@@ -2288,6 +2288,11 @@ defineExpose({ deleteTransaction })
   display: flex;
   flex-direction: column;
   min-height: 0;
+  /* 限高让滚动下放到内部 .page-shell(overflow-y:auto)上,
+     sticky 才能触发。注意:不要加 overflow:hidden,
+     否则会裁掉子元素的 box-shadow(如 .page-header 的 -20px 负 margin 突破)
+     和 box-shadow 模糊外延(导致卡片阴影被切) */
+  height: 100vh;
   padding-left: constant(safe-area-inset-left);
   padding-left: env(safe-area-inset-left);
   padding-right: constant(safe-area-inset-right);
@@ -2300,8 +2305,11 @@ defineExpose({ deleteTransaction })
 .page-shell {
   display: block;
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* 关键:用 overflow: clip auto(不是 hidden auto!)
+     hidden 会裁切所有子元素的 box-shadow 水平外延,导致卡片阴影左右被截断。
+     clip 行为类似 hidden(裁切内容溢出)但不裁切 box-shadow 等视觉外延,
+     保留卡片阴影的左右延伸 */
+  /* overflow: clip auto; */
   -webkit-overflow-scrolling: touch;
   padding-bottom: 100px;
   scrollbar-width: none;

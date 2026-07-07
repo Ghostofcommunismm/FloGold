@@ -190,6 +190,10 @@ function handleViewTransaction(id: number) {
   margin: 0 -20px;
   padding: 0 20px;
   padding-top: calc(env(safe-area-inset-top, 0px) + 4px);
+  /* 提升到独立合成层,跨过 motion.section 给 page-shell 加的 will-change 合成层边界,
+     否则 sticky 会被父合成层截胡、永远粘在初始位置 */
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
   /* 毛玻璃背景（参考 .stats-top-bar，滑动时始终可读） */
   background: rgba(245, 242, 236, 0.72);
   -webkit-backdrop-filter: saturate(180%) blur(20px);

@@ -47,11 +47,12 @@
       <span v-if="cardStyle === 'flowingGold'" class="lg-meta-updated">UPDATED {{ currentTime }}</span>
     </div>
 
-    <!-- v2 烫金浮雕:票据底部 (设计稿 .serial + .stamp) -->
+    <!-- v2 烫金浮雕:票据底部 (设计稿 .serial, 印章用绝对定位脱离文档流) -->
     <div v-if="cardStyle === 'embossedGold' && itemCount > 0" class="lg-cert-footer">
       <div class="lg-serial">No. {{ certSerial }} · {{ certYear }}</div>
-      <div class="lg-stamp">BANK<br>SEAL</div>
     </div>
+    <!-- v2 印章:绝对定位到卡片右下,不动高度 -->
+    <div v-if="cardStyle === 'embossedGold' && itemCount > 0" class="lg-stamp" aria-hidden="true">BANK<br>SEAL</div>
 
     <!-- v2 双层边框内层(配合 ::after 外层) -->
     <div v-if="cardStyle === 'embossedGold'" class="lg-cert-inner-border" aria-hidden="true"></div>
@@ -197,6 +198,19 @@ function formatStat(n: number): string {
   -webkit-transform: translate3d(0, 0, 0);
   /* 流动金默认字体:Outfit */
   font-family: 'Outfit', system-ui, sans-serif;
+}
+
+/* 极光 div 自身加 overflow:hidden 防止溢出 lg-card 边界,
+   但极光是 radial-gradient 软边,实际上即使溢出也看不出硬切,
+   加这一层只是保险 */
+.lg-aurora {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+  /* 不再使用 filter / mix-blend-mode */
+  /* 关键:极光可能比 lg-card 大,溢出卡片无大碍(radial-gradient 软边),
+     不用 overflow:hidden 也行,这里保留以防万一 */
 }
 
 /* ===== Aurora 极光（多段渐变模拟柔光 · 适配 Android WebView） =====
@@ -552,18 +566,14 @@ function formatStat(n: number): string {
   font-style: italic;
   font-size: 14px;
   color: #8a7a55;
-  margin: -8px 0 16px 0;
+  margin: -8px 0 4px 0;
   letter-spacing: 0.01em;
 }
-/* v2 票据底部 (设计稿 .serial + .stamp) */
+/* v2 票据底部 (设计稿 .serial, 印章绝对定位) */
 .lg-cert-footer {
   position: relative;
   z-index: 2;
   margin-bottom: 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  min-height: 56px;
 }
 .lg-card.lg-v-embossedGold .lg-serial {
   font-family: 'JetBrains Mono', monospace;
@@ -572,8 +582,12 @@ function formatStat(n: number): string {
   letter-spacing: 0.18em;
 }
 .lg-card.lg-v-embossedGold .lg-stamp {
-  width: 56px;
-  height: 56px;
+  /* 绝对定位 */
+  position: absolute;
+  right: 30px;
+  top: 150px;
+  width: 48px;
+  height: 48px;
   border: 2px solid #b04848;
   color: #b04848;
   border-radius: 50%;
@@ -588,7 +602,8 @@ function formatStat(n: number): string {
   line-height: 1.3;
   transform: rotate(-12deg);
   opacity: 0.75;
-  flex-shrink: 0;
+  z-index: 3;
+  pointer-events: none;
 }
 .lg-card.lg-v-embossedGold .lg-num {
   background: linear-gradient(180deg, #b48a3e 0%, #8a5f1c 50%, #6b4514 100%);
@@ -603,12 +618,14 @@ function formatStat(n: number): string {
   will-change: auto;
   font-family: 'Cormorant Garamond', 'Times New Roman', serif;
   font-weight: 600;
+  line-height: 60px;
 }
 .lg-card.lg-v-embossedGold .lg-currency {
   color: #8a5f1c;
   -webkit-text-fill-color: #8a5f1c;
   font-family: 'Cormorant Garamond', 'Times New Roman', serif;
   font-weight: 500;
+  line-height: 54px;
 }
 .lg-card.lg-v-embossedGold .lg-label {
   color: rgba(90, 70, 30, 0.65);
