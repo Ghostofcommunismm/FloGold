@@ -1,7 +1,7 @@
 <template>
   <div class="asset-tab">
     <!-- 页面标题 -->
-    <div class="page-header">
+    <div class="page-header" :class="{ scrolled }">
       <h1>家庭资产</h1>
     </div>
 
@@ -83,8 +83,9 @@ const props = withDefaults(
     assetCategories: Category[]
     transactions: Transaction[]
     cardStyle?: AssetCardStyle
+    scrolled?: boolean
   }>(),
-  { cardStyle: 'flowingGold' },
+  { cardStyle: 'flowingGold', scrolled: false },
 )
 
 const emit = defineEmits<{
@@ -182,19 +183,21 @@ function handleViewTransaction(id: number) {
   top: 0;
   z-index: 50;
   display: flex;
+  align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  height: 120px;
   /* 负边际让毛玻璃铺满 #app 整行（#app 左右各 20px padding） */
   margin: 0 -20px 20px;
-  padding: 0 20px;
-  padding-top: calc(env(safe-area-inset-top, 0px) + 4px);
+  padding: 4px 20px 0px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
   /* 提升到独立合成层,跨过 motion.section 给 page-shell 加的 will-change 合成层边界,
      否则 sticky 会被父合成层截胡、永远粘在初始位置 */
   transform: translate3d(0, 0, 0);
   -webkit-transform: translate3d(0, 0, 0);
   /* Apple风格渐变模糊：顶部模糊强度最大，向下递减 */
   background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   isolation: isolate;
 }
 .page-header::before {
@@ -226,22 +229,30 @@ function handleViewTransaction(id: number) {
 }
 
 .page-header h1 {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
-  letter-spacing: -0.005em;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 滚动后：增加下边框分隔线（与首页顶栏行为一致） */
+.page-header.scrolled {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 /* 深色模式顶栏 */
-:root[data-theme="dark"] .page-header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
 :root[data-theme="dark"] .page-header::before {
   background: rgba(45, 41, 37, 0.85);
   -webkit-backdrop-filter: saturate(180%) blur(26px);
   backdrop-filter: saturate(180%) blur(26px);
   box-shadow: 0 1px 12px rgba(0, 0, 0, 0.15);
+}
+:root[data-theme="dark"] .page-header.scrolled {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .filter-row {

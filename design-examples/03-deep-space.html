@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>萤火虫风 · 示例 3 - 深空科技版</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: radial-gradient(circle at 30% 20%, #1a0d3a 0%, #0a0518 60%, #050208 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      padding: 40px 20px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    :root {
+      --firefly: #C8FF00;
+      --firefly-2: #00FFB4;
+      --purple: #8B5CF6;
+      --pink: #FF00C8;
+      --bg: #0a0518;
+      --bg-2: rgba(255,255,255,0.04);
+      --line: rgba(255,255,255,0.08);
+      --text-2: rgba(255,255,255,0.6);
+      --text-3: rgba(255,255,255,0.4);
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      border-radius: 48px;
+      background: var(--bg);
+      box-shadow:
+        0 0 0 12px #1a0d3a,
+        0 0 0 14px #2a1d4a,
+        0 50px 100px rgba(0,0,0,0.8),
+        0 0 120px rgba(139, 92, 246, 0.3);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 背景渐变光晕 */
+    .bg-aurora {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(60% 40% at 80% 10%, rgba(200, 255, 0, 0.18) 0%, transparent 60%),
+        radial-gradient(50% 35% at 10% 30%, rgba(139, 92, 246, 0.25) 0%, transparent 60%),
+        radial-gradient(60% 40% at 70% 80%, rgba(255, 0, 200, 0.15) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    /* 星空点 */
+    .stars {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 20% 10%, rgba(255,255,255,0.6), transparent),
+        radial-gradient(1px 1px at 60% 15%, rgba(255,255,255,0.4), transparent),
+        radial-gradient(1px 1px at 80% 25%, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1.5px 1.5px at 35% 5%, rgba(200,255,0,0.8), transparent),
+        radial-gradient(1px 1px at 90% 40%, rgba(255,255,255,0.4), transparent);
+      pointer-events: none;
+    }
+
+    .statusbar {
+      position: relative;
+      z-index: 2;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .statusbar .right { display: flex; gap: 6px; align-items: center; }
+    .statusbar svg { width: 18px; height: 18px; }
+
+    .header {
+      position: relative;
+      z-index: 2;
+      padding: 8px 24px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header .left {
+      display: flex;
+      flex-direction: column;
+    }
+    .header .small {
+      font-size: 11px;
+      color: var(--text-2);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .header .big {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-top: 2px;
+    }
+    .header .big span {
+      color: var(--firefly);
+    }
+    .header .avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 16px;
+      border: 2px solid rgba(255,255,255,0.1);
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+    }
+
+    /* 余额主卡 */
+    .balance-card {
+      position: relative;
+      z-index: 2;
+      margin: 8px 20px 24px;
+      padding: 28px 24px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(200,255,0,0.1) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      overflow: hidden;
+    }
+    .balance-card::before {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: var(--firefly);
+      filter: blur(100px);
+      opacity: 0.18;
+      bottom: -150px; left: -100px;
+    }
+    .balance-card .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative;
+    }
+    .balance-card .label {
+      font-size: 11px;
+      color: var(--text-2);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .balance-card .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--firefly);
+      box-shadow: 0 0 12px var(--firefly);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+    .balance-card .amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 60px;
+      font-weight: 700;
+      letter-spacing: -3px;
+      margin: 12px 0 8px;
+      line-height: 1;
+      position: relative;
+      background: linear-gradient(180deg, #fff 0%, var(--firefly) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .balance-card .amount .currency {
+      font-size: 24px;
+      margin-right: 8px;
+      vertical-align: top;
+      line-height: 1.7;
+      background: none;
+      -webkit-text-fill-color: var(--firefly);
+    }
+    .balance-card .delta {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--firefly);
+      font-weight: 600;
+      position: relative;
+      letter-spacing: 0.5px;
+    }
+
+    /* 渐变分割线 */
+    .divider {
+      height: 1px;
+      margin: 22px 0 18px;
+      background: linear-gradient(90deg, transparent, rgba(200,255,0,0.3), rgba(139,92,246,0.3), transparent);
+      position: relative;
+    }
+    .balance-card .footer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      position: relative;
+    }
+    .balance-card .stat .v {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .balance-card .stat .k {
+      font-size: 10px;
+      color: var(--text-2);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+    .balance-card .stat .v.income { color: var(--firefly); }
+    .balance-card .stat .v.expense { color: #ff7a9c; }
+
+    /* 分类圆环卡片 */
+    .cat-card {
+      position: relative;
+      z-index: 2;
+      margin: 0 20px 20px;
+      padding: 20px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .cat-card .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .cat-card .title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .cat-card .more {
+      font-size: 11px;
+      color: var(--text-3);
+      font-weight: 500;
+    }
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .cat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .cat .ic {
+      width: 48px; height: 48px;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      position: relative;
+    }
+    .cat .ic.food { background: linear-gradient(135deg, #ff6b35, #ff8c5b); }
+    .cat .ic.transport { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+    .cat .ic.shop { background: linear-gradient(135deg, #ec4899, #db2777); }
+    .cat .ic.game { background: linear-gradient(135deg, var(--purple), #6d28d9); }
+    .cat .tx {
+      font-size: 10px;
+      color: var(--text-2);
+      font-weight: 500;
+    }
+    .cat .amt {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* 流水 */
+    .section-title {
+      position: relative;
+      z-index: 2;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .section-title .more {
+      font-size: 11px;
+      color: var(--text-3);
+      font-weight: 500;
+    }
+    .list {
+      position: relative;
+      z-index: 2;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tx-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .tx-item .ico {
+      width: 42px; height: 42px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .ico.food { background: linear-gradient(135deg, #ff6b35, #ff8c5b); }
+    .ico.transport { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+    .ico.shop { background: linear-gradient(135deg, #ec4899, #db2777); }
+    .ico.salary { background: linear-gradient(135deg, var(--firefly), #8FB800); }
+    .tx-item .meta { flex: 1; min-width: 0; }
+    .tx-item .name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .tx-item .sub {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+    .tx-item .val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .val.expense { color: #ff7a9c; }
+    .val.income { color: var(--firefly); }
+
+    /* Tab */
+    .tabbar {
+      position: absolute;
+      bottom: 16px; left: 16px; right: 16px;
+      height: 64px;
+      background: rgba(20,10,40,0.6);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      align-items: center;
+      padding: 0 8px;
+      z-index: 3;
+    }
+    .tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-3);
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .tab.active {
+      color: var(--firefly);
+    }
+    .tab.active .ic::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--firefly);
+      box-shadow: 0 0 8px var(--firefly);
+    }
+    .tab .ic { font-size: 20px; position: relative; }
+    .tab.center .ic {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--firefly), var(--firefly-2));
+      color: #000;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      margin-top: -18px;
+      box-shadow: 0 0 24px rgba(200,255,0,0.5);
+      font-weight: 700;
+    }
+    .tab.center span { display: none; }
+
+    .home-indicator {
+      position: absolute;
+      bottom: 6px; left: 50%;
+      transform: translateX(-50%);
+      width: 134px; height: 5px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 3px;
+      z-index: 4;
+    }
+
+    .doc-title {
+      position: fixed;
+      top: 20px; left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.4);
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="doc-title">示例 03 · 深空科技版</div>
+  <div class="phone">
+    <div class="bg-aurora"></div>
+    <div class="stars"></div>
+
+    <div class="statusbar">
+      <span>9:41</span>
+      <div class="right">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h2v-8H2v8zm5 0h2V10H7v12zm5 0h2V6h-2v16zm5 0h2V2h-2v20z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 00-6 0zm-4-4l2 2a7.074 7.074 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="7" width="18" height="10" rx="2"/></svg>
+      </div>
+    </div>
+
+    <div class="header">
+      <div class="left">
+        <div class="small">DASHBOARD</div>
+        <div class="big">Hello, <span>萤光</span></div>
+      </div>
+      <div class="avatar">F</div>
+    </div>
+
+    <div class="balance-card">
+      <div class="head">
+        <div class="label">总资产 · Total</div>
+        <div class="dot"></div>
+      </div>
+      <div class="amount"><span class="currency">¥</span>28,650.82</div>
+      <div class="delta">↗ LIVE · +12.4% 本月</div>
+      <div class="divider"></div>
+      <div class="footer">
+        <div class="stat">
+          <div class="v income">+¥8,200</div>
+          <div class="k">收入</div>
+        </div>
+        <div class="stat">
+          <div class="v expense">-¥3,547</div>
+          <div class="k">支出</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cat-card">
+      <div class="head">
+        <div class="title">本月分类</div>
+        <div class="more">详情 →</div>
+      </div>
+      <div class="cat-grid">
+        <div class="cat">
+          <div class="ic food">🍜</div>
+          <div class="tx">餐饮</div>
+          <div class="amt">¥1,248</div>
+        </div>
+        <div class="cat">
+          <div class="ic transport">🚇</div>
+          <div class="tx">交通</div>
+          <div class="amt">¥386</div>
+        </div>
+        <div class="cat">
+          <div class="ic shop">🛍️</div>
+          <div class="tx">购物</div>
+          <div class="amt">¥1,520</div>
+        </div>
+        <div class="cat">
+          <div class="ic game">🎮</div>
+          <div class="tx">娱乐</div>
+          <div class="amt">¥393</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">最近 <span class="more">全部 →</span></div>
+    <div class="list">
+      <div class="tx-item">
+        <div class="ico salary">💼</div>
+        <div class="meta">
+          <div class="name">工资入账</div>
+          <div class="sub">今天 09:12 · 招商银行</div>
+        </div>
+        <div class="val income">+¥8,200</div>
+      </div>
+      <div class="tx-item">
+        <div class="ico food">🍜</div>
+        <div class="meta">
+          <div class="name">海底捞火锅</div>
+          <div class="sub">今天 19:30 · 餐饮</div>
+        </div>
+        <div class="val expense">-¥268</div>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <div class="tab active">
+        <div class="ic">🏠</div>
+        <div>首页</div>
+      </div>
+      <div class="tab">
+        <div class="ic">📋</div>
+        <div>账单</div>
+      </div>
+      <div class="tab center">
+        <div class="ic">＋</div>
+        <span>记</span>
+      </div>
+      <div class="tab">
+        <div class="ic">📊</div>
+        <div>分析</div>
+      </div>
+      <div class="tab">
+        <div class="ic">👤</div>
+        <div>我的</div>
+      </div>
+    </div>
+
+    <div class="home-indicator"></div>
+  </div>
+</body>
+</html>

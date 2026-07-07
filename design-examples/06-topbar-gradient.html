@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>顶部渐变 · 示例 6 - 4 种渐变方案</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Outfit', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #f6f4ef;
+      min-height: 100vh;
+      color: #2d2d2d;
+      padding: 40px 24px 60px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page-title {
+      max-width: 1280px;
+      margin: 0 auto 36px;
+      text-align: center;
+    }
+    .page-title h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+    }
+    .page-title p {
+      font-size: 14px;
+      color: #6b6b6b;
+      font-weight: 400;
+    }
+
+    .grid {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+    @media (max-width: 1080px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 560px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.04), 0 1px 4px rgba(0,0,0,0.03);
+    }
+    .card h2 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card .tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: rgba(0,0,0,0.06);
+      color: #6b6b6b;
+      letter-spacing: 0.05em;
+    }
+    .card .desc {
+      font-size: 12px;
+      color: #8a8a8a;
+      margin-bottom: 14px;
+      line-height: 1.5;
+      min-height: 36px;
+    }
+
+    /* ---------- 手机模型 ---------- */
+    .phone {
+      width: 100%;
+      max-width: 320px;
+      margin: 0 auto;
+      aspect-ratio: 390 / 844;
+      border-radius: 38px;
+      background: #f9f9f9;
+      box-shadow:
+        0 0 0 8px #1a1a1a,
+        0 0 0 9px #2a2a2a,
+        0 24px 60px rgba(0,0,0,0.18);
+      overflow: hidden;
+      position: relative;
+      font-size: 14px;
+    }
+
+    .notch {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 28px;
+      background: #1a1a1a;
+      border-radius: 99px;
+      z-index: 10;
+    }
+
+    .statusbar {
+      position: relative;
+      z-index: 2;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px 0 32px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .statusbar .right { display: flex; gap: 5px; align-items: center; }
+    .statusbar svg { width: 14px; height: 14px; }
+
+    /* ---------- 顶部栏 ---------- */
+    .topbar {
+      position: relative;
+      padding: 8px 22px 18px;
+      color: #fff;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    /* 顶部栏的星点 / 光斑纹理 */
+    .topbar::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1px 1px at 75% 60%, rgba(255,255,255,0.35), transparent),
+        radial-gradient(1.5px 1.5px at 45% 80%, rgba(255,255,255,0.4), transparent);
+      pointer-events: none;
+      opacity: 0.6;
+      z-index: 0;
+    }
+    .topbar > * { position: relative; z-index: 1; }
+
+    .topbar .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+    }
+    .topbar .greeting {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.12);
+    }
+    .topbar .greeting .small {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      opacity: 0.85;
+      letter-spacing: 0.04em;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+    }
+    .topbar .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.22);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+    .topbar .icon-btn svg { width: 16px; height: 16px; color: #fff; }
+
+    /* 余额占位卡片 */
+    .balance-card {
+      margin: 14px 22px 0;
+      padding: 18px 18px 16px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow:
+        0 4px 18px rgba(0,0,0,0.06),
+        inset 0 1px 0 rgba(255,255,255,0.5);
+      position: relative;
+      z-index: 2;
+    }
+    .balance-card .label {
+      font-size: 11px;
+      color: #8a8a8a;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .balance-card .amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px;
+      font-weight: 700;
+      color: #2d2d2d;
+      margin-top: 4px;
+      letter-spacing: -0.02em;
+    }
+    .balance-card .meta {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      font-size: 11px;
+    }
+    .balance-card .meta span:first-child { color: #8ba888; font-weight: 600; }
+    .balance-card .meta span:last-child { color: #c97b7b; font-weight: 600; }
+
+    .content-fake {
+      padding: 14px 22px 0;
+    }
+    .content-fake .row {
+      height: 38px;
+      background: #fff;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .content-fake .row.short { width: 60%; }
+
+    /* ---------- 4 种渐变方案 ---------- */
+
+    /* 1. 极光 · 紫粉青 */
+    .g-aurora .topbar {
+      background:
+        radial-gradient(120% 80% at 0% 0%, rgba(139,92,246,0.95) 0%, transparent 60%),
+        radial-gradient(100% 70% at 100% 30%, rgba(236,72,153,0.85) 0%, transparent 65%),
+        radial-gradient(140% 90% at 50% 100%, rgba(56,189,248,0.75) 0%, transparent 70%),
+        linear-gradient(135deg, #6d28d9 0%, #be185d 50%, #0ea5e9 100%);
+    }
+
+    /* 2. 日落 · 橙粉紫 */
+    .g-sunset .topbar {
+      background:
+        radial-gradient(110% 80% at 100% 0%, rgba(251,146,60,0.95) 0%, transparent 60%),
+        radial-gradient(100% 80% at 0% 50%, rgba(244,114,182,0.9) 0%, transparent 60%),
+        radial-gradient(120% 100% at 50% 100%, rgba(124,58,237,0.8) 0%, transparent 70%),
+        linear-gradient(160deg, #fb923c 0%, #f472b6 45%, #7c3aed 100%);
+    }
+
+    /* 3. 薄荷 · 青绿冷调 */
+    .g-mint .topbar {
+      background:
+        radial-gradient(110% 80% at 100% 0%, rgba(94,234,212,0.85) 0%, transparent 60%),
+        radial-gradient(100% 80% at 0% 30%, rgba(56,189,248,0.8) 0%, transparent 60%),
+        radial-gradient(120% 100% at 50% 100%, rgba(99,102,241,0.7) 0%, transparent 70%),
+        linear-gradient(160deg, #2dd4bf 0%, #38bdf8 50%, #6366f1 100%);
+    }
+
+    /* 4. 暖金 · 与 App 主题色呼应 */
+    .g-warmgold .topbar {
+      background:
+        radial-gradient(110% 80% at 100% 0%, rgba(252,211,77,0.9) 0%, transparent 60%),
+        radial-gradient(100% 80% at 0% 50%, rgba(251,146,60,0.85) 0%, transparent 60%),
+        radial-gradient(120% 100% at 50% 100%, rgba(217,119,6,0.7) 0%, transparent 70%),
+        linear-gradient(160deg, #fbbf24 0%, #fb923c 50%, #b45309 100%);
+    }
+
+    /* ---------- 配色标注 ---------- */
+    .palette {
+      margin-top: 16px;
+      padding: 12px;
+      background: #fafafa;
+      border-radius: 12px;
+    }
+    .palette-title {
+      font-size: 10px;
+      color: #8a8a8a;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .swatches {
+      display: flex;
+      gap: 6px;
+    }
+    .swatch {
+      flex: 1;
+      height: 28px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      font-weight: 600;
+    }
+    .code {
+      margin-top: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #5b5b5b;
+      background: #fafafa;
+      padding: 10px 12px;
+      border-radius: 8px;
+      line-height: 1.6;
+      word-break: break-all;
+      border: 1px solid #ececec;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-title">
+    <h1>顶部渐变 · 4 种方案对比</h1>
+    <p>模拟手机屏幕预览，选定后告诉我用哪个，我直接落到 App.vue / AssetTab.vue 上</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- 方案 1：极光 -->
+    <div class="card">
+      <h2>极光 <span class="tag">AURORA</span></h2>
+      <p class="desc">紫粉青放射渐变，最有视觉冲击力，适合偏年轻、活跃风格的产品</p>
+      <div class="phone g-aurora">
+        <div class="notch"></div>
+        <div class="statusbar">
+          <span>9:41</span>
+          <div class="right">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+            <span style="font-family:'JetBrains Mono';font-size:11px">100%</span>
+          </div>
+        </div>
+        <div class="topbar">
+          <div class="row">
+            <div class="greeting">
+              <span class="small">Monday · 07/08</span>
+              晚上好，小明
+            </div>
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="balance-card">
+          <div class="label">本月结余</div>
+          <div class="amount">¥ 8,420.50</div>
+          <div class="meta"><span>↑ 收入 ¥12,300</span><span>↓ 支出 ¥3,879.50</span></div>
+        </div>
+        <div class="content-fake">
+          <div class="row"></div>
+          <div class="row short"></div>
+          <div class="row"></div>
+        </div>
+      </div>
+      <div class="palette">
+        <div class="palette-title">配色</div>
+        <div class="swatches">
+          <div class="swatch" style="background:#6d28d9">9 紫</div>
+          <div class="swatch" style="background:#be185d">5 粉</div>
+          <div class="swatch" style="background:#0ea5e9">9 青</div>
+        </div>
+      </div>
+      <div class="code">linear-gradient(135deg,#6d28d9,#be185d 50%,#0ea5e9)<br>+ 3 层 radial 叠加</div>
+    </div>
+
+    <!-- 方案 2：日落 -->
+    <div class="card">
+      <h2>日落 <span class="tag">SUNSET</span></h2>
+      <p class="desc">橙粉紫的温暖过渡，像傍晚的天空，跟记账的"时光感"很搭</p>
+      <div class="phone g-sunset">
+        <div class="notch"></div>
+        <div class="statusbar">
+          <span>9:41</span>
+          <div class="right">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+            <span style="font-family:'JetBrains Mono';font-size:11px">100%</span>
+          </div>
+        </div>
+        <div class="topbar">
+          <div class="row">
+            <div class="greeting">
+              <span class="small">Monday · 07/08</span>
+              晚上好，小明
+            </div>
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="balance-card">
+          <div class="label">本月结余</div>
+          <div class="amount">¥ 8,420.50</div>
+          <div class="meta"><span>↑ 收入 ¥12,300</span><span>↓ 支出 ¥3,879.50</span></div>
+        </div>
+        <div class="content-fake">
+          <div class="row"></div>
+          <div class="row short"></div>
+          <div class="row"></div>
+        </div>
+      </div>
+      <div class="palette">
+        <div class="palette-title">配色</div>
+        <div class="swatches">
+          <div class="swatch" style="background:#fb923c">3 橙</div>
+          <div class="swatch" style="background:#f472b6">3 粉</div>
+          <div class="swatch" style="background:#7c3aed">9 紫</div>
+        </div>
+      </div>
+      <div class="code">linear-gradient(160deg,#fb923c,#f472b6 45%,#7c3aed)<br>+ 3 层 radial 叠加</div>
+    </div>
+
+    <!-- 方案 3：薄荷 -->
+    <div class="card">
+      <h2>薄荷 <span class="tag">MINT</span></h2>
+      <p class="desc">青绿冷调，清爽干净，跟"省钱/理財"心智契合</p>
+      <div class="phone g-mint">
+        <div class="notch"></div>
+        <div class="statusbar">
+          <span>9:41</span>
+          <div class="right">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+            <span style="font-family:'JetBrains Mono';font-size:11px">100%</span>
+          </div>
+        </div>
+        <div class="topbar">
+          <div class="row">
+            <div class="greeting">
+              <span class="small">Monday · 07/08</span>
+              晚上好，小明
+            </div>
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="balance-card">
+          <div class="label">本月结余</div>
+          <div class="amount">¥ 8,420.50</div>
+          <div class="meta"><span>↑ 收入 ¥12,300</span><span>↓ 支出 ¥3,879.50</span></div>
+        </div>
+        <div class="content-fake">
+          <div class="row"></div>
+          <div class="row short"></div>
+          <div class="row"></div>
+        </div>
+      </div>
+      <div class="palette">
+        <div class="palette-title">配色</div>
+        <div class="swatches">
+          <div class="swatch" style="background:#2dd4bf">9 青</div>
+          <div class="swatch" style="background:#38bdf8">9 蓝</div>
+          <div class="swatch" style="background:#6366f1">9 紫</div>
+        </div>
+      </div>
+      <div class="code">linear-gradient(160deg,#2dd4bf,#38bdf8 50%,#6366f1)<br>+ 3 层 radial 叠加</div>
+    </div>
+
+    <!-- 方案 4：暖金 -->
+    <div class="card">
+      <h2>暖金 <span class="tag">WARM</span></h2>
+      <p class="desc">与 App 现有主色 (#d4a574) 呼应，整体风格最统一，质感最稳</p>
+      <div class="phone g-warmgold">
+        <div class="notch"></div>
+        <div class="statusbar">
+          <span>9:41</span>
+          <div class="right">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+            <span style="font-family:'JetBrains Mono';font-size:11px">100%</span>
+          </div>
+        </div>
+        <div class="topbar">
+          <div class="row">
+            <div class="greeting">
+              <span class="small">Monday · 07/08</span>
+              晚上好，小明
+            </div>
+            <div class="icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="balance-card">
+          <div class="label">本月结余</div>
+          <div class="amount">¥ 8,420.50</div>
+          <div class="meta"><span>↑ 收入 ¥12,300</span><span>↓ 支出 ¥3,879.50</span></div>
+        </div>
+        <div class="content-fake">
+          <div class="row"></div>
+          <div class="row short"></div>
+          <div class="row"></div>
+        </div>
+      </div>
+      <div class="palette">
+        <div class="palette-title">配色</div>
+        <div class="swatches">
+          <div class="swatch" style="background:#fbbf24">5 金</div>
+          <div class="swatch" style="background:#fb923c">3 橙</div>
+          <div class="swatch" style="background:#b45309">9 棕</div>
+        </div>
+      </div>
+      <div class="code">linear-gradient(160deg,#fbbf24,#fb923c 50%,#b45309)<br>+ 3 层 radial 叠加</div>
+    </div>
+
+  </div>
+
+</body>
+</html>

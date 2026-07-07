@@ -1,14 +1,59 @@
 <template>
   <section class="bcard">
-    <!-- 顶部：余额标题 + 芯片 -->
+    <!-- 顶部：余额标题 + 眼睛(显示/隐藏) -->
     <div class="bcard-top">
       <div class="blbl">本月余额</div>
-      <div class="bcard-chip"></div>
+      <button
+        class="bcard-eye"
+        :class="{ off: !balanceVisible }"
+        @click="balanceVisible = !balanceVisible"
+        :aria-label="balanceVisible ? '隐藏余额' : '显示余额'"
+      >
+        <svg v-if="balanceVisible" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <svg v-else viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+          <line x1="1" y1="1" x2="23" y2="23"/>
+        </svg>
+      </button>
     </div>
-    <!-- 余额数字 -->
-    <div class="bamt">
-      <span class="cur">¥</span>{{ animatedBalance.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+
+    <!-- 余额数字 + 趋势 -->
+    <div class="bcard-balance-row">
+      <div class="bamt">
+        <span v-if="balanceVisible" class="cur">¥</span>
+        <span v-if="balanceVisible">{{ animatedBalance.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+        <span v-else class="bamt-hidden">••••••</span>
+      </div>
+      <div v-if="balanceVisible && monthExpensePrev > 0" class="btrend" :class="trendCls">
+        <span class="btrend-arrow">{{ trendArrow }}</span>
+        <span class="btrend-pct">{{ Math.abs(trendPct).toFixed(1) }}%</span>
+        <span class="btrend-cap">较上月</span>
+      </div>
     </div>
+
+    <!-- 预算进度条(可选) -->
+    <div v-if="budgetLimit > 0 && balanceVisible" class="bcard-budget">
+      <div class="bb-track">
+        <div
+          class="bb-fill"
+          :class="{ over: budgetUsage > 100 }"
+          :style="{ width: Math.min(budgetUsage, 100) + '%' }"
+        ></div>
+      </div>
+      <div class="bb-meta">
+        <span class="bb-cap">月度预算</span>
+        <span class="bb-used">
+          ¥{{ monthExpense.toFixed(0) }} / ¥{{ budgetLimit.toFixed(0) }}
+        </span>
+        <span class="bb-pct" :class="{ over: budgetUsage > 100 }">
+          {{ budgetUsage > 100 ? '超支 ' + Math.round(budgetUsage - 100) + '%' : '已花 ' + budgetUsage.toFixed(0) + '%' }}
+        </span>
+      </div>
+    </div>
+
     <!-- 收入支出 -->
     <div class="bstats">
       <div class="scard in">
@@ -30,155 +75,216 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { computed, ref } from 'vue'
+
+const props = defineProps<{
   animatedBalance: number
   totalIncome: number
   totalExpense: number
+  monthExpense: number
+  monthExpensePrev: number
+  budgetLimit: number
 }>()
+
+// 余额可见性切换(用户偏好,默认显示)
+const balanceVisible = ref(true)
+
+// 余额 vs 上月支出趋势 — 用"已花"代表日常节奏(支出 vs 支出 才合理)，
+// 但用户更关心"净结余变化"，所以改用本月余额与上月余额对比;
+// 这里先用 monthExpensePrev 与 monthExpense 比较，作为近似"对比"的轻量信号。
+const trendPct = computed(() => {
+  if (props.monthExpensePrev <= 0) return 0
+  // 支出口径：本月少 = 节流好(下箭头 = 好);本月多 = 破费(上箭头 = 警示)
+  // 我们用克制版规则: 支出环比上升视为「↑」红色提示，下降为「↓」绿色
+  return ((props.monthExpense - props.monthExpensePrev) / props.monthExpensePrev) * 100
+})
+const trendCls = computed(() => {
+  if (trendPct.value < -0.1) return 'good'
+  if (trendPct.value > 0.1) return 'bad'
+  return 'flat'
+})
+const trendArrow = computed(() => {
+  if (trendPct.value > 0.1) return '↑'
+  if (trendPct.value < -0.1) return '↓'
+  return '—'
+})
+
+// 预算使用率(%)
+const budgetUsage = computed(() => {
+  if (props.budgetLimit <= 0) return 0
+  return (props.monthExpense / props.budgetLimit) * 100
+})
 </script>
 
 <style scoped>
-/* ========== 黄铜浮雕优化版（方案1：提高对比度） ========== */
-
-/* 黄铜金属卡片主体 - 更亮背景 */
+/* ========== 克制版: 以浅暖底 + 淡金边 替代原来高饱和的黄铜金属 ==========
+   思路：金色仅作 1 处强调(顶部右侧眼睛 hover)，其余收敛到中性卡其 */
 .bcard {
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, .12) 0%, transparent 40%, rgba(0, 0, 0, .08) 100%),
-    linear-gradient(160deg, #E8D4B0 0%, #DCC4A0 15%, #C9B896 35%, #B8A67C 55%, #E8D4B0 75%, #DCC4A0 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(250, 245, 240, 0.88) 100%);
   border-radius: 20px;
-  padding: 16px 24px 18px;
+  padding: 14px 18px 14px;
   position: relative;
   overflow: hidden;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(212, 165, 116, 0.18);
   box-shadow:
-    0 8px 32px rgba(139, 105, 20, .30),
-    0 3px 10px rgba(0, 0, 0, .20),
-    inset 0 1px 0 rgba(255, 255, 255, .4),
-    inset 0 -1px 0 rgba(139, 105, 20, .25);
+    0 4px 18px rgba(174, 168, 155, 0.10),
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-/* 刷纹金属纹理 - 减淡 */
+/* 底部淡金光晕: 仅在卡片底部一道很弱的暖色光, 不抢戏 */
 .bcard::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 2px,
-      rgba(255, 255, 255, .08) 2px,
-      rgba(255, 255, 255, .08) 4px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 3px,
-      rgba(0, 0, 0, .02) 3px,
-      rgba(0, 0, 0, .02) 6px
-    );
-  opacity: .10;
+  left: 0; right: 0; bottom: 0;
+  height: 38%;
+  background: linear-gradient(180deg, transparent, rgba(212, 165, 116, 0.07));
   pointer-events: none;
   z-index: 0;
 }
 
-/* 光泽反射效果 - 增强 */
-.bcard::after {
-  content: '';
-  position: absolute;
-  top: -30%;
-  left: -30%;
-  width: 160%;
-  height: 160%;
-  background: radial-gradient(ellipse at 35% 25%, rgba(255, 255, 255, .20) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* 顶部行 - 余额标题 + 芯片 */
+/* 顶部行 */
 .bcard-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   position: relative;
   z-index: 1;
 }
 
-/* 余额标签 - 深色文字 */
+/* 标签 */
 .blbl {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  color: #3A2E1C;
-  letter-spacing: .08em;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, .35);
+}
+
+/* 眼睛按钮 */
+.bcard-eye {
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, transform 0.2s;
+}
+.bcard-eye:hover {
+  color: var(--accent);
+  background: var(--accent-light);
+  transform: scale(1.06);
+}
+.bcard-eye.off {
+  color: var(--text-muted);
+}
+
+/* 余额 + 趋势 行 */
+.bcard-balance-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
   position: relative;
   z-index: 1;
 }
 
-/* 芯片（增强对比） */
-.bcard-chip {
-  width: 38px;
-  height: 28px;
-  border-radius: 6px;
-  background: linear-gradient(145deg, #F0E0C8, #D8C8A8, #C8B090, #D8C8A8);
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, .35),
-    inset 0 1px 0 rgba(255, 255, 255, .6),
-    inset 0 -1px 0 rgba(139, 105, 20, .35);
-  position: relative;
-}
-
-/* 芯片内部方框图案 */
-.bcard-chip::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 24px;
-  height: 18px;
-  border: 2px solid rgba(90, 74, 40, .5);
-  border-radius: 3px;
-}
-
-/* 芯片内部竖线分隔 */
-.bcard-chip::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 8px;
-  height: 18px;
-  border: 1px solid rgba(90, 74, 40, .25);
-  border-radius: 1px;
-}
-
-/* 余额数字 - 深色文字 */
 .bamt {
   font-family: 'DM Sans', 'Outfit', sans-serif;
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
-  color: #1A1510;
-  letter-spacing: -.02em;
-  line-height: 1.2;
-  margin-bottom: 14px;
-  position: relative;
-  z-index: 1;
-  text-shadow:
-    0 1px 0 rgba(255, 255, 255, .25),
-    0 2px 6px rgba(0, 0, 0, .12);
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
 }
-
 .bamt .cur {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
-  color: #5A4A28;
+  color: var(--text-secondary);
   margin-right: 2px;
 }
+.bamt-hidden {
+  font-size: 28px;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+}
+
+/* 趋势小标签 */
+.btrend {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 4px 9px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  flex-shrink: 0;
+}
+.btrend.good { background: rgba(139, 168, 136, 0.14); color: var(--income); }
+.btrend.bad  { background: rgba(201, 123, 123, 0.14); color: var(--expense); }
+.btrend.flat { background: rgba(174, 168, 155, 0.14); color: var(--text-secondary); }
+.btrend-arrow { font-size: 12px; }
+.btrend-cap { color: inherit; opacity: 0.72; font-weight: 500; margin-left: 1px; }
+
+/* 预算进度条 */
+.bcard-budget {
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+.bb-track {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.bb-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--income);
+  transition: width 0.7s cubic-bezier(0.34, 1.4, 0.64, 1), background 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.bb-fill.over { background: var(--expense); }
+.bb-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: translateX(-120%);
+  animation: bbShimmer 2.6s ease-in-out 0.6s infinite;
+}
+@keyframes bbShimmer {
+  0%   { transform: translateX(-120%); }
+  55%  { transform: translateX(120%); }
+  100% { transform: translateX(120%); }
+}
+.bb-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.bb-cap { font-weight: 600; }
+.bb-used { color: var(--text-secondary); }
+.bb-pct { margin-left: auto; font-weight: 700; color: var(--income); }
+.bb-pct.over { color: var(--expense); }
 
 /* 收入支出容器 */
 .bstats {
@@ -188,62 +294,78 @@ defineProps<{
   z-index: 1;
 }
 
-/* 收入支出卡片 - 更亮的半透明白色背景 */
 .scard {
   flex: 1;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, .25);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, .25),
-    inset 0 -2px 0 rgba(139, 105, 20, .15),
-    0 2px 6px rgba(139, 105, 20, .12);
-  transition: transform .2s, box-shadow .2s;
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
 }
-
 .scard:hover {
   transform: translateY(-1px);
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, .3),
-    inset 0 -2px 0 rgba(139, 105, 20, .18),
-    0 4px 12px rgba(139, 105, 20, .18);
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 3px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* 标签 - 深色文字 */
 .slbl {
   font-size: 11px;
   font-weight: 600;
-  color: #3A2E1C;
-  letter-spacing: .05em;
-  margin-bottom: 5px;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .slbl svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   fill: none;
   stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.slbl .si-i { stroke: #3A9E7C; }
-.slbl .si-e { stroke: #C85A6E; }
+.slbl .si-i { stroke: var(--income); }
+.slbl .si-e { stroke: var(--expense); }
 
-/* 数值 - 深色文字 */
 .sval {
   font-family: 'DM Sans', 'Outfit', sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: -.02em;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
-  color: #1A1510;
+  color: var(--text-primary);
 }
 
-.scard.in .sval { color: #3A9E7C; }
-.scard.out .sval { color: #C85A6E; }
+.scard.in .sval { color: var(--income); }
+.scard.out .sval { color: var(--expense); }
+
+/* 深色模式 */
+:root[data-theme="dark"] .bcard {
+  background:
+    linear-gradient(180deg, rgba(45, 41, 37, 0.7) 0%, rgba(40, 36, 32, 0.55) 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 4px 18px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+:root[data-theme="dark"] .bcard::before {
+  background: linear-gradient(180deg, transparent, rgba(212, 165, 116, 0.10));
+}
+:root[data-theme="dark"] .scard {
+  background: rgba(255, 255, 255, 0.04);
+}
+:root[data-theme="dark"] .bb-track { background: rgba(255, 255, 255, 0.08); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bb-fill { transition: width 0.7s ease; }
+  .bb-fill::after { animation: none; }
+}
 </style>

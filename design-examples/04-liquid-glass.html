@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>萤火虫风 · 示例 4 - 玻璃拟态版</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      padding: 40px 20px;
+      -webkit-font-smoothing: antialiased;
+      background: #050208;
+      overflow: hidden;
+    }
+    /* 背景大色块（用于透过玻璃） */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 30%, #FF6B35 0%, transparent 30%),
+        radial-gradient(circle at 80% 20%, var(--firefly) 0%, transparent 35%),
+        radial-gradient(circle at 50% 80%, #8B5CF6 0%, transparent 40%),
+        linear-gradient(135deg, #1a0d3a 0%, #0a0518 100%);
+      filter: blur(20px);
+    }
+
+    :root {
+      --firefly: #C8FF00;
+      --orange: #FF6B35;
+      --purple: #8B5CF6;
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      border-radius: 48px;
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      box-shadow:
+        0 0 0 12px rgba(255,255,255,0.05),
+        0 0 0 14px rgba(255,255,255,0.02),
+        0 50px 100px rgba(0,0,0,0.8);
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* 背景彩色球（玻璃后面） */
+    .bg-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      pointer-events: none;
+    }
+    .bg-blob.b1 {
+      width: 320px; height: 320px;
+      top: -80px; left: -60px;
+      background: var(--firefly);
+      opacity: 0.6;
+    }
+    .bg-blob.b2 {
+      width: 260px; height: 260px;
+      top: 200px; right: -80px;
+      background: var(--orange);
+      opacity: 0.5;
+    }
+    .bg-blob.b3 {
+      width: 300px; height: 300px;
+      bottom: -100px; left: 50px;
+      background: var(--purple);
+      opacity: 0.5;
+    }
+
+    /* 玻璃面板 mixin */
+    .glass {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(30px) saturate(180%);
+      -webkit-backdrop-filter: blur(30px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.2),
+        0 8px 32px rgba(0,0,0,0.2);
+    }
+    .glass-strong {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.3),
+        0 12px 40px rgba(0,0,0,0.25);
+    }
+
+    .statusbar {
+      position: relative;
+      z-index: 2;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .statusbar .right { display: flex; gap: 6px; align-items: center; }
+    .statusbar svg { width: 18px; height: 18px; }
+
+    .header {
+      position: relative;
+      z-index: 2;
+      padding: 8px 20px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header .logo {
+      width: 38px; height: 38px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.2);
+      font-size: 18px;
+    }
+    .header .name {
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: -0.3px;
+    }
+    .header .name small {
+      display: block;
+      font-size: 10px;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .header .search {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    /* 余额主卡 */
+    .balance-card {
+      position: relative;
+      z-index: 2;
+      margin: 8px 20px 20px;
+      padding: 28px 24px;
+      border-radius: 32px;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(40px) saturate(200%);
+      -webkit-backdrop-filter: blur(40px) saturate(200%);
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.4),
+        0 20px 60px rgba(0,0,0,0.4);
+      overflow: hidden;
+    }
+    .balance-card::after {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%);
+      transform: rotate(25deg);
+      pointer-events: none;
+    }
+    .balance-card .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    .balance-card .label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .balance-card .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(200,255,0,0.2);
+      border: 1px solid rgba(200,255,0,0.3);
+      font-size: 10px;
+      color: var(--firefly);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .balance-card .amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 56px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      margin: 14px 0 6px;
+      line-height: 1;
+      position: relative;
+      z-index: 1;
+    }
+    .balance-card .amount .currency {
+      font-size: 22px;
+      color: var(--firefly);
+      margin-right: 8px;
+      vertical-align: top;
+      line-height: 1.7;
+    }
+    .balance-card .trend {
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      position: relative;
+      z-index: 1;
+    }
+    .balance-card .trend .up { color: var(--firefly); font-weight: 700; }
+
+    .balance-card .footer {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .balance-card .stat {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .balance-card .stat .v {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .balance-card .stat .v.income { color: var(--firefly); }
+    .balance-card .stat .v.expense { color: #ff8c8c; }
+    .balance-card .stat .k {
+      font-size: 10px;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    /* 快捷卡片 */
+    .quick {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 0 20px;
+      margin-bottom: 20px;
+    }
+    .qa {
+      aspect-ratio: 1;
+      border-radius: 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: rgba(255,255,255,0.9);
+      transition: all .2s;
+    }
+    .qa.primary {
+      background: var(--firefly);
+      color: #000;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.5),
+        0 8px 24px rgba(200,255,0,0.5);
+    }
+    .qa.primary .ic { color: #000; }
+    .qa .ic {
+      font-size: 22px;
+      color: var(--firefly);
+    }
+    .qa .tx {
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    /* 流水 */
+    .section-title {
+      position: relative;
+      z-index: 2;
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .section-title .more {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      font-weight: 500;
+    }
+    .list {
+      position: relative;
+      z-index: 2;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tx-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .tx-item .ico {
+      width: 42px; height: 42px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .ico.food { background: rgba(255,107,53,0.25); }
+    .ico.transport { background: rgba(96,165,250,0.25); }
+    .ico.shop { background: rgba(236,72,153,0.25); }
+    .ico.salary { background: rgba(200,255,0,0.25); }
+    .tx-item .meta { flex: 1; min-width: 0; }
+    .tx-item .name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .tx-item .sub {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 2px;
+    }
+    .tx-item .val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .val.expense { color: #ff8c8c; }
+    .val.income { color: var(--firefly); }
+
+    /* Tab */
+    .tabbar {
+      position: absolute;
+      bottom: 16px; left: 16px; right: 16px;
+      height: 64px;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 24px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      align-items: center;
+      padding: 0 8px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+      z-index: 3;
+    }
+    .tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: rgba(255,255,255,0.5);
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .tab.active {
+      color: var(--firefly);
+    }
+    .tab .ic { font-size: 20px; }
+    .tab.center .ic {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: var(--firefly);
+      color: #000;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      margin-top: -20px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.5),
+        0 0 24px rgba(200,255,0,0.5);
+      font-weight: 700;
+    }
+    .tab.center span { display: none; }
+
+    .home-indicator {
+      position: absolute;
+      bottom: 6px; left: 50%;
+      transform: translateX(-50%);
+      width: 134px; height: 5px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 3px;
+      z-index: 4;
+    }
+
+    .doc-title {
+      position: fixed;
+      top: 20px; left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.4);
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-weight: 500;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div class="doc-title">示例 04 · 玻璃拟态版（Liquid Glass）</div>
+  <div class="phone">
+    <div class="bg-blob b1"></div>
+    <div class="bg-blob b2"></div>
+    <div class="bg-blob b3"></div>
+
+    <div class="statusbar">
+      <span>9:41</span>
+      <div class="right">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h2v-8H2v8zm5 0h2V10H7v12zm5 0h2V6h-2v16zm5 0h2V2h-2v20z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 00-6 0zm-4-4l2 2a7.074 7.074 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="7" width="18" height="10" rx="2"/></svg>
+      </div>
+    </div>
+
+    <div class="header">
+      <div class="brand">
+        <div class="logo">✦</div>
+        <div class="name">轻记账<small>FIREFLY EDITION</small></div>
+      </div>
+      <div class="search glass-strong">🔍</div>
+    </div>
+
+    <div class="balance-card">
+      <div class="head">
+        <div class="label">总资产</div>
+        <div class="pill">● LIVE</div>
+      </div>
+      <div class="amount"><span class="currency">¥</span>28,650.82</div>
+      <div class="trend">本月 <span class="up">+12.4%</span> · 跑赢 87% 用户</div>
+      <div class="footer">
+        <div class="stat">
+          <div class="v income">+¥8,200</div>
+          <div class="k">收入</div>
+        </div>
+        <div class="stat">
+          <div class="v expense">-¥3,547</div>
+          <div class="k">支出</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick">
+      <div class="qa primary">
+        <div class="ic">＋</div>
+        <div class="tx">记一笔</div>
+      </div>
+      <div class="qa glass">
+        <div class="ic">↗</div>
+        <div class="tx">转账</div>
+      </div>
+      <div class="qa glass">
+        <div class="ic">📊</div>
+        <div class="tx">报表</div>
+      </div>
+      <div class="qa glass">
+        <div class="ic">⚡</div>
+        <div class="tx">预算</div>
+      </div>
+    </div>
+
+    <div class="section-title">最近 <span class="more">全部 →</span></div>
+    <div class="list">
+      <div class="tx-item">
+        <div class="ico salary">💼</div>
+        <div class="meta">
+          <div class="name">工资入账</div>
+          <div class="sub">今天 09:12 · 招商银行</div>
+        </div>
+        <div class="val income">+¥8,200</div>
+      </div>
+      <div class="tx-item">
+        <div class="ico food">🍜</div>
+        <div class="meta">
+          <div class="name">海底捞火锅</div>
+          <div class="sub">今天 19:30 · 餐饮</div>
+        </div>
+        <div class="val expense">-¥268</div>
+      </div>
+      <div class="tx-item">
+        <div class="ico shop">🛍️</div>
+        <div class="meta">
+          <div class="name">UNIQLO</div>
+          <div class="sub">昨天 14:22 · 购物</div>
+        </div>
+        <div class="val expense">-¥399</div>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <div class="tab active">
+        <div class="ic">🏠</div>
+        <div>首页</div>
+      </div>
+      <div class="tab">
+        <div class="ic">📋</div>
+        <div>账单</div>
+      </div>
+      <div class="tab center">
+        <div class="ic">＋</div>
+        <span>记</span>
+      </div>
+      <div class="tab">
+        <div class="ic">📊</div>
+        <div>分析</div>
+      </div>
+      <div class="tab">
+        <div class="ic">👤</div>
+        <div>我的</div>
+      </div>
+    </div>
+
+    <div class="home-indicator"></div>
+  </div>
+</body>
+</html>

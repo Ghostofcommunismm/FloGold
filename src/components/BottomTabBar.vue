@@ -97,7 +97,7 @@ function ripple(e: MouseEvent) {
   position: fixed;
   bottom: calc(env(safe-area-inset-bottom, 0px));
   left: 50%;
-  top: auto;
+  bottom: 10px;
   transform: translateX(-50%);
   z-index: 100;
   display: inline-flex;
@@ -294,29 +294,35 @@ function ripple(e: MouseEvent) {
   z-index: 2;
 }
 
-/* 记账按钮 */
+/* 记账按钮 - FAB 风格：白底 + 对比色"+"号，强化悬浮感 */
 .add-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 22px;
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
   border: none;
+  /* 上移 4px 形成 FAB 悬浮，并保留白底 */
   background:
-    radial-gradient(circle at 32% 18%, rgba(255, 255, 255, 0.58), transparent 32%),
-    linear-gradient(145deg, #e7bd8d, var(--accent) 48%, #bc8555);
-  color: #fff;
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85) 38%, rgba(245, 245, 245, 0.92) 100%);
+  color: var(--income);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  /* FAB: 加大外阴影+底部微凸起，与胶囊形成层次 */
   box-shadow:
-    0 8px 22px rgba(212, 165, 116, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.46),
-    inset 0 -1px 0 rgba(103, 66, 33, 0.22);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    0 10px 24px rgba(60, 80, 60, 0.20),
+    0 3px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.04);
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease,
+    color 0.25s ease;
   flex-shrink: 0;
   position: relative;
-  overflow: hidden;
-  z-index: 2;
+  overflow: visible;
+  z-index: 3;
+  transform: translateY(-3px);
   touch-action: manipulation;
 }
 
@@ -324,11 +330,12 @@ function ripple(e: MouseEvent) {
   content: '';
   position: absolute;
   inset: -3px;
-  border-radius: 25px;
-  border: 1.5px solid var(--accent);
+  border-radius: 27px;
+  border: 1.5px solid rgba(139, 168, 136, 0.5);
   opacity: 0;
   animation: addPulse 2.8s ease-out 1s infinite;
   z-index: 0;
+  pointer-events: none;
 }
 
 .add-btn::after {
@@ -337,10 +344,7 @@ function ripple(e: MouseEvent) {
   inset: 1px;
   border-radius: inherit;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.48), transparent 42%),
-    linear-gradient(315deg, rgba(255, 96, 128, 0.18), rgba(92, 196, 255, 0.14));
-  mix-blend-mode: screen;
-  opacity: 0.75;
+    linear-gradient(135deg, rgba(255, 255, 255, 0.85), transparent 45%);
   pointer-events: none;
   z-index: 1;
 }
@@ -349,34 +353,42 @@ function ripple(e: MouseEvent) {
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
   z-index: 2;
+  stroke-width: 2.6;
 }
 
 .add-btn:hover {
-  box-shadow: 0 6px 20px rgba(212, 165, 116, 0.55);
-  transform: scale(1.06);
+  box-shadow:
+    0 12px 28px rgba(60, 80, 60, 0.28),
+    0 4px 10px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  transform: translateY(-5px) scale(1.04);
+  color: #4f8869;
 }
 .add-btn:hover .add-btn-icon {
   transform: rotate(90deg);
 }
 
 .add-btn:active {
-  box-shadow: 0 6px 20px rgba(212, 165, 116, 0.55);
-  transform: scale(0.92);
+  box-shadow:
+    0 6px 14px rgba(60, 80, 60, 0.20),
+    inset 0 1px 4px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px) scale(0.94);
 }
 .add-btn:active .add-btn-icon {
   transform: rotate(90deg) scale(0.85);
 }
 
 @keyframes addPulse {
-  0%   { transform: scale(0.9); opacity: 0.55; }
-  70%  { transform: scale(1.25); opacity: 0; }
-  100% { transform: scale(1.25); opacity: 0; }
+  0%   { transform: scale(0.92); opacity: 0.5; }
+  70%  { transform: scale(1.28); opacity: 0; }
+  100% { transform: scale(1.28); opacity: 0; }
 }
 
 .add-ripple {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(139, 168, 136, 0.4);
   transform: scale(0);
   animation: addRipple 0.6s ease-out;
   pointer-events: none;
@@ -384,6 +396,26 @@ function ripple(e: MouseEvent) {
 }
 @keyframes addRipple {
   to { transform: scale(2.4); opacity: 0; }
+}
+
+/* 深色模式：FAB 深色玻璃 */
+:root[data-theme="dark"] .add-btn {
+  background:
+    radial-gradient(circle at 32% 22%, rgba(245, 245, 245, 0.94), rgba(220, 225, 220, 0.85) 50%, rgba(180, 195, 180, 0.85) 100%);
+  color: #3a6b53;
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.40),
+    0 3px 10px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+}
+:root[data-theme="dark"] .add-btn:hover {
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.46),
+    0 4px 12px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.20);
+  color: #2b523d;
 }
 
 :root[data-theme="dark"] .capsule-inner {

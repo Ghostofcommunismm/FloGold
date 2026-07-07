@@ -14,13 +14,8 @@
     >
     <!-- 顶部栏 -->
     <header class="top-bar" :class="{ scrolled }">
-      <div class="avatar-box neumorph-circle">
-        <span class="avatar-text">💰</span>
-
-      </div>
-      <div class="date-box neumorph-pill" @click="showDatePicker = true">
-        <span class="month">{{ currentMonth }}</span>
-        <span class="year">{{ currentYearNum }}</span>
+      <div class="greeting-box">
+        <span class="greeting-text">{{ greetingText }}</span>
       </div>
       <div class="top-bar-right">
         <div class="bell-box neumorph-circle" @click="openSearch">
@@ -36,32 +31,10 @@
       :animated-balance="animatedBalance"
       :total-income="totalIncome"
       :total-expense="totalExpense"
+      :month-expense="monthExpense"
+      :month-expense-prev="prevSelectedMonthExpense"
+      :budget-limit="budget.monthlyLimit"
     />
-
-    <!-- 预算进度条 -->
-    <section v-if="budget.monthlyLimit > 0" class="budget-progress-card neumorph">
-      <div class="bp-header">
-        <span class="bp-label">月度预算</span>
-        <span class="bp-amount">
-          <span class="bp-used">¥{{ monthExpense.toFixed(0) }}</span>
-          <span class="bp-sep">/</span>
-          <span class="bp-total">¥{{ budget.monthlyLimit.toFixed(0) }}</span>
-        </span>
-      </div>
-      <div class="bp-track">
-        <div
-          class="bp-fill"
-          :class="{ over: budgetUsage > 100 }"
-          :style="{ width: Math.min(budgetUsage, 100) + '%' }"
-        ></div>
-      </div>
-      <div class="bp-footer">
-        <span class="bp-percent" :class="{ over: budgetUsage > 100 }">{{ budgetUsage.toFixed(0) }}%</span>
-        <span class="bp-remain" :class="{ over: budgetUsage > 100 }">
-          {{ budgetUsage > 100 ? `超支 ¥${(monthExpense - budget.monthlyLimit).toFixed(0)}` : `剩余 ¥${(budget.monthlyLimit - monthExpense).toFixed(0)}` }}
-        </span>
-      </div>
-    </section>
 
     <!-- 快捷分类 -->
     <section v-if="uiSettings.showCategoryFilter" class="category-section">
@@ -91,7 +64,22 @@
     <section class="transaction-section">
       <div class="section-header">
         <h2 class="section-title">最近交易</h2>
-        <button class="see-all" @click="openSearch">搜索 →</button>
+        <div class="month-picker">
+          <button class="month-nav month-nav-prev" @click="shiftMonth(-1)" aria-label="上一月">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          <div class="month-picker-label" @click="showDatePicker = true">
+            <span class="month">{{ currentMonth }}</span>
+            <span class="year">{{ currentYearNum }}</span>
+          </div>
+          <button class="month-nav month-nav-next" @click="shiftMonth(1)" aria-label="下一月">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div v-if="filteredTransactions.length === 0" class="tx-empty">
@@ -100,76 +88,83 @@
         <button class="tx-empty-btn" @click="openAddModal">记一笔</button>
       </div>
 
-      <TransitionGroup v-else name="list" tag="div" class="transaction-list">
-        <div
-          v-for="(tx, index) in filteredTransactions"
-          :key="tx.id"
-          class="tx-swipe-wrap"
-          :class="{ dragging: swiping && swipeCurrentId === tx.id, deleting: deletingId === tx.id }"
-          :style="{ animationDelay: index * 0.05 + 's' }"
-          :data-tx-id="tx.id"
-        >
-          <!-- 滑动操作按钮（背景层，宽度随滑动进度拉伸） -->
-          <div class="tx-swipe-actions" :style="actionsStyle(tx.id)">
-            <button
-              class="tx-swipe-btn edit"
-              :style="btnStyle(tx.id, 0)"
-              @click.stop="onSwipeEdit(tx)"
-            >
-              <span class="tx-swipe-inner" :style="innerStyle(tx.id, 0)">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-                <span>编辑</span>
-              </span>
-            </button>
-            <button
-              class="tx-swipe-btn delete"
-              :style="btnStyle(tx.id, 1)"
-              @click.stop="onSwipeDelete(tx)"
-            >
-              <span class="tx-swipe-inner" :style="innerStyle(tx.id, 1)">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                </svg>
-                <span>{{ deleteLabel(tx.id) }}</span>
-              </span>
-            </button>
+      <template v-else>
+        <div v-for="group in transactionGroups" :key="group.date" class="tx-group">
+          <div class="tx-group-label">
+            <span>{{ group.label }}</span>
+            <span class="tx-group-meta">{{ group.totalText }}</span>
           </div>
-          <!-- 卡片内容（前景层，可滑动） -->
-          <div
-            class="tx-card"
-            :class="{ swiped: swipedId === tx.id, swiping: swiping && swipeCurrentId === tx.id }"
-            :style="cardStyle(tx.id)"
-            @pointerdown="onSwipeStart($event, tx.id)"
-            @pointermove="onSwipeMove"
-            @pointerup="onSwipeEnd"
-            @pointercancel="onSwipeEnd"
-          >
-            <div class="tx-main">
-              <div class="tx-left">
-                <div class="tx-icon-box" :class="tx.type">
-                  <span class="tx-icon-emoji">{{ tx.icon }}</span>
-                </div>
-                <div class="tx-info">
-                  <span class="tx-name">{{ tx.name }}</span>
-                  <span class="tx-category">
-                    {{ tx.category }}<template v-if="tx.subCategory"> · {{ tx.subCategory }}</template> · {{ formatDisplayDate(tx.date) }}
-                    <template v-if="tx.merchant"> · 📍 {{ tx.merchant }}</template>
+          <TransitionGroup name="list" tag="div" class="transaction-list">
+            <div
+              v-for="(tx, index) in group.items"
+              :key="tx.id"
+              class="tx-swipe-wrap"
+              :class="{ dragging: swiping && swipeCurrentId === tx.id, deleting: deletingId === tx.id }"
+              :style="{ animationDelay: index * 0.04 + 's' }"
+              :data-tx-id="tx.id"
+            >
+              <!-- 滑动操作按钮（背景层，宽度随滑动进度拉伸） -->
+              <div class="tx-swipe-actions" :style="actionsStyle(tx.id)">
+                <button
+                  class="tx-swipe-btn edit"
+                  :style="btnStyle(tx.id, 0)"
+                  @click.stop="onSwipeEdit(tx)"
+                >
+                  <span class="tx-swipe-inner" :style="innerStyle(tx.id, 0)">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    <span>编辑</span>
                   </span>
-                </div>
+                </button>
+                <button
+                  class="tx-swipe-btn delete"
+                  :style="btnStyle(tx.id, 1)"
+                  @click.stop="onSwipeDelete(tx)"
+                >
+                  <span class="tx-swipe-inner" :style="innerStyle(tx.id, 1)">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    <span>{{ deleteLabel(tx.id) }}</span>
+                  </span>
+                </button>
               </div>
-              <div class="tx-right">
-                <span class="tx-amount" :class="tx.type">
-                  {{ tx.type === 'income' ? '+' : '-' }}¥{{ tx.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-                </span>
-                <div class="tx-blur-tag neumorph-tag">{{ tx.tag }}</div>
+              <!-- 卡片内容（前景层，可滑动） -->
+              <div
+                class="tx-card"
+                :class="{ swiped: swipedId === tx.id, swiping: swiping && swipeCurrentId === tx.id }"
+                :style="cardStyle(tx.id)"
+                @pointerdown="onSwipeStart($event, tx.id)"
+                @pointermove="onSwipeMove"
+                @pointerup="onSwipeEnd"
+                @pointercancel="onSwipeEnd"
+              >
+                <div class="tx-main">
+                  <div class="tx-left">
+                    <div class="tx-icon-box" :class="tx.type">
+                      <span class="tx-icon-emoji">{{ tx.icon }}</span>
+                    </div>
+                    <div class="tx-info">
+                      <span class="tx-name">{{ tx.name }}</span>
+                      <span class="tx-category">
+                        {{ tx.category }}<template v-if="tx.subCategory"> · {{ tx.subCategory }}</template>
+                        <template v-if="tx.merchant"> · 📍 {{ tx.merchant }}</template>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="tx-right">
+                    <span class="tx-amount" :class="tx.type">
+                      {{ tx.type === 'income' ? '+' : '-' }}¥{{ tx.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </TransitionGroup>
         </div>
-      </TransitionGroup>
+      </template>
     </section>
     </motion.section>
 
@@ -559,6 +554,7 @@
         :asset-categories="assetCategories"
         :transactions="transactions"
         :card-style="uiSettings.assetCardStyle"
+        :scrolled="scrolled"
         @save-asset="saveAsset"
         @delete-asset="deleteAsset"
         @view-transaction="viewTransaction"
@@ -990,6 +986,19 @@ const selectedYear = ref(new Date().getFullYear())
 const selectedMonth = ref(new Date().getMonth() + 1)
 const currentMonth = computed(() => selectedMonth.value + '月')
 const currentYearNum = computed(() => selectedYear.value)
+// 顶部问候语：按当前小时切换，昵称先复用「我的」页中的用户名
+const userNickname = '记账小能手'
+const greetingText = computed(() => {
+  const h = new Date().getHours()
+  let word = '晚上好'
+  if (h >= 5 && h <= 7) word = '早上好'
+  else if (h >= 8 && h <= 11) word = '上午好'
+  else if (h >= 12 && h <= 13) word = '中午好'
+  else if (h >= 14 && h <= 17) word = '傍晚好'
+  else if (h >= 18 && h <= 22) word = '晚上好'
+  else word = '深夜好'
+  return `${word}，${userNickname}`
+})
 // 所选月份的 YYYY-MM key（驱动首页余额/预算/交易列表）
 const selectedMonthKey = computed(
   () => `${selectedYear.value}-${String(selectedMonth.value).padStart(2, '0')}`
@@ -1456,6 +1465,72 @@ const filteredTransactions = computed(() => {
   return list.filter(t => t.category === activeCategory.value)
 })
 
+// ========== 按日期分组(展示给用户)，并标记今天/昨天/更早 ==========
+interface TxGroup {
+  date: string          // YYYY-MM-DD
+  label: string         // 今天 / 昨天 / MM/DD (周x)
+  items: typeof filteredTransactions.value
+  totalText: string     // 该组小计,展示在分组标题右侧
+}
+
+function weekdayCN(dateStr: string): string {
+  const wd = ['日', '一', '二', '三', '四', '五', '六']
+  const d = new Date(dateStr + 'T00:00:00')
+  return '周' + wd[d.getDay()]
+}
+
+function dateLabel(dateStr: string, today: string): string {
+  if (dateStr === today) return '今天'
+  const t = new Date(today + 'T00:00:00').getTime()
+  const d = new Date(dateStr + 'T00:00:00').getTime()
+  const diffDays = Math.round((t - d) / (24 * 3600 * 1000))
+  if (diffDays === 1) return '昨天'
+  if (diffDays === 2) return '前天'
+  // 其余用 MM/DD (周X)
+  const m = dateStr.substring(5, 7)
+  const day = dateStr.substring(8, 10)
+  return `${parseInt(m)}/${parseInt(day)} · ${weekdayCN(dateStr)}`
+}
+
+const transactionGroups = computed<TxGroup[]>(() => {
+  const today = todayStr()
+  const map = new Map<string, typeof filteredTransactions.value>()
+  for (const tx of filteredTransactions.value) {
+    const arr = map.get(tx.date) || []
+    arr.push(tx)
+    map.set(tx.date, arr)
+  }
+  // 按日期倒序
+  const dates = Array.from(map.keys()).sort((a, b) => (a < b ? 1 : -1))
+  return dates.map(date => {
+    const items = map.get(date) || []
+    let expense = 0, income = 0
+    for (const t of items) {
+      if (t.type === 'expense') expense += t.amount
+      else income += t.amount
+    }
+    const parts: string[] = []
+    if (income > 0) parts.push('收 ¥' + income.toFixed(0))
+    if (expense > 0) parts.push('支 ¥' + expense.toFixed(0))
+    return {
+      date,
+      label: dateLabel(date, today),
+      items,
+      totalText: parts.join('  ·  '),
+    }
+  })
+})
+
+// 月份切换箭头
+function shiftMonth(delta: number) {
+  let m = selectedMonth.value + delta
+  let y = selectedYear.value
+  if (m < 1) { m = 12; y -= 1 }
+  else if (m > 12) { m = 1; y += 1 }
+  selectedMonth.value = m
+  selectedYear.value = y
+}
+
 // ========== 统计数据 ==========
 
 const statsFilteredTxs = computed(() => {
@@ -1524,6 +1599,17 @@ const prevMonthExpense = computed(() =>
     .filter(t => t.type === 'expense' && t.date.startsWith(prevMonthKey()))
     .reduce((s, t) => s + t.amount, 0)
 )
+
+// 当前所选月份的"上一月"支出(响应 selectedMonthKey,用于 BalanceCard 趋势对比)
+const prevSelectedMonthExpense = computed(() => {
+  const [y, m] = selectedMonthKey.value.split('-').map(Number)
+  const py = m === 1 ? y - 1 : y
+  const pm = m === 1 ? 12 : m - 1
+  const prevKey = `${py}-${String(pm).padStart(2, '0')}`
+  return transactions.value
+    .filter(t => t.type === 'expense' && t.date.startsWith(prevKey))
+    .reduce((s, t) => s + t.amount, 0)
+})
 
 // 去年同月支出
 const lastYearExpense = computed(() =>
@@ -2447,45 +2533,70 @@ defineExpose({ deleteTransaction })
   gap: 8px;
 }
 
-.avatar-text {
-  font-size: 22px;
-  line-height: 1;
-  display: inline-block;
-  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.avatar-box {
-  cursor: pointer;
-  transition: transform 0.3s ease;
-}
-.avatar-box:hover { transform: scale(1.08); }
-.avatar-box:hover .avatar-text {
-  animation: avatarWobble 0.6s ease-in-out;
-}
-@keyframes avatarWobble {
-  0%, 100% { transform: rotate(0deg) scale(1); }
-  25%      { transform: rotate(-12deg) scale(1.1); }
-  50%      { transform: rotate(8deg) scale(1.05); }
-  75%      { transform: rotate(-5deg) scale(1.08); }
-}
-
-.date-box {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+/* 顶部问候语 */
+.greeting-box {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  flex-direction: row;
   align-items: center;
-  padding: 6px 24px;
-  gap: 8px;
 }
-.date-box .month {
-  font-size: 18px;
+.greeting-text {
+  font-size: 20px;
   font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: 1px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.date-box .year {
+
+/* 月份切换左右箭头 —— 现在放在「最近交易」右侧的紧凑版 */
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.2s, background 0.2s, transform 0.2s;
+}
+.month-nav:hover {
+  color: var(--accent);
+  background: var(--accent-light);
+}
+.month-nav:active {
+  transform: scale(0.92);
+}
+/* 「最近交易」右侧的月份选择器组合 */
+.month-picker {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-inset);
+  border-radius: 14px;
+  padding: 2px 4px;
+}
+.month-picker-label {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
+  user-select: none;
+}
+.month-picker-label .month {
   font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.month-picker-label .year {
+  font-size: 11px;
   color: var(--text-muted);
 }
 
@@ -2702,10 +2813,32 @@ defineExpose({ deleteTransaction })
 }
 .see-all:hover { opacity: 1; }
 
+/* 日期分组标题 */
+.tx-group {
+  margin-bottom: 18px;
+}
+.tx-group:last-child { margin-bottom: 0; }
+.tx-group-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+}
+.tx-group-meta {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .transaction-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* 空状态 */
@@ -2804,7 +2937,8 @@ defineExpose({ deleteTransaction })
 .tx-card {
   position: relative;
   z-index: 2;
-  background: var(--bg-solid);
+  /* background: var(--bg-solid); */
+  background: white;
   border-radius: 16px;
   box-shadow: var(--shadow-sm);
   border: none;
@@ -2832,23 +2966,23 @@ defineExpose({ deleteTransaction })
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: 11px 14px;
 }
 
 .tx-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
 }
 
 .tx-icon-box {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 21px;
   box-shadow: var(--shadow-sm);
   flex-shrink: 0;
 }
@@ -2864,13 +2998,14 @@ defineExpose({ deleteTransaction })
 }
 
 .tx-name {
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.25;
 }
 
 .tx-category {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -2881,12 +3016,12 @@ defineExpose({ deleteTransaction })
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: 0;
   flex-shrink: 0;
 }
 
 .tx-amount {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }

@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>萤火虫风 · 示例 1 - 黑底荧光绿（主调）</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #0a0a0a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      padding: 40px 20px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 萤火虫品牌色 */
+    :root {
+      --firefly: #C8FF00;       /* 主品牌荧光绿 */
+      --firefly-2: #B4FF1A;
+      --firefly-soft: rgba(200, 255, 0, 0.12);
+      --bg: #0a0a0a;
+      --bg-2: #141414;
+      --bg-3: #1c1c1c;
+      --line: rgba(255,255,255,0.08);
+      --text-2: rgba(255,255,255,0.6);
+      --text-3: rgba(255,255,255,0.4);
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      border-radius: 48px;
+      background: var(--bg);
+      box-shadow:
+        0 0 0 12px #1a1a1a,
+        0 0 0 14px #2a2a2a,
+        0 50px 100px rgba(0,0,0,0.8),
+        0 0 80px rgba(200, 255, 0, 0.15);
+      overflow: hidden;
+      position: relative;
+      padding: 0;
+    }
+
+    /* 顶部状态栏 */
+    .statusbar {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .statusbar .right { display: flex; gap: 6px; align-items: center; }
+    .statusbar svg { width: 18px; height: 18px; }
+
+    /* 顶部大标题区 */
+    .header {
+      padding: 16px 24px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header .greet {
+      font-size: 14px;
+      color: var(--text-2);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .header .avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--firefly), #6FD000);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+      color: #000;
+      font-size: 14px;
+    }
+
+    /* 余额主卡片 - 萤火虫核心视觉 */
+    .balance-card {
+      margin: 16px 20px 24px;
+      padding: 28px 24px;
+      border-radius: 28px;
+      background:
+        radial-gradient(120% 100% at 100% 0%, rgba(200,255,0,0.25) 0%, transparent 50%),
+        radial-gradient(120% 100% at 0% 100%, rgba(200,255,0,0.15) 0%, transparent 50%),
+        linear-gradient(135deg, #181818 0%, #0d0d0d 100%);
+      border: 1px solid rgba(200,255,0,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    .balance-card::before {
+      content: '';
+      position: absolute;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: var(--firefly);
+      filter: blur(60px);
+      opacity: 0.3;
+      top: -50px; right: -50px;
+    }
+    .balance-card .label {
+      font-size: 12px;
+      color: var(--text-2);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 500;
+      position: relative;
+    }
+    .balance-card .amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 56px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      margin: 12px 0 6px;
+      position: relative;
+      line-height: 1;
+    }
+    .balance-card .amount .currency {
+      font-size: 24px;
+      color: var(--firefly);
+      margin-right: 8px;
+      vertical-align: top;
+      line-height: 1.5;
+    }
+    .balance-card .delta {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--firefly);
+      background: var(--firefly-soft);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      position: relative;
+    }
+    .balance-card .footer {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      position: relative;
+    }
+    .balance-card .stat .v {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .balance-card .stat .k {
+      font-size: 11px;
+      color: var(--text-2);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .balance-card .stat .v.income { color: var(--firefly); }
+    .balance-card .stat .v.expense { color: #ff5b5b; }
+
+    /* 快速记录区 */
+    .section-title {
+      padding: 0 24px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-2);
+      margin-bottom: 12px;
+    }
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 0 20px;
+      margin-bottom: 24px;
+    }
+    .qa {
+      aspect-ratio: 1;
+      border-radius: 20px;
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .qa.primary {
+      background: var(--firefly);
+      border-color: var(--firefly);
+    }
+    .qa.primary .ic, .qa.primary .tx { color: #000; }
+    .qa .ic {
+      font-size: 22px;
+      color: var(--firefly);
+    }
+    .qa .tx {
+      font-size: 11px;
+      color: var(--text-2);
+      font-weight: 500;
+    }
+
+    /* 流水列表 */
+    .list {
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tx-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+    }
+    .tx-item .ico {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .ico.food { background: rgba(255,140,0,0.15); color: #ff8c00; }
+    .ico.transport { background: rgba(96,165,250,0.15); color: #60a5fa; }
+    .ico.shop { background: rgba(236,72,153,0.15); color: #ec4899; }
+    .ico.salary { background: rgba(200,255,0,0.15); color: var(--firefly); }
+    .tx-item .meta { flex: 1; min-width: 0; }
+    .tx-item .name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .tx-item .sub {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+    .tx-item .val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .val.expense { color: #ff5b5b; }
+    .val.income { color: var(--firefly); }
+
+    /* 底部 Tab */
+    .tabbar {
+      position: absolute;
+      bottom: 16px; left: 16px; right: 16px;
+      height: 64px;
+      background: rgba(20,20,20,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: center;
+      padding: 0 8px;
+    }
+    .tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-3);
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .tab.active {
+      color: var(--firefly);
+    }
+    .tab .ic { font-size: 20px; }
+    .tab.center {
+      position: relative;
+    }
+    .tab.center .ic {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--firefly);
+      color: #000;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-top: -16px;
+      box-shadow: 0 0 24px rgba(200,255,0,0.5);
+    }
+
+    .home-indicator {
+      position: absolute;
+      bottom: 6px; left: 50%;
+      transform: translateX(-50%);
+      width: 134px; height: 5px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 3px;
+    }
+
+    /* 标题 */
+    .doc-title {
+      position: fixed;
+      top: 20px; left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.4);
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="doc-title">示例 01 · 黑底荧光绿（主调）</div>
+  <div class="phone">
+    <!-- 状态栏 -->
+    <div class="statusbar">
+      <span>9:41</span>
+      <div class="right">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h2v-8H2v8zm5 0h2V10H7v12zm5 0h2V6h-2v16zm5 0h2V2h-2v20z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 00-6 0zm-4-4l2 2a7.074 7.074 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="7" width="18" height="10" rx="2"/></svg>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <div class="greet">晚上好, Lucas</div>
+      </div>
+      <div class="avatar">L</div>
+    </div>
+
+    <!-- 余额卡 -->
+    <div class="balance-card">
+      <div class="label">总资产 · Total</div>
+      <div class="amount"><span class="currency">¥</span>28,650.<span style="color: var(--firefly)">82</span></div>
+      <span class="delta">↑ 本月 +12.4%</span>
+      <div class="footer">
+        <div class="stat">
+          <div class="v income">+¥8,200</div>
+          <div class="k">收入 Income</div>
+        </div>
+        <div class="stat">
+          <div class="v expense">-¥3,547</div>
+          <div class="k">支出 Expense</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 快捷操作 -->
+    <div class="section-title">快捷 · Quick</div>
+    <div class="quick-actions">
+      <div class="qa primary">
+        <div class="ic">＋</div>
+        <div class="tx">记一笔</div>
+      </div>
+      <div class="qa">
+        <div class="ic">↗</div>
+        <div class="tx">转账</div>
+      </div>
+      <div class="qa">
+        <div class="ic">📊</div>
+        <div class="tx">报表</div>
+      </div>
+      <div class="qa">
+        <div class="ic">⚡</div>
+        <div class="tx">预算</div>
+      </div>
+    </div>
+
+    <!-- 流水 -->
+    <div class="section-title">最近 · Recent</div>
+    <div class="list">
+      <div class="tx-item">
+        <div class="ico salary">💼</div>
+        <div class="meta">
+          <div class="name">工资入账</div>
+          <div class="sub">今天 09:12 · 招商银行</div>
+        </div>
+        <div class="val income">+¥8,200</div>
+      </div>
+      <div class="tx-item">
+        <div class="ico food">🍜</div>
+        <div class="meta">
+          <div class="name">海底捞火锅</div>
+          <div class="sub">今天 19:30 · 餐饮</div>
+        </div>
+        <div class="val expense">-¥268</div>
+      </div>
+      <div class="tx-item">
+        <div class="ico transport">🚇</div>
+        <div class="meta">
+          <div class="name">地铁出行</div>
+          <div class="sub">今天 18:45 · 交通</div>
+        </div>
+        <div class="val expense">-¥9</div>
+      </div>
+      <div class="tx-item">
+        <div class="ico shop">🛍️</div>
+        <div class="meta">
+          <div class="name">UNIQLO</div>
+          <div class="sub">昨天 14:22 · 购物</div>
+        </div>
+        <div class="val expense">-¥399</div>
+      </div>
+    </div>
+
+    <!-- Tab -->
+    <div class="tabbar">
+      <div class="tab active">
+        <div class="ic">🏠</div>
+        <div>首页</div>
+      </div>
+      <div class="tab">
+        <div class="ic">📋</div>
+        <div>账单</div>
+      </div>
+      <div class="tab center">
+        <div class="ic">＋</div>
+      </div>
+      <div class="tab">
+        <div class="ic">📈</div>
+        <div>分析</div>
+      </div>
+      <div class="tab">
+        <div class="ic">👤</div>
+        <div>我的</div>
+      </div>
+    </div>
+
+    <div class="home-indicator"></div>
+  </div>
+</body>
+</html>

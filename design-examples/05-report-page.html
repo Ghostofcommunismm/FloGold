@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>萤火虫风 · 示例 5 - 报表分析页</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: radial-gradient(circle at 30% 20%, #1a0d3a 0%, #0a0518 60%, #050208 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      padding: 40px 20px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    :root {
+      --firefly: #C8FF00;
+      --orange: #FF6B35;
+      --pink: #FF00C8;
+      --purple: #8B5CF6;
+      --blue: #60a5fa;
+      --line: rgba(255,255,255,0.08);
+      --text-2: rgba(255,255,255,0.6);
+      --text-3: rgba(255,255,255,0.4);
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      border-radius: 48px;
+      background: var(--bg, #0a0518);
+      box-shadow:
+        0 0 0 12px #1a0d3a,
+        0 0 0 14px #2a1d4a,
+        0 50px 100px rgba(0,0,0,0.8),
+        0 0 120px rgba(200, 255, 0, 0.2);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bg-aurora {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(60% 40% at 80% 10%, rgba(200, 255, 0, 0.18) 0%, transparent 60%),
+        radial-gradient(50% 35% at 10% 30%, rgba(139, 92, 246, 0.25) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .stars {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 20% 10%, rgba(255,255,255,0.6), transparent),
+        radial-gradient(1px 1px at 60% 15%, rgba(255,255,255,0.4), transparent),
+        radial-gradient(1.5px 1.5px at 80% 25%, rgba(200,255,0,0.8), transparent);
+      pointer-events: none;
+    }
+
+    .statusbar {
+      position: relative;
+      z-index: 2;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .statusbar .right { display: flex; gap: 6px; align-items: center; }
+    .statusbar svg { width: 18px; height: 18px; }
+
+    /* 顶部标题 */
+    .topbar {
+      position: relative;
+      z-index: 2;
+      padding: 4px 24px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar .back {
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      backdrop-filter: blur(20px);
+    }
+    .topbar .title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .topbar .more {
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    /* 时间切换 */
+    .period {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      gap: 6px;
+      padding: 4px;
+      margin: 8px 20px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .period .p {
+      flex: 1;
+      text-align: center;
+      padding: 8px 0;
+      font-size: 12px;
+      color: var(--text-2);
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all .2s;
+    }
+    .period .p.active {
+      background: var(--firefly);
+      color: #000;
+      box-shadow: 0 4px 16px rgba(200,255,0,0.4);
+    }
+
+    /* 主数据 */
+    .hero {
+      position: relative;
+      z-index: 2;
+      padding: 0 24px;
+      margin-bottom: 16px;
+    }
+    .hero .label {
+      font-size: 11px;
+      color: var(--text-2);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .hero .v {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      margin: 6px 0 4px;
+      line-height: 1;
+      background: linear-gradient(180deg, #fff 0%, var(--firefly) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero .v .cur {
+      font-size: 22px;
+      -webkit-text-fill-color: var(--firefly);
+      margin-right: 6px;
+      vertical-align: top;
+      line-height: 1.7;
+    }
+    .hero .meta {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-2);
+    }
+    .hero .meta .item .v { color: var(--firefly); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .hero .meta .item .v.down { color: #ff8c8c; }
+
+    /* 柱状图 */
+    .chart-card {
+      position: relative;
+      z-index: 2;
+      margin: 0 20px 16px;
+      padding: 18px 18px 14px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--line);
+    }
+    .chart-card .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .chart-card .head .t {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .chart-card .head .legend {
+      display: flex;
+      gap: 12px;
+      font-size: 10px;
+      color: var(--text-2);
+      font-weight: 500;
+    }
+    .chart-card .head .legend .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .bars {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 6px;
+      height: 120px;
+      padding-bottom: 4px;
+      border-bottom: 1px dashed rgba(255,255,255,0.1);
+    }
+    .bar {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+    }
+    .bar .stack {
+      width: 100%;
+      max-width: 22px;
+      display: flex;
+      flex-direction: column-reverse;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar .b1 {
+      background: linear-gradient(180deg, var(--firefly) 0%, #6FD000 100%);
+      box-shadow: 0 0 12px rgba(200,255,0,0.4);
+    }
+    .bar .b2 {
+      background: linear-gradient(180deg, var(--orange) 0%, #d44a1f 100%);
+    }
+    .bar .label {
+      font-size: 9px;
+      color: var(--text-3);
+      font-weight: 600;
+    }
+    .bar.highlight .stack .b1 {
+      box-shadow: 0 0 16px rgba(200,255,0,0.6);
+    }
+    .bar.highlight .label {
+      color: var(--firefly);
+    }
+
+    /* 分类饼图 */
+    .cat-section {
+      position: relative;
+      z-index: 2;
+      padding: 0 20px;
+    }
+    .cat-row {
+      display: flex;
+      gap: 12px;
+    }
+    .pie-card {
+      width: 140px;
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .pie {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background:
+        conic-gradient(var(--firefly) 0 35%, var(--orange) 35% 60%, var(--pink) 60% 80%, var(--purple) 80% 100%);
+      position: relative;
+      mask: radial-gradient(circle, transparent 35%, #000 36%);
+      -webkit-mask: radial-gradient(circle, transparent 35%, #000 36%);
+    }
+    .pie-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    .pie-center .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .pie-card .caption {
+      font-size: 10px;
+      color: var(--text-2);
+      margin-top: 10px;
+      text-align: center;
+    }
+    .legend-card {
+      flex: 1;
+      padding: 14px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .legend-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+    .legend-row .l {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-2);
+      font-weight: 500;
+    }
+    .legend-row .l .dot {
+      width: 8px; height: 8px;
+      border-radius: 2px;
+    }
+    .legend-row .v {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .legend-row .pct {
+      color: var(--firefly);
+      margin-left: 4px;
+    }
+
+    /* 排行 */
+    .rank-section {
+      position: relative;
+      z-index: 2;
+      padding: 16px 20px 0;
+    }
+    .rank-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .rank-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line);
+      margin-bottom: 6px;
+    }
+    .rank-row .num {
+      width: 24px; height: 24px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-2);
+    }
+    .rank-row:nth-child(1) .num {
+      background: linear-gradient(135deg, var(--firefly), #6FD000);
+      color: #000;
+      box-shadow: 0 0 12px rgba(200,255,0,0.4);
+    }
+    .rank-row:nth-child(2) .num {
+      background: linear-gradient(135deg, #C0C0C0, #888);
+      color: #000;
+    }
+    .rank-row:nth-child(3) .num {
+      background: linear-gradient(135deg, #CD7F32, #8b4513);
+      color: #fff;
+    }
+    .rank-row .name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .rank-row .bar-bg {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      margin: 0 8px;
+    }
+    .rank-row .bar-fg {
+      height: 100%;
+      background: linear-gradient(90deg, var(--firefly), var(--firefly));
+      border-radius: 3px;
+      box-shadow: 0 0 8px rgba(200,255,0,0.4);
+    }
+    .rank-row .amt {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      min-width: 60px;
+      text-align: right;
+    }
+
+    /* Tab */
+    .tabbar {
+      position: absolute;
+      bottom: 16px; left: 16px; right: 16px;
+      height: 64px;
+      background: rgba(20,10,40,0.6);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      align-items: center;
+      padding: 0 8px;
+      z-index: 3;
+    }
+    .tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-3);
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .tab.active {
+      color: var(--firefly);
+    }
+    .tab .ic { font-size: 20px; }
+    .tab.center .ic {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--firefly), #6FD000);
+      color: #000;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      margin-top: -18px;
+      box-shadow: 0 0 24px rgba(200,255,0,0.5);
+      font-weight: 700;
+    }
+    .tab.center span { display: none; }
+
+    .home-indicator {
+      position: absolute;
+      bottom: 6px; left: 50%;
+      transform: translateX(-50%);
+      width: 134px; height: 5px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 3px;
+      z-index: 4;
+    }
+
+    .doc-title {
+      position: fixed;
+      top: 20px; left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.4);
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="doc-title">示例 05 · 报表分析页（深空科技风）</div>
+  <div class="phone">
+    <div class="bg-aurora"></div>
+    <div class="stars"></div>
+
+    <div class="statusbar">
+      <span>9:41</span>
+      <div class="right">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h2v-8H2v8zm5 0h2V10H7v12zm5 0h2V6h-2v16zm5 0h2V2h-2v20z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 00-6 0zm-4-4l2 2a7.074 7.074 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="7" width="18" height="10" rx="2"/></svg>
+      </div>
+    </div>
+
+    <div class="topbar">
+      <div class="back">←</div>
+      <div class="title">数据分析</div>
+      <div class="more">↗</div>
+    </div>
+
+    <div class="period">
+      <div class="p">日</div>
+      <div class="p">周</div>
+      <div class="p active">月</div>
+      <div class="p">年</div>
+    </div>
+
+    <div class="hero">
+      <div class="label">本月总支出 · November</div>
+      <div class="v"><span class="cur">¥</span>3,547.<span style="color: var(--firefly)">80</span></div>
+      <div class="meta">
+        <div class="item">较上月 <span class="v down">+8.2%</span></div>
+        <div class="item">日均 <span class="v">¥118</span></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="head">
+        <div class="t">每日趋势</div>
+        <div class="legend">
+          <span><span class="dot" style="background: var(--firefly);"></span>支出</span>
+          <span><span class="dot" style="background: var(--orange);"></span>收入</span>
+        </div>
+      </div>
+      <div class="bars">
+        <div class="bar"><div class="stack"><div class="b1" style="height: 40px;"></div><div class="b2" style="height: 20px;"></div></div><div class="label">1</div></div>
+        <div class="bar"><div class="stack"><div class="b1" style="height: 28px;"></div><div class="b2" style="height: 12px;"></div></div><div class="label">2</div></div>
+        <div class="bar"><div class="stack"><div class="b1" style="height: 50px;"></div><div class="b2" style="height: 16px;"></div></div><div class="label">3</div></div>
+        <div class="bar"><div class="stack"><div class="b1" style="height: 22px;"></div><div class="b2" style="height: 8px;"></div></div><div class="label">4</div></div>
+        <div class="bar"><div class="stack"><div class="b1" style="height: 65px;"></div><div class="b2" style="height: 22px;"></div></div><div class="label">5</div></div>
+        <div class="bar"><div class="stack"><div class="b1" style="height: 38px;"></div><div class="b2" style="height: 14px;"></div></div><div class="label">6</div></div>
+        <div class="bar highlight"><div class="stack"><div class="b1" style="height: 90px;"></div><div class="b2" style="height: 24px;"></div></div><div class="label">7</div></div>
+        <div class="bar"><div class="stack"><div class="b1" style="height: 30px;"></div><div class="b2" style="height: 10px;"></div></div><div class="label">8</div></div>
+      </div>
+    </div>
+
+    <div class="cat-section">
+      <div class="cat-row">
+        <div class="pie-card">
+          <div style="position:relative;">
+            <div class="pie"></div>
+            <div class="pie-center"><div class="n">¥3.5K</div></div>
+          </div>
+          <div class="caption">总支出 · 4 类目</div>
+        </div>
+        <div class="legend-card">
+          <div class="legend-row">
+            <span class="l"><span class="dot" style="background: var(--firefly);"></span>餐饮</span>
+            <span class="v">¥1,248 <span class="pct">35%</span></span>
+          </div>
+          <div class="legend-row">
+            <span class="l"><span class="dot" style="background: var(--orange);"></span>购物</span>
+            <span class="v">¥1,142 <span class="pct">32%</span></span>
+          </div>
+          <div class="legend-row">
+            <span class="l"><span class="dot" style="background: var(--pink);"></span>娱乐</span>
+            <span class="v">¥711 <span class="pct">20%</span></span>
+          </div>
+          <div class="legend-row">
+            <span class="l"><span class="dot" style="background: var(--purple);"></span>其他</span>
+            <span class="v">¥447 <span class="pct">13%</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rank-section">
+      <div class="rank-title">本周排行</div>
+      <div class="rank-row">
+        <div class="num">1</div>
+        <div class="name">海底捞</div>
+        <div class="bar-bg"><div class="bar-fg" style="width: 100%;"></div></div>
+        <div class="amt">¥268</div>
+      </div>
+      <div class="rank-row">
+        <div class="num">2</div>
+        <div class="name">UNIQLO</div>
+        <div class="bar-bg"><div class="bar-fg" style="width: 75%;"></div></div>
+        <div class="amt">¥399</div>
+      </div>
+      <div class="rank-row">
+        <div class="num">3</div>
+        <div class="name">盒马鲜生</div>
+        <div class="bar-bg"><div class="bar-fg" style="width: 55%;"></div></div>
+        <div class="amt">¥186</div>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <div class="tab">
+        <div class="ic">🏠</div>
+        <div>首页</div>
+      </div>
+      <div class="tab">
+        <div class="ic">📋</div>
+        <div>账单</div>
+      </div>
+      <div class="tab center">
+        <div class="ic">＋</div>
+        <span>记</span>
+      </div>
+      <div class="tab active">
+        <div class="ic">📊</div>
+        <div>分析</div>
+      </div>
+      <div class="tab">
+        <div class="ic">👤</div>
+        <div>我的</div>
+      </div>
+    </div>
+
+    <div class="home-indicator"></div>
+  </div>
+</body>
+</html>
