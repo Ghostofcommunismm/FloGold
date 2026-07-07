@@ -1,31 +1,31 @@
 <template>
   <section class="bcard">
+    <!-- 顶部：余额标题 + 芯片 -->
     <div class="bcard-top">
+      <div class="blbl">本月余额</div>
       <div class="bcard-chip"></div>
-      <div class="bcard-contactless"><span></span><span></span><span></span></div>
     </div>
-    <div class="bcard-brand">WEALTH FINANCE</div>
-    <div class="blbl">本月余额</div>
+    <!-- 余额数字 -->
     <div class="bamt">
       <span class="cur">¥</span>{{ animatedBalance.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
     </div>
+    <!-- 收入支出 -->
     <div class="bstats">
-      <div class="scard">
+      <div class="scard in">
         <div class="slbl">
           <svg class="si-i" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
           收入
         </div>
-        <div class="sval inc">¥{{ totalIncome.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+        <div class="sval">¥{{ totalIncome.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
       </div>
-      <div class="scard">
+      <div class="scard out">
         <div class="slbl">
           <svg class="si-e" viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
           支出
         </div>
-        <div class="sval exp">¥{{ totalExpense.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+        <div class="sval">¥{{ totalExpense.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
       </div>
     </div>
-    <div class="bcard-num">•••• •••• •••• 8826</div>
   </section>
 </template>
 
@@ -38,165 +38,149 @@ defineProps<{
 </script>
 
 <style scoped>
-/* Balance Card — Platinum Bank Card */
+/* ========== 黄铜浮雕优化版（方案1：提高对比度） ========== */
+
+/* 黄铜金属卡片主体 - 更亮背景 */
 .bcard {
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, .6) 0%, transparent 30%, transparent 70%, rgba(255, 255, 255, .3) 100%),
-    linear-gradient(160deg, #2C2926 0%, #3A3530 20%, #2F2B26 40%, #342F2A 60%, #28241F 80%, #1E1B17 100%);
-  border: 1px solid rgba(184, 134, 11, .25);
+    linear-gradient(145deg, rgba(255, 255, 255, .12) 0%, transparent 40%, rgba(0, 0, 0, .08) 100%),
+    linear-gradient(160deg, #E8D4B0 0%, #DCC4A0 15%, #C9B896 35%, #B8A67C 55%, #E8D4B0 75%, #DCC4A0 100%);
   border-radius: 20px;
-  padding: 24px 24px 20px;
+  padding: 16px 24px 18px;
   position: relative;
   overflow: hidden;
-  margin-bottom: 28px;
+  margin-bottom: 16px;
   box-shadow:
-    0 12px 40px rgba(0, 0, 0, .15),
-    0 4px 12px rgba(0, 0, 0, .1),
-    inset 0 1px 0 rgba(255, 255, 255, .12),
-    inset 0 -1px 0 rgba(0, 0, 0, .2);
+    0 8px 32px rgba(139, 105, 20, .30),
+    0 3px 10px rgba(0, 0, 0, .20),
+    inset 0 1px 0 rgba(255, 255, 255, .4),
+    inset 0 -1px 0 rgba(139, 105, 20, .25);
 }
 
-/* Holographic shimmer — platinum rainbow tint */
+/* 刷纹金属纹理 - 减淡 */
 .bcard::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(105deg,
-    transparent 15%,
-    rgba(184, 134, 11, .04) 30%,
-    rgba(212, 168, 83, .1) 38%,
-    rgba(180, 200, 220, .08) 44%,
-    rgba(184, 134, 11, .06) 52%,
-    transparent 65%
-  );
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, .08) 2px,
+      rgba(255, 255, 255, .08) 4px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0, 0, 0, .02) 3px,
+      rgba(0, 0, 0, .02) 6px
+    );
+  opacity: .10;
   pointer-events: none;
-  animation: cardShimmer 4s ease-in-out infinite alternate;
+  z-index: 0;
 }
 
-@keyframes cardShimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* Brushed metal texture */
+/* 光泽反射效果 - 增强 */
 .bcard::after {
   content: '';
   position: absolute;
-  inset: 0;
-  opacity: .06;
+  top: -30%;
+  left: -30%;
+  width: 160%;
+  height: 160%;
+  background: radial-gradient(ellipse at 35% 25%, rgba(255, 255, 255, .20) 0%, transparent 50%);
   pointer-events: none;
-  background-image: repeating-linear-gradient(
-    90deg, transparent, transparent 1px, rgba(255, 255, 255, .4) 1px, rgba(255, 255, 255, .4) 2px
-  );
-  background-size: 3px 3px;
+  z-index: 0;
 }
 
-/* Card chip */
-.bcard-chip {
-  width: 42px;
-  height: 32px;
-  border-radius: 6px;
-  background: linear-gradient(145deg, #E0C060, #D4A843, #C49A30, #D4A843);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .4);
+/* 顶部行 - 余额标题 + 芯片 */
+.bcard-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
   position: relative;
-  flex-shrink: 0;
+  z-index: 1;
 }
 
+/* 余额标签 - 深色文字 */
+.blbl {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3A2E1C;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .35);
+  position: relative;
+  z-index: 1;
+}
+
+/* 芯片（增强对比） */
+.bcard-chip {
+  width: 38px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(145deg, #F0E0C8, #D8C8A8, #C8B090, #D8C8A8);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, .35),
+    inset 0 1px 0 rgba(255, 255, 255, .6),
+    inset 0 -1px 0 rgba(139, 105, 20, .35);
+  position: relative;
+}
+
+/* 芯片内部方框图案 */
 .bcard-chip::before {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 28px;
-  height: 20px;
-  border: 1.5px solid rgba(139, 105, 20, .5);
+  width: 24px;
+  height: 18px;
+  border: 2px solid rgba(90, 74, 40, .5);
   border-radius: 3px;
 }
 
+/* 芯片内部竖线分隔 */
 .bcard-chip::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 12px;
-  height: 20px;
-  border: 1px solid rgba(139, 105, 20, .35);
-  border-radius: 2px;
+  width: 8px;
+  height: 18px;
+  border: 1px solid rgba(90, 74, 40, .25);
+  border-radius: 1px;
 }
 
-/* Card top row */
-.bcard-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  position: relative;
-  z-index: 1;
-}
-
-.bcard-brand {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(212, 168, 83, .6);
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  position: relative;
-  z-index: 1;
-}
-
-.bcard-contactless {
-  display: flex;
-  gap: 2px;
-  opacity: .4;
-}
-
-.bcard-contactless span {
-  display: block;
-  width: 3px;
-  height: 16px;
-  background: #D4A843;
-  border-radius: 2px;
-  transform: rotate(-30deg);
-}
-
-.blbl {
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(212, 168, 83, .7);
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-  position: relative;
-  z-index: 1;
-}
-
+/* 余额数字 - 深色文字 */
 .bamt {
-  font-family: 'DM Sans', 'Noto Sans SC', sans-serif;
-  font-size: 40px;
+  font-family: 'DM Sans', 'Outfit', sans-serif;
+  font-size: 36px;
   font-weight: 700;
-  color: #F5F2EC;
-  letter-spacing: -.03em;
-  line-height: 1.1;
-  margin-bottom: 16px;
+  color: #1A1510;
+  letter-spacing: -.02em;
+  line-height: 1.2;
+  margin-bottom: 14px;
   position: relative;
   z-index: 1;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, .3);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, .25),
+    0 2px 6px rgba(0, 0, 0, .12);
   font-variant-numeric: tabular-nums;
 }
 
 .bamt .cur {
-  font-size: 22px;
-  font-weight: 500;
+  font-size: 18px;
+  font-weight: 600;
+  color: #5A4A28;
   margin-right: 2px;
-  background: linear-gradient(180deg, #F0D080, #D4A843);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
+/* 收入支出容器 */
 .bstats {
   display: flex;
   gap: 10px;
@@ -204,67 +188,62 @@ defineProps<{
   z-index: 1;
 }
 
+/* 收入支出卡片 - 更亮的半透明白色背景 */
 .scard {
   flex: 1;
-  background: rgba(255, 255, 255, .06);
-  border: 1px solid rgba(255, 255, 255, .08);
-  border-radius: 14px;
   padding: 12px 14px;
-  transition: all .2s;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .25);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, .25),
+    inset 0 -2px 0 rgba(139, 105, 20, .15),
+    0 2px 6px rgba(139, 105, 20, .12);
+  transition: transform .2s, box-shadow .2s;
   cursor: pointer;
 }
 
 .scard:hover {
-  background: rgba(255, 255, 255, .1);
   transform: translateY(-1px);
-  border-color: rgba(255, 255, 255, .12);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, .3),
+    inset 0 -2px 0 rgba(139, 105, 20, .18),
+    0 4px 12px rgba(139, 105, 20, .18);
 }
 
+/* 标签 - 深色文字 */
 .slbl {
-  font-size: 10px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, .35);
-  letter-spacing: .03em;
+  font-size: 11px;
+  font-weight: 600;
+  color: #3A2E1C;
+  letter-spacing: .05em;
   margin-bottom: 5px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .slbl svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   fill: none;
-  stroke-width: 2;
+  stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.slbl .si-i { stroke: #5AE89C; }
-.slbl .si-e { stroke: #F06B7E; }
+.slbl .si-i { stroke: #3A9E7C; }
+.slbl .si-e { stroke: #C85A6E; }
 
+/* 数值 - 深色文字 */
 .sval {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'DM Sans', 'Outfit', sans-serif;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -.02em;
-  color: rgba(255, 255, 255, .9);
   font-variant-numeric: tabular-nums;
+  color: #1A1510;
 }
 
-.sval.inc { color: #5AE89C; }
-.sval.exp { color: #F06B7E; }
-
-/* Card number watermark */
-.bcard-num {
-  position: absolute;
-  bottom: 18px;
-  right: 24px;
-  font-family: 'DM Sans', monospace;
-  font-size: 13px;
-  font-weight: 400;
-  color: rgba(212, 168, 83, .1);
-  letter-spacing: .15em;
-  z-index: 0;
-}
+.scard.in .sval { color: #3A9E7C; }
+.scard.out .sval { color: #C85A6E; }
 </style>

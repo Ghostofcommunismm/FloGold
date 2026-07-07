@@ -19,12 +19,7 @@
 
       </div>
       <div class="date-box neumorph-pill" @click="showDatePicker = true">
-        <div class="date-text">
-          <span class="month">{{ currentMonth }}</span>
-          <svg class="date-chevron" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </div>
+        <span class="month">{{ currentMonth }}</span>
         <span class="year">{{ currentYearNum }}</span>
       </div>
       <div class="top-bar-right">
@@ -32,13 +27,6 @@
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
           </svg>
-        </div>
-        <div class="bell-box neumorph-circle" v-if="hasNotification">
-          <svg class="bell-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
-          <span class="bell-dot"></span>
         </div>
       </div>
     </header>
@@ -510,43 +498,46 @@
         </div>
       </section>
 
-      <!-- 记账热力图 -->
+      <!-- 记账热力图 (方案C: 液态金额条) -->
       <section v-reveal class="heatmap-section">
         <div class="section-header">
-          <h3 class="section-title">记账热力图</h3>
+          <h3 class="section-title">收支热力图</h3>
           <span class="heatmap-subtitle">{{ heatmapTitle }}</span>
+          <span class="heatmap-legend-inline">
+            <span class="legend-item income"><i class="legend-dot"></i>收入</span>
+            <span class="legend-item expense"><i class="legend-dot"></i>支出</span>
+          </span>
         </div>
-        <div class="heatmap-wrapper">
+        <div class="heatmap-wrapper liquid">
           <!-- 星期标题行 -->
           <div class="heatmap-weekdays-row">
             <span v-for="wd in ['一','二','三','四','五','六','日']" :key="wd" class="heatmap-wd-label">{{ wd }}</span>
           </div>
-          <!-- 日历网格（按行排列） -->
-          <div class="calendar-grid">
-            <template v-for="(row, ri) in heatmapCalendar" :key="ri">
-              <div
-                v-for="(day, di) in row"
-                :key="di"
-                class="heatmap-cell"
-                :class="[day.isPlaceholder ? 'placeholder' : 'level-' + day.level]"
-                :title="day.date && !day.isPlaceholder ? day.date + ' · ' + day.count + ' 笔' : ''"
-              >
-                <span v-if="day.date" class="cell-day-num">{{ day.date.split('/')[1] }}</span>
-              </div>
-            </template>
-          </div>
-          <!-- 图例 -->
-          <div class="heatmap-legend">
-            <span class="heat-legend-label">少</span>
-            <div class="heat-legend-cells">
-              <span class="heat-legend-dot level-0"></span>
-              <span class="heat-legend-dot level-1"></span>
-              <span class="heat-legend-dot level-2"></span>
-              <span class="heat-legend-dot level-3"></span>
-              <span class="heat-legend-dot level-4"></span>
+          <!-- 日历网格 -->
+          <div class="heatmap-days-grid">
+            <div
+              v-for="(cell, i) in heatmapCells"
+              :key="i"
+              class="heatmap-cell"
+              :class="{ placeholder: !cell }"
+              :style="cell ? heatmapCellStyle(cell) : {}"
+            >
+              <template v-if="cell">
+                <span class="cell-day-num">{{ cell.day }}</span>
+                <div class="cell-metrics">
+                  <span class="metric-bar income" :style="{ '--bar-w': heatmapBarWidth(cell.income, heatmapMaxIncome) }">
+                    <span class="metric-label">收</span>
+                    <span class="metric-val">{{ heatmapShortMoney(cell.income) }}</span>
+                  </span>
+                  <span class="metric-bar expense" :style="{ '--bar-w': heatmapBarWidth(cell.expense, heatmapMaxExpense) }">
+                    <span class="metric-label">支</span>
+                    <span class="metric-val">{{ heatmapShortMoney(cell.expense) }}</span>
+                  </span>
+                </div>
+              </template>
             </div>
-            <span class="heat-legend-label">多</span>
           </div>
+          <div class="heatmap-tip">条形越长越深，金额越高</div>
         </div>
       </section>
     </motion.section>
@@ -1868,82 +1859,95 @@ function onTrendLeave() {
   hoverIdx.value = null
 }
 
-// ========== 热力图 ==========
-interface HeatmapDay {
+// ========== 热力图 (方案C: 液态金额条) ==========
+interface HeatmapCell {
+  day: number
   date: string
-  count: number
-  level: number
-  isPlaceholder: boolean // 月份前的占位空白（隐藏）
+  income: number
+  expense: number
 }
 
-function buildDateCountMap(): Map<string, number> {
-  const map = new Map<string, number>()
+function buildDailyAmountMap(): Map<string, { income: number; expense: number }> {
+  const map = new Map<string, { income: number; expense: number }>()
   for (const tx of transactions.value) {
-    map.set(tx.date, (map.get(tx.date) || 0) + 1)
+    const entry = map.get(tx.date) || { income: 0, expense: 0 }
+    if (tx.type === 'income') entry.income += tx.amount
+    else entry.expense += tx.amount
+    map.set(tx.date, entry)
   }
   return map
 }
 
-const heatmapCalendar = computed<HeatmapDay[][]>(() => {
-  const dateMap = buildDateCountMap()
+const heatmapCells = computed<(HeatmapCell | null)[]>(() => {
+  const dailyMap = buildDailyAmountMap()
   const today = new Date()
-
   const year = today.getFullYear()
   const month = today.getMonth()
   const firstDay = new Date(year, month, 1)
   const daysInMonth = new Date(year, month + 1, 0).getDate()
-  let startWeekday = firstDay.getDay()
-  startWeekday = startWeekday === 0 ? 6 : startWeekday - 1
+  let startOffset = firstDay.getDay()
+  startOffset = startOffset === 0 ? 6 : startOffset - 1 // 周一为0
 
-  let maxCount = 1
-  dateMap.forEach((v, k) => {
-    if (k.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`) && v > maxCount) maxCount = v
-  })
+  const cells: (HeatmapCell | null)[] = []
 
-  const grid: HeatmapDay[][] = []
-  let week: HeatmapDay[] = []
+  // 前置空白格
+  for (let i = 0; i < startOffset; i++) cells.push(null)
 
-  for (let i = 0; i < startWeekday; i++) {
-    week.push({ date: '', count: 0, level: -1, isPlaceholder: true })
-  }
-
+  // 日期格子
   for (let d = 1; d <= daysInMonth; d++) {
-    const dd = new Date(year, month, d)
-    const isFuture = dd > today
     const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-    const count = isFuture ? 0 : (dateMap.get(dateKey) || 0)
-    let level = 0
-    if (!isFuture && count > 0) {
-      if (count >= maxCount * 0.75) level = 4
-      else if (count >= maxCount * 0.5) level = 3
-      else if (count >= maxCount * 0.25) level = 2
-      else level = 1
-    }
-    week.push({
-      date: `${String(month + 1).padStart(2, '0')}/${String(d).padStart(2, '0')}`,
-      count,
-      level,
-      isPlaceholder: false,
+    const data = dailyMap.get(dateKey) || { income: 0, expense: 0 }
+    cells.push({
+      day: d,
+      date: dateKey,
+      income: data.income,
+      expense: data.expense,
     })
-    if ((startWeekday + d - 1) % 7 === 6) {
-      grid.push(week)
-      week = []
-    }
   }
 
-  if (week.length > 0) {
-    while (week.length < 7) {
-      week.push({ date: '', count: 0, level: -1, isPlaceholder: true })
-    }
-    grid.push(week)
-  }
+  // 补齐7列
+  while (cells.length % 7 !== 0) cells.push(null)
 
-  return grid
+  return cells
 })
+
+const heatmapMaxIncome = computed(() => {
+  const amounts = heatmapCells.value.filter(c => c).map(c => c!.income)
+  return Math.max(1, ...amounts)
+})
+
+const heatmapMaxExpense = computed(() => {
+  const amounts = heatmapCells.value.filter(c => c).map(c => c!.expense)
+  return Math.max(1, ...amounts)
+})
+
+function heatmapAlpha(amount: number, max: number): string {
+  if (!amount) return '0.08'
+  return (0.18 + Math.pow(amount / max, 0.64) * 0.58).toFixed(3)
+}
+
+function heatmapBarWidth(amount: number, max: number): string {
+  if (!amount) return '12%'
+  return `${Math.max(20, Math.round((amount / max) * 100))}%`
+}
+
+function heatmapShortMoney(value: number): string {
+  if (!value) return '0'
+  if (value >= 10000) return `${(value / 10000).toFixed(1).replace('.0', '')}万`
+  if (value >= 1000) return `${(value / 1000).toFixed(1).replace('.0', '')}k`
+  return String(Math.round(value))
+}
+
+function heatmapCellStyle(cell: HeatmapCell) {
+  return {
+    '--ia': heatmapAlpha(cell.income, heatmapMaxIncome.value),
+    '--ea': heatmapAlpha(cell.expense, heatmapMaxExpense.value),
+  }
+}
 
 const heatmapTitle = computed(() => {
   const now = new Date()
-  return `${now.getMonth() + 1} 月`
+  return `${now.getFullYear()}年${now.getMonth() + 1}月`
 })
 
 // ========== "我的"页面 ==========
@@ -2382,29 +2386,60 @@ defineExpose({ deleteTransaction })
   align-items: center;
   justify-content: space-between;
   /* 负边际让模糊背景铺满整行（#app 左右各 20px padding） */
-  margin: 0 -20px;
-  padding: 4px 20px 12px;
-  padding-top: calc(env(safe-area-inset-top, 0px) + 4px);
+  margin: 0 -20px 20px;
+  padding: 4px 20px 0px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
   /* 透明态：无背景，仅靠安全区留白 */
   background: transparent;
   transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   border-bottom: 1px solid transparent;
 }
 
-/* 滚动后：毛玻璃模糊（类 iOS Apple Music 顶栏） */
+/* Apple风格渐变模糊：保持原有大小 */
+.top-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: -1;
+  /* 渐变模糊：初始状态就有模糊效果 */
+  background: rgba(249, 249, 249, 0.88);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* 底部渐变过渡层：从背景色渐变到透明 */
+.top-bar::after {
+  content: '';
+  position: absolute;
+  /* 在顶栏底部创建渐变过渡 */
+  top: 102%;
+  left: 0;
+  right: 0;
+  height: 20px;
+  /* 负边际延伸到顶栏外部 */
+  margin-top: -1px;
+  z-index: -1;
+  /* 从顶栏背景色渐变到透明 */
+  background: linear-gradient(to bottom, rgba(249, 249, 249, 0.88), rgba(249, 249, 249, 0));
+  pointer-events: none;
+}
+
+/* 滚动后：增加下边框分隔线 */
 .top-bar.scrolled {
-  background: rgba(245, 242, 236, 0.72);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.03);
 }
 
 /* 深色模式顶栏 */
+:root[data-theme="dark"] .top-bar::before {
+  background: rgba(45, 41, 37, 0.85);
+  -webkit-backdrop-filter: saturate(180%) blur(26px);
+  backdrop-filter: saturate(180%) blur(26px);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.15);
+}
 :root[data-theme="dark"] .top-bar.scrolled {
-  background: rgba(45, 41, 37, 0.75);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.12);
 }
 
 .top-bar-right {
@@ -2438,15 +2473,10 @@ defineExpose({ deleteTransaction })
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   padding: 6px 24px;
-  gap: 0;
-}
-.date-text {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 .date-box .month {
   font-size: 18px;
@@ -2454,20 +2484,9 @@ defineExpose({ deleteTransaction })
   color: var(--text-primary);
   letter-spacing: 1px;
 }
-.date-chevron {
-  color: var(--text-muted);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.date-box:hover .date-chevron {
-  transform: rotate(180deg) translateY(1px);
-}
-.date-box:active .date-chevron {
-  transform: rotate(180deg) translateY(2px) scale(0.92);
-}
 .date-box .year {
-  font-size: 11px;
+  font-size: 14px;
   color: var(--text-muted);
-  margin-top: -2px;
 }
 
 .bell-box {
@@ -3465,21 +3484,51 @@ defineExpose({ deleteTransaction })
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 -20px;
+  margin: 0 -20px 20px;
   padding: 8px 20px 16px;
   padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
-  background: rgba(245, 242, 236, 0.72);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
+  background: transparent;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.03);
+  /* Apple风格渐变模糊伪元素 */
+  isolation: isolate;
+}
+.stats-top-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: -1;
+  /* 渐变模糊：保持原有大小 */
+  background: rgba(249, 249, 249, 0.88);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* 底部渐变过渡层 */
+.stats-top-bar::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 20px;
+  margin-top: -1px;
+  z-index: -1;
+  /* 从顶栏背景色渐变到透明 */
+  background: linear-gradient(to bottom, rgba(249, 249, 249, 0.88), rgba(249, 249, 249, 0));
+  pointer-events: none;
 }
 
 /* 深色模式统计页顶栏 */
 :root[data-theme="dark"] .stats-top-bar {
-  background: rgba(45, 41, 37, 0.75);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.12);
+}
+:root[data-theme="dark"] .stats-top-bar::before {
+  background: rgba(45, 41, 37, 0.85);
+  -webkit-backdrop-filter: saturate(180%) blur(26px);
+  backdrop-filter: saturate(180%) blur(26px);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.15);
 }
 
 .stats-header-left {
@@ -4367,9 +4416,33 @@ defineExpose({ deleteTransaction })
 .legend-income { background: #7ecb7c; }
 .legend-expense { background: #e88b8b; }
 
-/* ========== 热力图 ========== */
+/* ========== 热力图 (方案C: 液态金额条) ========== */
 .heatmap-section {
   margin-bottom: 24px;
+}
+
+.heatmap-legend-inline {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+.heatmap-legend-inline .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.heatmap-legend-inline .legend-dot {
+  width: 10px;
+  height: 6px;
+  border-radius: 2px;
+}
+.heatmap-legend-inline .legend-item.income .legend-dot {
+  background: linear-gradient(90deg, rgba(126,203,124,0.7), rgba(126,203,124,0.2));
+}
+.heatmap-legend-inline .legend-item.expense .legend-dot {
+  background: linear-gradient(90deg, rgba(232,139,139,0.7), rgba(232,139,139,0.2));
 }
 
 .heatmap-subtitle {
@@ -4379,139 +4452,137 @@ defineExpose({ deleteTransaction })
 }
 
 .heatmap-wrapper {
-  padding: 14px 16px 12px;
+  padding: 14px 12px 10px;
   background: var(--bg-card);
   border-radius: 18px;
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 6px;
+}
+.heatmap-wrapper.liquid {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .heatmap-weekdays-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   width: 100%;
-  max-width: 320px;
   gap: 4px;
   margin-bottom: 4px;
 }
 
 .heatmap-wd-label {
   text-align: center;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
-  font-weight: 600;
-  line-height: 28px;
+  font-weight: 700;
+  line-height: 22px;
 }
 
-.calendar-grid {
+.heatmap-days-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
   width: 100%;
-  max-width: 320px;
 }
 
 .heatmap-cell {
-  aspect-ratio: 1 / 1;
-  border-radius: 10px;
   position: relative;
-  transition: transform 0.15s ease, opacity 0.2s ease;
-  animation: heatFadeIn 0.3s ease backwards;
+  min-height: 56px;
+  border-radius: 8px;
+  padding: 5px 4px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.heatmap-cell:hover {
-  transform: scale(1.2);
-  z-index: 1;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  font-variant-numeric: tabular-nums;
+  animation: heatFadeIn 0.3s ease backwards;
 }
 .heatmap-cell.placeholder {
   visibility: hidden;
 }
-.heatmap-cell.level-0 {
-  background: rgba(0, 0, 0, 0.03);
-}
-.heatmap-cell.level-1 {
-  background: rgba(212, 165, 116, 0.22);
-}
-.heatmap-cell.level-2 {
-  background: rgba(212, 165, 116, 0.45);
-}
-.heatmap-cell.level-3 {
-  background: rgba(212, 165, 116, 0.68);
-}
-.heatmap-cell.level-4 {
-  background: rgba(212, 165, 116, 0.92);
-  box-shadow: 0 0 8px rgba(212, 165, 116, 0.3);
+.heatmap-cell:not(.placeholder) {
+  background: rgba(255,255,255,0.52);
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 4px 10px rgba(91,78,61,0.06);
+  cursor: default;
 }
 
-/* 深色模式热力图 */
-:root[data-theme="dark"] .heatmap-cell.level-0 {
-  background: rgba(255, 255, 255, 0.05);
-}
-:root[data-theme="dark"] .heatmap-cell.level-1 {
-  background: rgba(212, 165, 116, 0.18);
-}
-:root[data-theme="dark"] .heatmap-cell.level-2 {
-  background: rgba(212, 165, 116, 0.38);
-}
-:root[data-theme="dark"] .heatmap-cell.level-3 {
-  background: rgba(212, 165, 116, 0.58);
-}
-:root[data-theme="dark"] .heatmap-cell.level-4 {
-  background: rgba(212, 165, 116, 0.82);
-  box-shadow: 0 0 8px rgba(212, 165, 116, 0.35);
-}
-:root[data-theme="dark"] .heatmap-cell.level-0 .cell-day-num {
-  color: rgba(255, 255, 255, 0.25);
+/* 深色模式 */
+:root[data-theme="dark"] .heatmap-cell:not(.placeholder) {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 10px rgba(0,0,0,0.12);
 }
 
 .cell-day-num {
-  font-size: 10px;
-  font-weight: 600;
-  color: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-primary);
   line-height: 1;
 }
-.heatmap-cell.level-0 .cell-day-num { color: rgba(0, 0, 0, 0.25); }
-.heatmap-cell:not(.placeholder):not(.level-0) .cell-day-num { color: #fff; }
 
-@keyframes heatFadeIn {
-  from { opacity: 0; transform: scale(0.5); }
-  to   { opacity: 1; transform: scale(1); }
+.cell-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
 }
-
-.heatmap-legend {
+.metric-bar {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 7px;
-  margin-top: 12px;
+  justify-content: space-between;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.28);
+  font-size: 8px;
+  line-height: 1.2;
+  font-weight: 600;
+  overflow: hidden;
 }
+.metric-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--bar-w);
+  border-radius: inherit;
+  opacity: 0.82;
+  z-index: 0;
+  transition: width 0.4s;
+}
+.metric-bar.income::before {
+  background: linear-gradient(90deg, rgba(126,203,124,var(--ia)), rgba(126,203,124,calc(var(--ia) * 0.2)));
+}
+.metric-bar.expense::before {
+  background: linear-gradient(90deg, rgba(232,139,139,var(--ea)), rgba(232,139,139,calc(var(--ea) * 0.2)));
+}
+.metric-bar.income { color: rgb(69,121,76); }
+.metric-bar.expense { color: rgb(176,79,86); }
 
-.heat-legend-label {
-  font-size: 11px;
+/* 深色模式条形 */
+:root[data-theme="dark"] .metric-bar {
+  background: rgba(255,255,255,0.1);
+}
+:root[data-theme="dark"] .metric-bar.income { color: #a8d1ad; }
+:root[data-theme="dark"] .metric-bar.expense { color: #f0a1a6; }
+
+.metric-label { z-index: 1; opacity: 0.9; }
+.metric-val { z-index: 1; font-weight: 700; }
+
+.heatmap-tip {
+  font-size: 10px;
   color: var(--text-muted);
-  font-weight: 500;
+  text-align: center;
 }
 
-.heat-legend-cells {
-  display: flex;
-  gap: 3px;
+@keyframes heatFadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
 }
-
-.heat-legend-dot {
-  width: 13px;
-  height: 13px;
-  border-radius: 3px;
-  display: inline-block;
-}
-.heat-legend-dot.level-0 { background: rgba(0, 0, 0, 0.04); }
-.heat-legend-dot.level-1 { background: rgba(212, 165, 116, 0.28); }
-.heat-legend-dot.level-2 { background: rgba(212, 165, 116, 0.50); }
-.heat-legend-dot.level-3 { background: rgba(212, 165, 116, 0.72); }
-.heat-legend-dot.level-4 { background: rgba(212, 165, 116, 0.95); }
 
 /* ========== "我的"页面 ========== */
 .profile-header {

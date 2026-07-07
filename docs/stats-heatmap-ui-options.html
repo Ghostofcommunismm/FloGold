@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>统计页日历热力图 UI 方案</title>
+  <style>
+    :root {
+      --page: #f4f1ea;
+      --paper: rgba(255, 253, 248, 0.82);
+      --paper-strong: #fffdf8;
+      --line: rgba(90, 77, 60, 0.12);
+      --ink: #312b24;
+      --muted: #82786c;
+      --soft: #b3aa9d;
+      --gold: 210, 160, 94;
+      --income: 112, 153, 116;
+      --expense: 201, 105, 111;
+      --shadow: 0 18px 50px rgba(83, 72, 56, 0.13), 0 3px 10px rgba(83, 72, 56, 0.08);
+      --small-shadow: 0 8px 24px rgba(83, 72, 56, 0.11);
+      font-family: "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--page);
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(135deg, rgba(255, 253, 247, 0.96) 0%, rgba(237, 244, 237, 0.78) 44%, rgba(248, 235, 234, 0.86) 100%),
+        var(--page);
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 40px 0 56px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 28px;
+      border-bottom: 1px solid rgba(84, 72, 58, 0.12);
+      padding-bottom: 22px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      height: 28px;
+      padding: 0 10px;
+      border: 1px solid rgba(var(--gold), 0.3);
+      border-radius: 8px;
+      color: #9c7245;
+      background: rgba(255, 249, 239, 0.76);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.12;
+      letter-spacing: 0;
+      font-weight: 850;
+    }
+
+    .hero p {
+      margin: 10px 0 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .hero-stats {
+      min-width: 246px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 253, 248, 0.66);
+      box-shadow: var(--small-shadow);
+    }
+
+    .hero-stat-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(84, 72, 58, 0.08);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hero-stat-line:last-child {
+      border-bottom: 0;
+    }
+
+    .hero-stat-line span:first-child {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .hero-stat-line strong {
+      font-size: 14px;
+    }
+
+    .positive {
+      color: rgb(var(--income));
+    }
+
+    .negative {
+      color: rgb(var(--expense));
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .option {
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      background: rgba(255, 253, 248, 0.78);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .option-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: start;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(84, 72, 58, 0.09);
+    }
+
+    .option-kicker {
+      display: block;
+      color: #a97845;
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .option h2 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .option-desc {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 26px;
+      padding: 0 9px;
+      border-radius: 8px;
+      background: rgba(var(--gold), 0.12);
+      color: #976d3d;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .mock {
+      padding: 16px;
+    }
+
+    .month-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .month-title {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .month-title strong {
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .month-title span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .month-balance {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .month-balance span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .month-balance strong {
+      font-size: 18px;
+      line-height: 1.25;
+      color: rgb(var(--income));
+    }
+
+    .weekday-row,
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 5px;
+    }
+
+    .weekday-row {
+      margin-bottom: 6px;
+    }
+
+    .weekday-row span {
+      text-align: center;
+      font-size: 11px;
+      line-height: 24px;
+      font-weight: 800;
+      color: var(--soft);
+    }
+
+    .day-cell {
+      position: relative;
+      isolation: isolate;
+      min-height: 66px;
+      border-radius: 8px;
+      padding: 7px 5px 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .day-cell.placeholder {
+      visibility: hidden;
+    }
+
+    .day-no {
+      position: relative;
+      z-index: 2;
+      display: block;
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 850;
+    }
+
+    .metrics {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .metric {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 9px;
+      line-height: 1.12;
+      font-weight: 760;
+    }
+
+    .metric.income {
+      color: rgb(69, 121, 76);
+    }
+
+    .metric.expense {
+      color: rgb(176, 79, 86);
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 13px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .legend-pair {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .legend-ramp {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .ramp-dot {
+      display: block;
+      width: 13px;
+      height: 9px;
+      border-radius: 3px;
+    }
+
+    .ramp-dot.in-1 { background: rgba(var(--income), 0.18); }
+    .ramp-dot.in-2 { background: rgba(var(--income), 0.38); }
+    .ramp-dot.in-3 { background: rgba(var(--income), 0.62); }
+    .ramp-dot.out-1 { background: rgba(var(--expense), 0.18); }
+    .ramp-dot.out-2 { background: rgba(var(--expense), 0.38); }
+    .ramp-dot.out-3 { background: rgba(var(--expense), 0.62); }
+
+    .dual .day-cell {
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      background:
+        linear-gradient(145deg, rgba(var(--income), var(--ia)) 0%, rgba(var(--income), calc(var(--ia) * 0.72)) 44%, rgba(var(--expense), calc(var(--ea) * 0.66)) 45%, rgba(var(--expense), var(--ea)) 100%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.4));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 5px 14px rgba(68, 58, 46, calc(var(--heat) * 0.12));
+    }
+
+    .dual .day-cell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), transparent 44%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .dual .day-no {
+      color: rgba(49, 43, 36, 0.88);
+    }
+
+    .ledger .mock {
+      background: linear-gradient(180deg, rgba(255, 253, 248, 0.65), rgba(249, 245, 237, 0.7));
+    }
+
+    .ledger .day-cell {
+      background: rgba(255, 255, 252, 0.78);
+      border: 1px solid rgba(84, 72, 58, 0.08);
+      box-shadow: inset 4px 0 0 rgba(var(--income), var(--ia)), inset -4px 0 0 rgba(var(--expense), var(--ea));
+    }
+
+    .ledger .day-cell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(var(--income), calc(var(--ia) * 0.38)), transparent 40%),
+        linear-gradient(270deg, rgba(var(--expense), calc(var(--ea) * 0.38)), transparent 40%);
+      z-index: 0;
+    }
+
+    .ledger .day-no {
+      color: #3b332a;
+    }
+
+    .ledger .metric {
+      padding-left: 3px;
+    }
+
+    .liquid .mock {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.64), rgba(246, 242, 234, 0.72));
+    }
+
+    .liquid .day-cell {
+      background: rgba(255, 255, 255, 0.56);
+      border: 1px solid rgba(255, 255, 255, 0.74);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 6px 16px rgba(91, 78, 61, 0.08);
+      backdrop-filter: blur(16px);
+    }
+
+    .liquid .metric {
+      position: relative;
+      padding: 3px 4px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.34);
+    }
+
+    .liquid .metric::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: var(--bar-w);
+      border-radius: inherit;
+      opacity: 0.86;
+      z-index: -1;
+    }
+
+    .liquid .metric.income::before {
+      background: linear-gradient(90deg, rgba(var(--income), var(--ia)), rgba(var(--income), calc(var(--ia) * 0.24)));
+    }
+
+    .liquid .metric.expense::before {
+      background: linear-gradient(90deg, rgba(var(--expense), var(--ea)), rgba(var(--expense), calc(var(--ea) * 0.24)));
+    }
+
+    .liquid .metric.income {
+      --bar-w: var(--in-w);
+    }
+
+    .liquid .metric.expense {
+      --bar-w: var(--out-w);
+    }
+
+    .liquid .day-no {
+      color: #2f2921;
+    }
+
+    .dark-shell {
+      background: #1f1b17;
+      border-color: rgba(255, 255, 255, 0.08);
+      color: #f6efe3;
+      box-shadow: 0 22px 58px rgba(24, 20, 16, 0.28);
+    }
+
+    .dark-shell .option-header {
+      border-bottom-color: rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+    }
+
+    .dark-shell .option-kicker,
+    .dark-shell .option-desc,
+    .dark-shell .month-title span,
+    .dark-shell .weekday-row span,
+    .dark-shell .legend,
+    .dark-shell .month-balance span {
+      color: rgba(246, 239, 227, 0.58);
+    }
+
+    .dark-shell .tag {
+      background: rgba(255, 216, 156, 0.12);
+      color: #e7bd80;
+    }
+
+    .dark .mock {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012));
+    }
+
+    .dark .day-cell {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background:
+        linear-gradient(135deg, rgba(var(--income), calc(var(--ia) * 0.7)), rgba(255, 255, 255, 0.035) 46%, rgba(var(--expense), calc(var(--ea) * 0.7))),
+        #27221c;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 7px 18px rgba(0, 0, 0, calc(var(--heat) * 0.22));
+    }
+
+    .dark .day-cell::after {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, calc(0.04 + var(--heat) * 0.05));
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .dark .day-no {
+      color: #fff8eb;
+    }
+
+    .dark .metric.income {
+      color: #a8d1ad;
+    }
+
+    .dark .metric.expense {
+      color: #f0a1a6;
+    }
+
+    .recommend {
+      margin-top: 22px;
+      padding: 17px 18px;
+      border-radius: 8px;
+      border: 1px solid rgba(84, 72, 58, 0.1);
+      background: rgba(255, 253, 248, 0.72);
+      box-shadow: var(--small-shadow);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .recommend strong {
+      color: var(--ink);
+    }
+
+    @media (max-width: 960px) {
+      .hero,
+      .option-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-stats {
+        min-width: 0;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .page {
+        width: min(100% - 20px, 440px);
+        padding: 22px 0 36px;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      .option-header {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .mock {
+        padding: 12px;
+      }
+
+      .weekday-row,
+      .calendar {
+        gap: 4px;
+      }
+
+      .day-cell {
+        min-height: 59px;
+        padding: 6px 3px 5px;
+        gap: 3px;
+      }
+
+      .metric {
+        font-size: 8px;
+      }
+
+      .legend {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div>
+        <span class="eyebrow">FloGold / 统计热力图升级</span>
+        <h1>日期、收入、支出与金额热度合并在同一张月历里</h1>
+        <p>以下四个方案使用同一组模拟账单数据：每一天都在日期下方显示当天收入与支出，颜色深浅分别映射收入和支出金额，适合直接作为统计页热力图的视觉参考。</p>
+      </div>
+      <aside class="hero-stats" aria-label="月度概览">
+        <div class="hero-stat-line"><span>本月收入</span><strong class="positive" id="heroIncome">¥0</strong></div>
+        <div class="hero-stat-line"><span>本月支出</span><strong class="negative" id="heroExpense">¥0</strong></div>
+        <div class="hero-stat-line"><span>月度结余</span><strong id="heroBalance">¥0</strong></div>
+      </aside>
+    </section>
+
+    <section class="option-grid">
+      <article class="option dual" data-calendar="dual">
+        <header class="option-header">
+          <div>
+            <span class="option-kicker">方案 A</span>
+            <h2>双温层磁片</h2>
+            <p class="option-desc">收入从左上渗入，支出从右下叠加。适合保留现有暖色、柔和、轻拟物气质。</p>
+          </div>
+          <span class="tag">推荐改造成本低</span>
+        </header>
+        <div class="mock">
+          <div class="month-head">
+            <div class="month-title"><strong>2026 年 7 月</strong><span>收支热力月历</span></div>
+            <div class="month-balance"><span>结余</span><strong data-balance>¥0</strong></div>
+          </div>
+          <div class="weekday-row" data-weekdays></div>
+          <div class="calendar" data-days></div>
+          <div class="legend">
+            <span>颜色越深，金额越高</span>
+            <div class="legend-pair">
+              <span class="legend-item">收入 <span class="legend-ramp"><i class="ramp-dot in-1"></i><i class="ramp-dot in-2"></i><i class="ramp-dot in-3"></i></span></span>
+              <span class="legend-item">支出 <span class="legend-ramp"><i class="ramp-dot out-1"></i><i class="ramp-dot out-2"></i><i class="ramp-dot out-3"></i></span></span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="option ledger" data-calendar="ledger">
+        <header class="option-header">
+          <div>
+            <span class="option-kicker">方案 B</span>
+            <h2>账本分栏</h2>
+            <p class="option-desc">左右边栏分别表达收入与支出热度，正文更像高级账本，阅读日期和金额最稳。</p>
+          </div>
+          <span class="tag">可读性最高</span>
+        </header>
+        <div class="mock">
+          <div class="month-head">
+            <div class="month-title"><strong>2026 年 7 月</strong><span>每日收支分布</span></div>
+            <div class="month-balance"><span>结余</span><strong data-balance>¥0</strong></div>
+          </div>
+          <div class="weekday-row" data-weekdays></div>
+          <div class="calendar" data-days></div>
+          <div class="legend">
+            <span>左绿为收入，右红为支出</span>
+            <div class="legend-pair">
+              <span class="legend-item">收入 <span class="legend-ramp"><i class="ramp-dot in-1"></i><i class="ramp-dot in-2"></i><i class="ramp-dot in-3"></i></span></span>
+              <span class="legend-item">支出 <span class="legend-ramp"><i class="ramp-dot out-1"></i><i class="ramp-dot out-2"></i><i class="ramp-dot out-3"></i></span></span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="option liquid" data-calendar="liquid">
+        <header class="option-header">
+          <div>
+            <span class="option-kicker">方案 C</span>
+            <h2>液态金额条</h2>
+            <p class="option-desc">收入、支出各自有一条柔和填充条，金额大小同时由长度和深浅表达，信息密度更精致。</p>
+          </div>
+          <span class="tag">交互扩展性好</span>
+        </header>
+        <div class="mock">
+          <div class="month-head">
+            <div class="month-title"><strong>2026 年 7 月</strong><span>金额强弱对照</span></div>
+            <div class="month-balance"><span>结余</span><strong data-balance>¥0</strong></div>
+          </div>
+          <div class="weekday-row" data-weekdays></div>
+          <div class="calendar" data-days></div>
+          <div class="legend">
+            <span>条形越长越深，金额越高</span>
+            <div class="legend-pair">
+              <span class="legend-item">收入 <span class="legend-ramp"><i class="ramp-dot in-1"></i><i class="ramp-dot in-2"></i><i class="ramp-dot in-3"></i></span></span>
+              <span class="legend-item">支出 <span class="legend-ramp"><i class="ramp-dot out-1"></i><i class="ramp-dot out-2"></i><i class="ramp-dot out-3"></i></span></span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="option dark-shell dark" data-calendar="dark">
+        <header class="option-header">
+          <div>
+            <span class="option-kicker">方案 D</span>
+            <h2>暗色金属盘</h2>
+            <p class="option-desc">更适合夜间模式或统计分析强化版，深色底让高金额日期具有金融仪表感。</p>
+          </div>
+          <span class="tag">质感最强</span>
+        </header>
+        <div class="mock">
+          <div class="month-head">
+            <div class="month-title"><strong>2026 年 7 月</strong><span>Dark analytics</span></div>
+            <div class="month-balance"><span>结余</span><strong data-balance>¥0</strong></div>
+          </div>
+          <div class="weekday-row" data-weekdays></div>
+          <div class="calendar" data-days></div>
+          <div class="legend">
+            <span>亮度和饱和度同步增强</span>
+            <div class="legend-pair">
+              <span class="legend-item">收入 <span class="legend-ramp"><i class="ramp-dot in-1"></i><i class="ramp-dot in-2"></i><i class="ramp-dot in-3"></i></span></span>
+              <span class="legend-item">支出 <span class="legend-ramp"><i class="ramp-dot out-1"></i><i class="ramp-dot out-2"></i><i class="ramp-dot out-3"></i></span></span>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="recommend">
+      <strong>落地建议：</strong>如果只替换当前统计页热力图，优先选方案 A 或 B；如果希望后续点击某天展开明细、对比收入支出结构，方案 C 的扩展空间最好。
+    </section>
+  </main>
+
+  <script>
+    const year = 2026;
+    const month = 6;
+    const weekdays = ["一", "二", "三", "四", "五", "六", "日"];
+    const sample = {
+      "2026-07-01": { income: 0, expense: 328 },
+      "2026-07-02": { income: 0, expense: 86 },
+      "2026-07-03": { income: 1200, expense: 452 },
+      "2026-07-04": { income: 0, expense: 780 },
+      "2026-07-05": { income: 0, expense: 134 },
+      "2026-07-06": { income: 3500, expense: 98 },
+      "2026-07-07": { income: 0, expense: 266 },
+      "2026-07-08": { income: 0, expense: 58 },
+      "2026-07-09": { income: 280, expense: 421 },
+      "2026-07-10": { income: 0, expense: 1160 },
+      "2026-07-11": { income: 0, expense: 520 },
+      "2026-07-12": { income: 0, expense: 72 },
+      "2026-07-13": { income: 600, expense: 208 },
+      "2026-07-14": { income: 0, expense: 319 },
+      "2026-07-15": { income: 15000, expense: 860 },
+      "2026-07-16": { income: 0, expense: 155 },
+      "2026-07-17": { income: 0, expense: 2680 },
+      "2026-07-18": { income: 0, expense: 390 },
+      "2026-07-19": { income: 0, expense: 620 },
+      "2026-07-20": { income: 1800, expense: 118 },
+      "2026-07-21": { income: 0, expense: 244 },
+      "2026-07-22": { income: 0, expense: 74 },
+      "2026-07-23": { income: 5200, expense: 502 },
+      "2026-07-24": { income: 0, expense: 1360 },
+      "2026-07-25": { income: 0, expense: 288 },
+      "2026-07-26": { income: 0, expense: 92 },
+      "2026-07-27": { income: 0, expense: 198 },
+      "2026-07-28": { income: 800, expense: 488 },
+      "2026-07-29": { income: 0, expense: 142 },
+      "2026-07-30": { income: 0, expense: 66 },
+      "2026-07-31": { income: 3200, expense: 720 }
+    };
+
+    const values = Object.values(sample);
+    const maxIncome = Math.max(1, ...values.map((day) => day.income));
+    const maxExpense = Math.max(1, ...values.map((day) => day.expense));
+    const totalIncome = values.reduce((sum, day) => sum + day.income, 0);
+    const totalExpense = values.reduce((sum, day) => sum + day.expense, 0);
+
+    function keyFor(day) {
+      return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+
+    function alpha(value, max) {
+      if (!value) return "0.055";
+      return (0.12 + Math.pow(value / max, 0.64) * 0.62).toFixed(3);
+    }
+
+    function heat(income, expense) {
+      return Math.max(income / maxIncome, expense / maxExpense).toFixed(3);
+    }
+
+    function width(value, max) {
+      if (!value) return "0%";
+      return `${Math.max(18, Math.round((value / max) * 100))}%`;
+    }
+
+    function shortMoney(value) {
+      if (!value) return "0";
+      if (value >= 10000) return `${(value / 10000).toFixed(1).replace(".0", "")}万`;
+      if (value >= 1000) return `${(value / 1000).toFixed(1).replace(".0", "")}k`;
+      return String(Math.round(value));
+    }
+
+    function fullMoney(value) {
+      return `¥${Math.round(value).toLocaleString("zh-CN")}`;
+    }
+
+    function calendarDays() {
+      const result = [];
+      const first = new Date(year, month, 1);
+      const start = (first.getDay() + 6) % 7;
+      const count = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < start; i += 1) {
+        result.push(null);
+      }
+      for (let day = 1; day <= count; day += 1) {
+        result.push(day);
+      }
+      while (result.length % 7 !== 0) {
+        result.push(null);
+      }
+      return result;
+    }
+
+    function renderWeekdays(root) {
+      root.innerHTML = weekdays.map((day) => `<span>${day}</span>`).join("");
+    }
+
+    function renderCalendar(section) {
+      section.querySelectorAll("[data-weekdays]").forEach(renderWeekdays);
+      const calendar = section.querySelector("[data-days]");
+      calendar.innerHTML = calendarDays().map((day) => {
+        if (!day) return '<div class="day-cell placeholder"></div>';
+        const data = sample[keyFor(day)] || { income: 0, expense: 0 };
+        const style = [
+          `--ia:${alpha(data.income, maxIncome)}`,
+          `--ea:${alpha(data.expense, maxExpense)}`,
+          `--heat:${heat(data.income, data.expense)}`,
+          `--in-w:${width(data.income, maxIncome)}`,
+          `--out-w:${width(data.expense, maxExpense)}`
+        ].join(";");
+
+        return `
+          <div class="day-cell" style="${style}" title="7月${day}日 收入 ${fullMoney(data.income)}，支出 ${fullMoney(data.expense)}">
+            <span class="day-no">${day}</span>
+            <span class="metrics">
+              <span class="metric income">收${shortMoney(data.income)}</span>
+              <span class="metric expense">支${shortMoney(data.expense)}</span>
+            </span>
+          </div>
+        `;
+      }).join("");
+
+      const balance = section.querySelector("[data-balance]");
+      if (balance) balance.textContent = fullMoney(totalIncome - totalExpense);
+    }
+
+    document.querySelectorAll("[data-calendar]").forEach(renderCalendar);
+    document.getElementById("heroIncome").textContent = fullMoney(totalIncome);
+    document.getElementById("heroExpense").textContent = fullMoney(totalExpense);
+    document.getElementById("heroBalance").textContent = fullMoney(totalIncome - totalExpense);
+  </script>
+</body>
+</html>

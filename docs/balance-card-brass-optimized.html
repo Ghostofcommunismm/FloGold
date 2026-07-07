@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>黄铜余额卡片优化方案</title>
+  
+  <!-- 字体引入 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+      background: linear-gradient(135deg, #f5f6fa 0%, #e8e9ed 100%);
+      padding: 20px;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 24px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 40px 0 20px 0;
+      padding-left: 12px;
+      border-left: 4px solid #b48a3e;
+      color: #2a2a2a;
+    }
+    
+    .card-wrapper {
+      margin-bottom: 30px;
+    }
+    
+    .card-label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 12px;
+      font-weight: 500;
+      background: rgba(180, 138, 62, 0.1);
+      padding: 8px 12px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+    
+    /* ========== 方案 1: 提高对比度（深色文字） ========== */
+    .balance-card-v1 {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, .12) 0%, transparent 40%, rgba(0, 0, 0, .08) 100%),
+        linear-gradient(160deg, #E8D4B0 0%, #DCC4A0 15%, #C9B896 35%, #B8A67C 55%, #E8D4B0 75%, #DCC4A0 100%);
+      border-radius: 20px;
+      padding: 20px 24px 18px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 8px 32px rgba(139, 105, 20, .30),
+        0 3px 10px rgba(0, 0, 0, .20),
+        inset 0 1px 0 rgba(255, 255, 255, .4),
+        inset 0 -1px 0 rgba(139, 105, 20, .25);
+    }
+    
+    .balance-card-v1::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 255, 255, .08) 2px, rgba(255, 255, 255, .08) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 0, 0, .02) 3px, rgba(0, 0, 0, .02) 6px);
+      opacity: .10;
+      pointer-events: none;
+    }
+    
+    .balance-card-v1::after {
+      content: '';
+      position: absolute;
+      top: -30%; left: -30%;
+      width: 160%; height: 160%;
+      background: radial-gradient(ellipse at 35% 25%, rgba(255, 255, 255, .20) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    
+    .v1-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v1-brand {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: #5A4A28;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .5);
+    }
+    
+    .v1-chip {
+      width: 38px;
+      height: 28px;
+      border-radius: 6px;
+      background: linear-gradient(145deg, #F0E0C8, #D8C8A8, #C8B090, #D8C8A8);
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, .35),
+        inset 0 1px 0 rgba(255, 255, 255, .6),
+        inset 0 -1px 0 rgba(139, 105, 20, .35);
+      position: relative;
+    }
+    
+    .v1-chip::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 24px; height: 18px;
+      border: 2px solid rgba(90, 74, 40, .5);
+      border-radius: 3px;
+    }
+    
+    .v1-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #3A2E1C;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .35);
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v1-amount {
+      font-family: 'DM Sans', 'Outfit', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: #1A1510;
+      letter-spacing: -.02em;
+      line-height: 1.2;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .25), 0 2px 6px rgba(0, 0, 0, .12);
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .v1-amount .currency {
+      font-size: 18px;
+      font-weight: 600;
+      color: #5A4A28;
+      margin-right: 2px;
+    }
+    
+    .v1-stats {
+      display: flex;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v1-stat {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .25);
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, .25),
+        inset 0 -2px 0 rgba(139, 105, 20, .15),
+        0 2px 6px rgba(139, 105, 20, .12);
+    }
+    
+    .v1-stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #3A2E1C;
+      letter-spacing: .05em;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .v1-stat-label svg {
+      width: 14px; height: 14px;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .v1-stat-label svg.up { stroke: #3A9E7C; }
+    .v1-stat-label svg.down { stroke: #C85A6E; }
+    
+    .v1-stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      font-variant-numeric: tabular-nums;
+      color: #1A1510;
+    }
+    
+    .v1-stat.income .v1-stat-value { color: #3A9E7C; }
+    .v1-stat.expense .v1-stat-value { color: #C85A6E; }
+    
+    /* ========== 方案 2: 更亮的底色 + 清晰分隔 ========== */
+    .balance-card-v2 {
+      background:
+        linear-gradient(145deg, #F8F0E0 0%, #F0E8D8 30%, #E8DCC8 60%, #E0D4B8 100%);
+      border-radius: 22px;
+      padding: 22px 26px 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 10px 40px rgba(139, 105, 20, .35),
+        0 4px 12px rgba(0, 0, 0, .15),
+        inset 0 2px 0 rgba(255, 255, 255, .6),
+        inset 0 -2px 0 rgba(139, 105, 20, .2);
+      border: 2px solid rgba(180, 138, 62, .3);
+    }
+    
+    .balance-card-v2::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/><feColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.35  0 0 0 0 0.18  0 0 0 0.08 0'/></filter><rect width='300' height='300' filter='url(%23p)'/></svg>");
+      opacity: .15;
+      pointer-events: none;
+      mix-blend-mode: multiply;
+    }
+    
+    .v2-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v2-brand {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      color: #6A5038;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      background: rgba(180, 138, 62, .15);
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(180, 138, 62, .25);
+    }
+    
+    .v2-chip {
+      width: 40px;
+      height: 30px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #F8E8C8, #E0D0A8);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
+      position: relative;
+      border: 1px solid rgba(180, 138, 62, .3);
+    }
+    
+    .v2-chip::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 26px; height: 20px;
+      border: 2px solid rgba(100, 74, 40, .55);
+      border-radius: 3px;
+    }
+    
+    .v2-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6A5038;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v2-amount {
+      font-family: 'Outfit', sans-serif;
+      font-size: 42px;
+      font-weight: 700;
+      color: #2A1E12;
+      letter-spacing: -.03em;
+      line-height: 1.1;
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .v2-amount .currency {
+      font-size: 20px;
+      font-weight: 600;
+      color: #6A5038;
+    }
+    
+    .v2-divider {
+      height: 2px;
+      background: linear-gradient(90deg, rgba(180, 138, 62, .4), transparent 80%);
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+      border-radius: 2px;
+    }
+    
+    .v2-stats {
+      display: flex;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v2-stat {
+      flex: 1;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, .45);
+      border: 2px solid rgba(180, 138, 62, .2);
+      box-shadow: 0 2px 8px rgba(139, 105, 20, .15);
+    }
+    
+    .v2-stat-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .v2-stat-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: rgba(180, 138, 62, .15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    
+    .v2-stat-icon.up { background: rgba(58, 158, 124, .2); color: #3A9E7C; }
+    .v2-stat-icon.down { background: rgba(200, 90, 110, .2); color: #C85A6E; }
+    
+    .v2-stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6A5038;
+      letter-spacing: .08em;
+    }
+    
+    .v2-stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #2A1E12;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -.02em;
+    }
+    
+    .v2-stat.income .v2-stat-value { color: #3A9E7C; }
+    .v2-stat.expense .v2-stat-value { color: #C85A6E; }
+    
+    /* ========== 方案 3: 简化纹理 + 大号文字 ========== */
+    .balance-card-v3 {
+      background: linear-gradient(135deg, #EADCC8 0%, #D8C8A8 50%, #C8B898 100%);
+      border-radius: 24px;
+      padding: 24px 28px 22px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 12px 48px rgba(139, 105, 20, .40),
+        0 5px 15px rgba(0, 0, 0, .20),
+        inset 0 1px 0 rgba(255, 255, 255, .5);
+      border: 1px solid rgba(180, 138, 62, .4);
+    }
+    
+    .balance-card-v3::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 40%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, .3) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    
+    .v3-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v3-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #4A3520;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .v3-title-bar {
+      width: 18px;
+      height: 3px;
+      background: linear-gradient(90deg, #B48A3E, transparent);
+      border-radius: 3px;
+    }
+    
+    .v3-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #F8E8D0, #E0D0B0);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .v3-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #6A5540;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v3-amount {
+      font-family: 'Outfit', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      color: #1A1208;
+      letter-spacing: -.04em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .v3-amount .currency {
+      font-size: 24px;
+      font-weight: 600;
+      color: #6A5540;
+      margin-right: 4px;
+    }
+    
+    .v3-stats {
+      display: flex;
+      gap: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v3-stat {
+      flex: 1;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .35);
+      border: 1px solid rgba(180, 138, 62, .3);
+      box-shadow: 0 3px 12px rgba(139, 105, 20, .18);
+    }
+    
+    .v3-stat-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .v3-stat-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    
+    .v3-stat-icon.income { background: rgba(58, 158, 124, .25); color: #3A9E7C; }
+    .v3-stat-icon.expense { background: rgba(200, 90, 110, .25); color: #C85A6E; }
+    
+    .v3-stat-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #4A3520;
+      letter-spacing: .06em;
+    }
+    
+    .v3-stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #1A1208;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .v3-stat.income .v3-stat-value { color: #3A9E7C; }
+    .v3-stat.expense .v3-stat-value { color: #C85A6E; }
+    
+    /* ========== 方案 4: 黄铜 + 白色卡片分隔 ========== */
+    .balance-card-v4 {
+      background: linear-gradient(135deg, #D4BC90 0%, #C9B896 50%, #B8A67C 100%);
+      border-radius: 22px;
+      padding: 18px 20px 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 10px 40px rgba(139, 105, 20, .35),
+        0 4px 12px rgba(0, 0, 0, .15),
+        inset 0 1px 0 rgba(255, 255, 255, .4);
+      border: 1px solid rgba(180, 138, 62, .35);
+    }
+    
+    .balance-card-v4::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, .06) 3px, rgba(255, 255, 255, .06) 6px),
+        repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(0, 0, 0, .02) 4px, rgba(0, 0, 0, .02) 8px);
+      opacity: .08;
+      pointer-events: none;
+    }
+    
+    .v4-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v4-brand {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      color: #2A1E12;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    
+    .v4-chip {
+      width: 36px;
+      height: 26px;
+      border-radius: 5px;
+      background: linear-gradient(145deg, #F0E0C0, #D8C0A0);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, .3);
+      position: relative;
+    }
+    
+    .v4-chip::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 22px; height: 16px;
+      border: 2px solid rgba(90, 74, 40, .5);
+      border-radius: 2px;
+    }
+    
+    .v4-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #2A1E12;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v4-amount {
+      font-family: 'Outfit', sans-serif;
+      font-size: 34px;
+      font-weight: 700;
+      color: #1A1208;
+      letter-spacing: -.03em;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .v4-amount .currency {
+      font-size: 17px;
+      font-weight: 600;
+      color: #3A2E1C;
+    }
+    
+    .v4-stats {
+      display: flex;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v4-stat {
+      flex: 1;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #ffffff;
+      border: 1px solid rgba(180, 138, 62, .2);
+      box-shadow: 0 2px 8px rgba(139, 105, 20, .15);
+    }
+    
+    .v4-stat-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .v4-stat-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    
+    .v4-stat-icon.income { background: rgba(58, 158, 124, .15); color: #3A9E7C; }
+    .v4-stat-icon.expense { background: rgba(200, 90, 110, .15); color: #C85A6E; }
+    
+    .v4-stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6A6A6A;
+      letter-spacing: .08em;
+    }
+    
+    .v4-stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a1a;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .v4-stat.income .v4-stat-value { color: #3A9E7C; }
+    .v4-stat.expense .v4-stat-value { color: #C85A6E; }
+    
+    /* ========== 方案 5: 渐变金 + 深色文字 ========== */
+    .balance-card-v5 {
+      background: linear-gradient(135deg,
+        #F8E8D0 0%,
+        #EADCC0 20%,
+        #D8C8A8 40%,
+        #C8B890 60%,
+        #B8A878 80%,
+        #A89860 100%);
+      border-radius: 24px;
+      padding: 24px 28px 22px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 12px 48px rgba(139, 105, 20, .45),
+        0 6px 18px rgba(0, 0, 0, .20),
+        inset 0 2px 0 rgba(255, 255, 255, .5),
+        inset 0 -2px 0 rgba(139, 105, 20, .2);
+      border: 2px solid rgba(180, 138, 62, .4);
+    }
+    
+    .balance-card-v5::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, .35) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    
+    .v5-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v5-brand {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: #4A3520;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .v5-brand-dot {
+      width: 6px;
+      height: 6px;
+      background: #B48A3E;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #B48A3E;
+    }
+    
+    .v5-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      color: #4A3520;
+      background: rgba(255, 255, 255, .25);
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(180, 138, 62, .2);
+    }
+    
+    .v5-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #5A4530;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v5-amount {
+      font-family: 'Outfit', sans-serif;
+      font-size: 44px;
+      font-weight: 700;
+      color: #1A1208;
+      letter-spacing: -.04em;
+      line-height: 1.1;
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, .15);
+    }
+    
+    .v5-amount .currency {
+      font-size: 22px;
+      font-weight: 600;
+      color: #6A5038;
+      background: linear-gradient(180deg, #B48A3E, #8B6914);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .v5-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(180, 138, 62, .4), transparent);
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v5-stats {
+      display: flex;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v5-stat {
+      flex: 1;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .55);
+      border: 1px solid rgba(255, 255, 255, .6);
+      box-shadow: 0 3px 12px rgba(139, 105, 20, .20);
+    }
+    
+    .v5-stat-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .v5-stat-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    
+    .v5-stat-icon.income { background: rgba(58, 158, 124, .2); color: #3A9E7C; }
+    .v5-stat-icon.expense { background: rgba(200, 90, 110, .2); color: #C85A6E; }
+    
+    .v5-stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #5A4530;
+      letter-spacing: .08em;
+    }
+    
+    .v5-stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #1A1208;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -.02em;
+    }
+    
+    .v5-stat.income .v5-stat-value { color: #3A9E7C; }
+    .v5-stat.expense .v5-stat-value { color: #C85A6E; }
+    
+    /* ========== 方案 6: 原风格优化版（最小改动） ========== */
+    .balance-card-v6 {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, .15) 0%, transparent 40%, rgba(0, 0, 0, .06) 100%),
+        linear-gradient(160deg, #C9B896 0%, #D4C4A8 15%, #B8A67C 35%, #A8956C 55%, #C9B896 75%, #D4C4A8 100%);
+      border-radius: 18px;
+      padding: 18px 20px 16px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow:
+        0 8px 32px rgba(139, 105, 20, .25),
+        0 3px 8px rgba(0, 0, 0, .15),
+        inset 0 1px 0 rgba(255, 255, 255, .35),
+        inset 0 -1px 0 rgba(139, 105, 20, .2);
+    }
+    
+    .balance-card-v6::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255, 255, 255, .08) 1px, rgba(255, 255, 255, .08) 2px),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, .02) 2px, rgba(0, 0, 0, .02) 4px);
+      opacity: .08;
+      pointer-events: none;
+    }
+    
+    .balance-card-v6::after {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, .18) 0%, transparent 40%);
+      pointer-events: none;
+    }
+    
+    .v6-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v6-brand {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      color: #5A4A28;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .4);
+    }
+    
+    .v6-chip {
+      width: 36px;
+      height: 26px;
+      border-radius: 5px;
+      background: linear-gradient(145deg, #E8D4B0, #D4BC90, #C4A870, #D4BC90);
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, .3),
+        inset 0 1px 0 rgba(255, 255, 255, .6),
+        inset 0 -1px 0 rgba(139, 105, 20, .3);
+      position: relative;
+    }
+    
+    .v6-chip::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 22px; height: 16px;
+      border: 2px solid rgba(90, 74, 40, .45);
+      border-radius: 2px;
+    }
+    
+    .v6-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #3A2E1C;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .3);
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v6-amount {
+      font-family: 'DM Sans', 'Outfit', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: #1A1510;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .2), 0 2px 4px rgba(0, 0, 0, .1);
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .v6-amount .currency {
+      font-size: 16px;
+      font-weight: 600;
+      color: #5A4A28;
+      background: linear-gradient(180deg, #B8A67C, #8B6914);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .v6-stats {
+      display: flex;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .v6-stat {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .20);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .2),
+        inset 0 -1px 0 rgba(139, 105, 20, .08);
+    }
+    
+    .v6-stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #3A2E1C;
+      letter-spacing: .04em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .v6-stat-label svg {
+      width: 12px; height: 12px;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .v6-stat-label svg.up { stroke: #3A9E7C; }
+    .v6-stat-label svg.down { stroke: #C85A6E; }
+    
+    .v6-stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      font-variant-numeric: tabular-nums;
+      color: #1A1510;
+    }
+    
+    .v6-stat.income .v6-stat-value { color: #3A9E7C; }
+    .v6-stat.expense .v6-stat-value { color: #C85A6E; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>黄铜余额卡片优化方案</h1>
+    
+    <!-- 方案 1 -->
+    <div class="section-title">方案 1: 提高对比度（深色文字 + 更亮背景）</div>
+    <div class="card-wrapper">
+      <div class="card-label">核心改动：文字加深为 #1A1510，背景更亮，纹理减淡</div>
+      <section class="balance-card-v1">
+        <div class="v1-top">
+          <div class="v1-brand">GOLD ACCOUNT</div>
+          <div class="v1-chip"></div>
+        </div>
+        <div class="v1-label">本月余额</div>
+        <div class="v1-amount">
+          <span class="currency">¥</span>3,256.80
+        </div>
+        <div class="v1-stats">
+          <div class="v1-stat income">
+            <div class="v1-stat-label">
+              <svg class="up" viewBox="0 0 24 24">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+              </svg>
+              收入
+            </div>
+            <div class="v1-stat-value">¥5,840.00</div>
+          </div>
+          <div class="v1-stat expense">
+            <div class="v1-stat-label">
+              <svg class="down" viewBox="0 0 24 24">
+                <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+                <polyline points="17 18 23 18 23 12"/>
+              </svg>
+              支出
+            </div>
+            <div class="v1-stat-value">¥2,583.20</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <!-- 方案 2 -->
+    <div class="section-title">方案 2: 更亮的底色 + 清晰分隔</div>
+    <div class="card-wrapper">
+      <div class="card-label">核心改动：米黄渐变底色，加分隔线，白色卡片</div>
+      <section class="balance-card-v2">
+        <div class="v2-header">
+          <div class="v2-brand">GOLD ACCOUNT</div>
+          <div class="v2-chip"></div>
+        </div>
+        <div class="v2-label">本月余额</div>
+        <div class="v2-amount">
+          <span class="currency">¥</span>3,256.80
+        </div>
+        <div class="v2-divider"></div>
+        <div class="v2-stats">
+          <div class="v2-stat income">
+            <div class="v2-stat-header">
+              <div class="v2-stat-icon up">↑</div>
+              <span class="v2-stat-label">收入</span>
+            </div>
+            <div class="v2-stat-value">¥5,840.00</div>
+          </div>
+          <div class="v2-stat expense">
+            <div class="v2-stat-header">
+              <div class="v2-stat-icon down">↓</div>
+              <span class="v2-stat-label">支出</span>
+            </div>
+            <div class="v2-stat-value">¥2,583.20</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <!-- 方案 3 -->
+    <div class="section-title">方案 3: 简化纹理 + 大号文字</div>
+    <div class="card-wrapper">
+      <div class="card-label">核心改动：去掉复杂纹理，48px大数字，更清爽</div>
+      <section class="balance-card-v3">
+        <div class="v3-header">
+          <div class="v3-title">
+            <span class="v3-title-bar"></span>
+            本月余额
+          </div>
+          <div class="v3-badge">💰</div>
+        </div>
+        <div class="v3-label">BALANCE</div>
+        <div class="v3-amount">
+          <span class="currency">¥</span>3,256.80
+        </div>
+        <div class="v3-stats">
+          <div class="v3-stat income">
+            <div class="v3-stat-row">
+              <div class="v3-stat-icon income">↑</div>
+              <span class="v3-stat-label">收入</span>
+            </div>
+            <div class="v3-stat-value">¥5,840.00</div>
+          </div>
+          <div class="v3-stat expense">
+            <div class="v3-stat-row">
+              <div class="v3-stat-icon expense">↓</div>
+              <span class="v3-stat-label">支出</span>
+            </div>
+            <div class="v3-stat-value">¥2,583.20</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <!-- 方案 4 -->
+    <div class="section-title">方案 4: 黄铜底 + 纯白卡片（强对比）</div>
+    <div class="card-wrapper">
+      <div class="card-label">核心改动：黄铜色底，收支卡片用纯白背景，对比最强</div>
+      <section class="balance-card-v4">
+        <div class="v4-top">
+          <div class="v4-brand">GOLD ACCOUNT</div>
+          <div class="v4-chip"></div>
+        </div>
+        <div class="v4-label">本月余额</div>
+        <div class="v4-amount">
+          <span class="currency">¥</span>3,256.80
+        </div>
+        <div class="v4-stats">
+          <div class="v4-stat income">
+            <div class="v4-stat-header">
+              <div class="v4-stat-icon income">↑</div>
+              <span class="v4-stat-label">收入</span>
+            </div>
+            <div class="v4-stat-value">¥5,840.00</div>
+          </div>
+          <div class="v4-stat expense">
+            <div class="v4-stat-header">
+              <div class="v4-stat-icon expense">↓</div>
+              <span class="v4-stat-label">支出</span>
+            </div>
+            <div class="v4-stat-value">¥2,583.20</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <!-- 方案 5 -->
+    <div class="section-title">方案 5: 渐变金底 + 深色文字</div>
+    <div class="card-wrapper">
+      <div class="card-label">核心改动：6段金渐变底，顶部高光，日期徽章</div>
+      <section class="balance-card-v5">
+        <div class="v5-header">
+          <div class="v5-brand">
+            <span class="v5-brand-dot"></span>
+            GOLD ACCOUNT
+          </div>
+          <div class="v5-date">2026.07</div>
+        </div>
+        <div class="v5-label">本月余额</div>
+        <div class="v5-amount">
+          <span class="currency">¥</span>3,256.80
+        </div>
+        <div class="v5-divider"></div>
+        <div class="v5-stats">
+          <div class="v5-stat income">
+            <div class="v5-stat-header">
+              <div class="v5-stat-icon income">↑</div>
+              <span class="v5-stat-label">收入</span>
+            </div>
+            <div class="v5-stat-value">¥5,840.00</div>
+          </div>
+          <div class="v5-stat expense">
+            <div class="v5-stat-header">
+              <div class="v5-stat-icon expense">↓</div>
+              <span class="v5-stat-label">支出</span>
+            </div>
+            <div class="v5-stat-value">¥2,583.20</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <!-- 方案 6 -->
+    <div class="section-title">方案 6: 原风格微调版（最小改动）</div>
+    <div class="card-wrapper">
+      <div class="card-label">核心改动：仅加深文字颜色，纹理透明度从 0.15 降到 0.08</div>
+      <section class="balance-card-v6">
+        <div class="v6-top">
+          <div class="v6-brand">GOLD ACCOUNT</div>
+          <div class="v6-chip"></div>
+        </div>
+        <div class="v6-label">本月余额</div>
+        <div class="v6-amount">
+          <span class="currency">¥</span>3,256.80
+        </div>
+        <div class="v6-stats">
+          <div class="v6-stat income">
+            <div class="v6-stat-label">
+              <svg class="up" viewBox="0 0 24 24">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+              </svg>
+              收入
+            </div>
+            <div class="v6-stat-value">¥5,840.00</div>
+          </div>
+          <div class="v6-stat expense">
+            <div class="v6-stat-label">
+              <svg class="down" viewBox="0 0 24 24">
+                <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+                <polyline points="17 18 23 18 23 12"/>
+              </svg>
+              支出
+            </div>
+            <div class="v6-stat-value">¥2,583.20</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

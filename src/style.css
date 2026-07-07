@@ -1,16 +1,16 @@
 :root {
-  /* 暖色调基础 */
-  --bg-primary: #f5f2ec;
-  --bg-card: rgba(255, 255, 255, 0.72);
-  --bg-card-hover: rgba(255, 255, 255, 0.85);
-  --text-primary: #3d3830;
-  --text-secondary: #8c857a;
-  --text-muted: #b8b2a7;
+  /* 柔和浅灰背景 */
+  --bg-primary: #f9f9f9;
+  --bg-card: rgba(255, 255, 255, 0.92);
+  --bg-card-hover: rgba(255, 255, 255, 1);
+  --text-primary: #2d2d2d;
+  --text-secondary: #6b6b6b;
+  --text-muted: #a8a8a8;
 
   /* 品牌色 */
   --accent: #d4a574;
   --accent-dark: #c19463;
-  --accent-light: #f5e6d3;
+  --accent-light: #faf5f0;
   --income: #8ba888;
   --income-bg: #e8f0e5;
   --expense: #c97b7b;
@@ -51,11 +51,7 @@
 
 body {
   font-family: var(--sans);
-  background:
-    radial-gradient(ellipse at 20% 0%, rgba(212, 165, 116, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 30%, rgba(139, 168, 136, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 100%, rgba(201, 123, 123, 0.06) 0%, transparent 60%),
-    var(--bg-primary);
+  background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
   overscroll-behavior-y: none;

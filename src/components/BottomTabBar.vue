@@ -1,17 +1,5 @@
 <template>
-  <LiquidGlass
-    class-name="liquid-tab-glass"
-    :blur-amount="0.22"
-    :saturation="168"
-    :elasticity="0.12"
-    :displacement-scale="52"
-    :aberration-intensity="3.6"
-    :corner-radius="34"
-    effect="liquidGlass"
-    :mode="'shader'"
-    padding="0"
-    :style="{ position: 'fixed', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)', left: '50%', top: 'auto', zIndex: '100' }"
-  >
+  <div class="liquid-tab-glass">
     <div class="capsule-inner">
       <!-- 首页 -->
       <button
@@ -75,12 +63,10 @@
         </svg>
       </button>
     </div>
-  </LiquidGlass>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { LiquidGlass } from '@wxperia/liquid-glass-vue'
-
 defineProps<{
   modelValue: string
 }>()
@@ -106,10 +92,17 @@ function ripple(e: MouseEvent) {
 </script>
 
 <style>
-/* 全局样式：作用于 LiquidGlass 组件内部的 .glass 元素 */
-.liquid-tab-glass .glass {
-  display: inline-flex !important;
+/* 纯 CSS 毛玻璃底部导航栏容器 */
+.liquid-tab-glass {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  top: auto;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: inline-flex;
   border: 1px solid rgba(255, 255, 255, 0.56);
+  border-radius: 34px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.18) 48%, rgba(255, 255, 255, 0.34)),
     rgba(255, 255, 255, 0.22);
@@ -119,16 +112,11 @@ function ripple(e: MouseEvent) {
     0 18px 42px rgba(61, 56, 48, 0.20),
     0 6px 18px rgba(61, 56, 48, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.28) !important;
+    inset 0 -1px 0 rgba(255, 255, 255, 0.28);
   isolation: isolate;
 }
 
-.liquid-tab-glass .glass__warp {
-  inset: -2px !important;
-  opacity: 0.95;
-}
-
-:root[data-theme="dark"] .liquid-tab-glass .glass {
+:root[data-theme="dark"] .liquid-tab-glass {
   border-color: rgba(255, 255, 255, 0.20);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0.14)),
@@ -137,11 +125,11 @@ function ripple(e: MouseEvent) {
     0 18px 42px rgba(0, 0, 0, 0.34),
     0 6px 18px rgba(0, 0, 0, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08) !important;
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08);
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .liquid-tab-glass .glass {
+  .liquid-tab-glass {
     background: rgba(255, 255, 255, 0.82);
   }
 }
@@ -159,6 +147,9 @@ function ripple(e: MouseEvent) {
   position: relative;
   overflow: hidden;
   isolation: isolate;
+  /* 兜底模糊效果 - 确保所有情况都有模糊 */
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
 }
 
 .capsule-inner::before,
@@ -393,6 +384,12 @@ function ripple(e: MouseEvent) {
 }
 @keyframes addRipple {
   to { transform: scale(2.4); opacity: 0; }
+}
+
+:root[data-theme="dark"] .capsule-inner {
+  /* 深色模式模糊效果 */
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
 }
 
 :root[data-theme="dark"] .capsule-inner::before {

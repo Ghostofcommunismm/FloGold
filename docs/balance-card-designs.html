@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>余额卡片设计方案展示</title>
+  
+  <!-- 字体引入 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Outfit:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #f5f6fa;
+      padding: 20px;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 24px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 40px 0 20px 0;
+      padding-left: 12px;
+      border-left: 4px solid #6bb8e3;
+      color: #2a2a2a;
+    }
+    
+    .card-wrapper {
+      margin-bottom: 30px;
+    }
+    
+    .card-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    
+    /* ========== 方案 1: 黄铜浮雕（现有风格） ========== */
+    .balance-card-brass {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, .08) 0%, transparent 40%, rgba(0, 0, 0, .05) 100%),
+        linear-gradient(160deg, #C9B896 0%, #D4C4A8 15%, #B8A67C 35%, #A8956C 55%, #C9B896 75%, #D4C4A8 100%);
+      border-radius: 18px;
+      padding: 18px 20px 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 8px 32px rgba(139, 105, 20, .25),
+        0 3px 8px rgba(0, 0, 0, .15),
+        inset 0 1px 0 rgba(255, 255, 255, .3),
+        inset 0 -1px 0 rgba(139, 105, 20, .2);
+    }
+    
+    .balance-card-brass::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255, 255, 255, .1) 1px, rgba(255, 255, 255, .1) 2px),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, .03) 2px, rgba(0, 0, 0, .03) 4px);
+      opacity: .15;
+      pointer-events: none;
+    }
+    
+    .balance-card-brass::after {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, .15) 0%, transparent 40%);
+      pointer-events: none;
+    }
+    
+    .brass-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .brass-brand {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(139, 105, 20, .7);
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .3);
+    }
+    
+    .brass-chip {
+      width: 36px;
+      height: 26px;
+      border-radius: 5px;
+      background: linear-gradient(145deg, #E8D4B0, #D4BC90, #C4A870, #D4BC90);
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, .3),
+        inset 0 1px 0 rgba(255, 255, 255, .5),
+        inset 0 -1px 0 rgba(139, 105, 20, .3);
+      position: relative;
+    }
+    
+    .brass-chip::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 22px; height: 16px;
+      border: 1.5px solid rgba(139, 105, 20, .4);
+      border-radius: 2px;
+    }
+    
+    .brass-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(139, 105, 20, .8);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .25);
+      position: relative;
+      z-index: 1;
+    }
+    
+    .brass-amount {
+      font-family: 'DM Sans', 'Noto Sans SC', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: #2D2820;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .2), 0 2px 4px rgba(0, 0, 0, .1);
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .brass-amount .currency {
+      font-size: 16px;
+      font-weight: 500;
+      background: linear-gradient(180deg, #B8A67C, #8B6914);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .brass-stats {
+      display: flex;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .brass-stat {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, .04);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), inset 0 -1px 0 rgba(139, 105, 20, .08);
+    }
+    
+    .brass-stat-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: rgba(139, 105, 20, .6);
+      letter-spacing: .04em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .brass-stat-label svg {
+      width: 12px; height: 12px;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .brass-stat-label svg.up { stroke: #5AE89C; }
+    .brass-stat-label svg.down { stroke: #F06B7E; }
+    
+    .brass-stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -.02em;
+      font-variant-numeric: tabular-nums;
+      color: rgba(45, 40, 32, .9);
+    }
+    
+    .brass-stat.income .brass-stat-value { color: #4A9E7C; }
+    .brass-stat.expense .brass-stat-value { color: #C85A6E; }
+    
+    /* ========== 方案 2: 极简现代风格 ========== */
+    .balance-card-modern {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 24px 24px 20px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      position: relative;
+    }
+    
+    .modern-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    
+    .modern-date {
+      font-size: 13px;
+      font-weight: 500;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .modern-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6bb8e3;
+      background: rgba(107, 184, 227, 0.1);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+    
+    .modern-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #999;
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+    }
+    
+    .modern-amount {
+      font-family: 'Outfit', sans-serif;
+      font-size: 38px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 16px;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .modern-amount .currency {
+      font-size: 22px;
+      font-weight: 500;
+      color: #666;
+      margin-right: 4px;
+    }
+    
+    .modern-divider {
+      height: 1px;
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.08), transparent);
+      margin-bottom: 16px;
+    }
+    
+    .modern-stats {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .modern-stat {
+      flex: 1;
+    }
+    
+    .modern-stat-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    
+    .modern-stat-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    
+    .modern-stat-icon.income { background: rgba(90, 232, 156, 0.15); color: #5AE89C; }
+    .modern-stat-icon.expense { background: rgba(240, 107, 126, 0.15); color: #F06B7E; }
+    
+    .modern-stat-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #666;
+    }
+    
+    .modern-stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+    
+    .modern-stat.income .modern-stat-value { color: #5AE89C; }
+    .modern-stat.expense .modern-stat-value { color: #F06B7E; }
+    
+    /* ========== 方案 3: 玻璃拟态风格 ========== */
+    .balance-card-glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 24px 24px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .balance-card-glass::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    
+    .glass-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      opacity: 0.03;
+      pointer-events: none;
+    }
+    
+    .glass-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .glass-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.6);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    
+    .glass-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #5AE89C;
+      box-shadow: 0 0 8px #5AE89C;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    
+    .glass-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.5);
+      margin-bottom: 6px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .glass-amount {
+      font-family: 'Outfit', sans-serif;
+      font-size: 36px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .glass-amount .currency {
+      font-size: 20px;
+      font-weight: 500;
+      color: #666;
+    }
+    
+    .glass-stats {
+      display: flex;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .glass-stat {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .glass-stat-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    
+    .glass-stat-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    
+    .glass-stat-icon.income { background: rgba(90, 232, 156, 0.2); }
+    .glass-stat-icon.expense { background: rgba(240, 107, 126, 0.2); }
+    
+    .glass-stat-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.05em;
+    }
+    
+    .glass-stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .glass-stat.income .glass-stat-value { color: #5AE89C; }
+    .glass-stat.expense .glass-stat-value { color: #F06B7E; }
+    
+    /* ========== 方案 4: 渐变流体风格 ========== */
+    .balance-card-fluid {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 24px;
+      padding: 24px 24px 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+      color: #fff;
+    }
+    
+    .balance-card-fluid::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    
+    @keyframes shimmer {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(20px, 20px); }
+    }
+    
+    .fluid-orbit {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation: orbit 8s linear infinite;
+    }
+    
+    @keyframes orbit {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    
+    .fluid-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .fluid-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.7);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    
+    .fluid-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 4px 12px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .fluid-amount-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .fluid-amount {
+      font-family: 'Outfit', sans-serif;
+      font-size: 40px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 2px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .fluid-amount .currency {
+      font-size: 22px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .fluid-stats {
+      display: flex;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .fluid-stat {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+    }
+    
+    .fluid-stat-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .fluid-stat-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+    
+    .fluid-stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    /* ========== 方案 5: 深色金融风格（类似流动金） ========== */
+    .balance-card-dark {
+      position: relative;
+      background:
+        radial-gradient(ellipse 80% 60% at 80% 15%, #2a2540 0%, transparent 60%),
+        radial-gradient(ellipse 100% 80% at 20% 100%, #1a1530 0%, transparent 70%),
+        linear-gradient(135deg, #14101f 0%, #0a0712 50%, #050308 100%);
+      border-radius: 22px;
+      padding: 22px 22px 18px;
+      overflow: hidden;
+      color: #f4f0e6;
+      box-shadow:
+        0 20px 50px -16px rgba(10, 7, 18, 0.55),
+        0 4px 14px rgba(10, 7, 18, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    
+    .dark-aurora {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+    
+    .dark-aurora-1 {
+      width: 360px;
+      height: 360px;
+      top: -120px;
+      right: -110px;
+      background: radial-gradient(circle,
+        rgba(255, 210, 110, 0.55) 0%,
+        rgba(255, 210, 110, 0.38) 10%,
+        rgba(212, 175, 55, 0.22) 22%,
+        rgba(212, 175, 55, 0.12) 35%,
+        rgba(212, 175, 55, 0.05) 50%,
+        transparent 70%);
+      animation: aurora-breathe 6s ease-in-out infinite;
+    }
+    
+    .dark-aurora-2 {
+      width: 340px;
+      height: 340px;
+      bottom: -140px;
+      left: -110px;
+      background: radial-gradient(circle,
+        rgba(170, 120, 230, 0.40) 0%,
+        rgba(170, 120, 230, 0.25) 12%,
+        rgba(120, 90, 200, 0.15) 26%,
+        rgba(120, 90, 200, 0.08) 40%,
+        rgba(120, 90, 200, 0.03) 55%,
+        transparent 70%);
+      animation: aurora-breathe 8s ease-in-out infinite;
+      animation-delay: -2.5s;
+    }
+    
+    @keyframes aurora-breathe {
+      0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.65; }
+      50% { transform: translate3d(40px, -32px, 0) scale(1.32); opacity: 1; }
+    }
+    
+    .dark-header {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .dark-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.3em;
+      color: rgba(244, 240, 230, 0.55);
+      text-transform: uppercase;
+      font-family: 'Outfit', system-ui, sans-serif;
+    }
+    
+    .dark-label-bar {
+      width: 14px;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(212, 175, 55, 0.7), transparent);
+    }
+    
+    .dark-live {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      color: #4ade80;
+      padding: 3px 7px;
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.22);
+      border-radius: 99px;
+    }
+    
+    .dark-live-dot {
+      width: 5px;
+      height: 5px;
+      background: #4ade80;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #4ade80;
+      animation: live-pulse 1.6s ease-in-out infinite;
+    }
+    
+    @keyframes live-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+    
+    .dark-amount-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(244, 240, 230, 0.5);
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .dark-amount {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+      margin-bottom: 14px;
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.025em;
+    }
+    
+    .dark-currency {
+      font-size: 24px;
+      font-weight: 500;
+      color: #c9a85a;
+      margin-right: 4px;
+      align-self: flex-start;
+      margin-top: 6px;
+    }
+    
+    .dark-num {
+      font-size: 46px;
+      font-weight: 600;
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: linear-gradient(
+        100deg,
+        #b48a3e 0%,
+        #f4d577 22%,
+        #fff8dc 38%,
+        #ffffff 50%,
+        #fff8dc 62%,
+        #f4d577 78%,
+        #b48a3e 100%
+      );
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: gold-flow 4s linear infinite;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      text-shadow: 0 0 24px rgba(255, 210, 110, 0.5), 0 0 50px rgba(212, 175, 55, 0.22);
+    }
+    
+    @keyframes gold-flow {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    .dark-stats {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      padding-top: 14px;
+      border-top: 1px solid rgba(244, 240, 230, 0.08);
+      gap: 16px;
+    }
+    
+    .dark-stat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .dark-stat-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: rgba(244, 240, 230, 0.42);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .dark-stat-label svg {
+      width: 12px;
+      height: 12px;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .dark-stat-label svg.income { stroke: #4ade80; }
+    .dark-stat-label svg.expense { stroke: #f87171; }
+    
+    .dark-stat-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(244, 240, 230, 0.92);
+      font-variant-numeric: tabular-nums;
+      font-family: 'Outfit', system-ui, sans-serif;
+      letter-spacing: -0.01em;
+    }
+    
+    .dark-stat.income .dark-stat-value { color: #4ade80; }
+    .dark-stat.expense .dark-stat-value { color: #f87171; }
+    
+    /* ========== 方案 6: 新拟物风格 ========== */
+    .balance-card-neumorph {
+      background: #e0e5ec;
+      border-radius: 20px;
+      padding: 24px 24px 20px;
+      box-shadow:
+        8px 8px 16px rgba(174, 174, 192, 0.4),
+        -8px -8px 16px rgba(255, 255, 255, 0.8),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.3),
+        inset -1px -1px 2px rgba(174, 174, 192, 0.1);
+      position: relative;
+    }
+    
+    .neumorph-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    
+    .neumorph-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6a6a6a;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: #e0e5ec;
+      padding: 6px 12px;
+      border-radius: 8px;
+      box-shadow:
+        2px 2px 4px rgba(174, 174, 192, 0.3),
+        -2px -2px 4px rgba(255, 255, 255, 0.6);
+    }
+    
+    .neumorph-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e0e5ec;
+      box-shadow:
+        4px 4px 8px rgba(174, 174, 192, 0.4),
+        -4px -4px 8px rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    
+    .neumorph-amount-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #8a8a8a;
+      margin-bottom: 8px;
+    }
+    
+    .neumorph-amount {
+      font-family: 'Outfit', sans-serif;
+      font-size: 38px;
+      font-weight: 600;
+      color: #2a2a2a;
+      margin-bottom: 20px;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .neumorph-amount .currency {
+      font-size: 20px;
+      font-weight: 500;
+      color: #6a6a6a;
+    }
+    
+    .neumorph-stats {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .neumorph-stat {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #e0e5ec;
+      box-shadow:
+        inset 4px 4px 8px rgba(174, 174, 192, 0.4),
+        inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+    }
+    
+    .neumorph-stat-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    
+    .neumorph-stat-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #e0e5ec;
+      box-shadow:
+        2px 2px 4px rgba(174, 174, 192, 0.3),
+        -2px -2px 4px rgba(255, 255, 255, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    
+    .neumorph-stat-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #6a6a6a;
+      letter-spacing: 0.05em;
+    }
+    
+    .neumorph-stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #2a2a2a;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .neumorph-stat.income .neumorph-stat-value { color: #5AE89C; }
+    .neumorph-stat.expense .neumorph-stat-value { color: #F06B7E; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>余额卡片设计方案展示</h1>
+    
+    <!-- 方案 1: 黄铜浮雕（现有风格） -->
+    <div class="section-title">方案 1: 黄铜浮雕风格</div>
+    <div class="card-wrapper">
+      <div class="card-label">特点：金属质感、复古优雅、浮雕效果</div>
+      <section class="balance-card-brass">
+        <div class="brass-top">
+          <div class="brass-brand">GOLD ACCOUNT</div>
+          <div class="brass-chip"></div>
+        </div>
+        <div class="brass-label">本月余额</div>
+        <div class="brass-amount">
+          <span class="currency">¥</span>3,256.80
+        </div>
+        <div class="brass-stats">
+          <div class="brass-stat income">
+            <div class="brass-stat-label">
+              <svg class="up" viewBox="0 0 24 24">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+              </svg>
+              收入
+            </div>
+            <div class="brass-stat-value">¥5,840.00</div>
+          </div>
+          <div class="brass-stat expense">
+            <div class="brass-stat-label">
+              <svg class="down" viewBox="0 0 24 24">
+                <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+                <polyline points="17 18 23 18 23 12"/>
+              </svg>
+              支出
+            </div>
+            <div class="brass-stat-value">¥2,583.20</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <!-- 方案 2: 极简现代 -->
+    <div class="section-title">方案 2: 极简现代风格</div>
+    <div class="card-wrapper">
+      <div class="card-label">特点：简洁线条、现代配色、清爽易读</div>
+      <section class="balance-card-modern">
+        <div class="modern-header">
+          <div class="modern-date">
+            📅 2026年7月
+          </div>
+          <div class="modern-badge">本月</div>
+        </div>
+        <div class="modern-label">本月余额</div>
+        <div class="modern-amount">
+          <span class="currency">¥</span>3,256.80
+        </div>
+        <div class="modern-divider"></div>
+        <div class="modern-stats">
+          <div class="modern-stat income">
+            <div class="modern-stat-row">
+              <div class="modern-stat-icon income">↑</div>
+              <span class="modern-stat-label">收入</span>
+            </div>
+            <div class="modern-stat-value">¥5,840.00</div>
+          </div>
+          <div class="modern-stat expense">
+            <div class="modern-stat-row">
+              <div class="modern-stat-icon expense">↓</div>
+              <span class="modern-stat-label">支出</span>
+            </div>
+            <div class="modern-stat-value">¥2,583.20</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <!-- 方案 3: 玻璃拟态 -->
+    <div class="section-title">方案 3: 玻璃拟态风格</div>
+    <div class="card-wrapper">
+      <div class="card-label">特点：毛玻璃效果、通透现代、轻量视觉</div>
+      <section class="balance-card-glass">
+        <div class="glass-bg"></div>
+        <div class="glass-header">
+          <div class="glass-title">BALANCE</div>
+          <div class="glass-indicator"></div>
+        </div>
+        <div class="glass-label">本月余额</div>
+        <div class="glass-amount">
+          <span class="currency">¥</span>3,256.80
+        </div>
+        <div class="glass-stats">
+          <div class="glass-stat income">
+            <div class="glass-stat-header">
+              <div class="glass-stat-icon income">↑</div>
+              <span class="glass-stat-label">收入</span>
+            </div>
+            <div class="glass-stat-value">¥5,840.00</div>
+          </div>
+          <div class="glass-stat expense">
+            <div class="glass-stat-header">
+              <div class="glass-stat-icon expense">↓</div>
+              <span class="glass-stat-label">支出</span>
+            </div>
+            <div class="glass-stat-value">¥2,583.20</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <!-- 方案 4: 渐变流体 -->
+    <div class="section-title">方案 4: 渐变流体风格</div>
+    <div class="card-wrapper">
+      <div class="card-label">特点：动态渐变、活泼流动、视觉冲击</div>
+      <section class="balance-card-fluid">
+        <div class="fluid-orbit"></div>
+        <div class="fluid-header">
+          <div class="fluid-label">本月余额</div>
+          <div class="fluid-badge">7月</div>
+        </div>
+        <div class="fluid-amount-label">本月余额</div>
+        <div class="fluid-amount">
+          <span class="currency">¥</span>3,256.80
+        </div>
+        <div class="fluid-stats">
+          <div class="fluid-stat">
+            <div class="fluid-stat-label">
+              <div class="fluid-stat-icon">↑</div>
+              收入
+            </div>
+            <div class="fluid-stat-value">¥5,840.00</div>
+          </div>
+          <div class="fluid-stat">
+            <div class="fluid-stat-label">
+              <div class="fluid-stat-icon">↓</div>
+              支出
+            </div>
+            <div class="fluid-stat-value">¥2,583.20</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <!-- 方案 5: 深色金融 -->
+    <div class="section-title">方案 5: 深色金融风格</div>
+    <div class="card-wrapper">
+      <div class="card-label">特点：极光背景、真金流光、重量感、金融质感</div>
+      <section class="balance-card-dark">
+        <div class="dark-aurora dark-aurora-1"></div>
+        <div class="dark-aurora dark-aurora-2"></div>
+        <div class="dark-header">
+          <div class="dark-label">
+            <span class="dark-label-bar"></span>
+            <span>本月余额</span>
+          </div>
+          <div class="dark-live">
+            <span class="dark-live-dot"></span>
+            <span class="dark-live-text">LIVE</span>
+          </div>
+        </div>
+        <div class="dark-amount-label">本月余额</div>
+        <div class="dark-amount">
+          <span class="dark-currency">¥</span>
+          <span class="dark-num">3,256.80</span>
+        </div>
+        <div class="dark-stats">
+          <div class="dark-stat income">
+            <div class="dark-stat-label">
+              <svg class="income" viewBox="0 0 24 24">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+              </svg>
+              收入
+            </div>
+            <div class="dark-stat-value">¥5,840.00</div>
+          </div>
+          <div class="dark-stat expense">
+            <div class="dark-stat-label">
+              <svg class="expense" viewBox="0 0 24 24">
+                <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+                <polyline points="17 18 23 18 23 12"/>
+              </svg>
+              支出
+            </div>
+            <div class="dark-stat-value">¥2,583.20</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <!-- 方案 6: 新拟物 -->
+    <div class="section-title">方案 6: 新拟物风格</div>
+    <div class="card-wrapper">
+      <div class="card-label">特点：柔和凸起、三维感、现代设计趋势</div>
+      <section class="balance-card-neumorph">
+        <div class="neumorph-header">
+          <div class="neumorph-label">本月余额</div>
+          <div class="neumorph-badge">💰</div>
+        </div>
+        <div class="neumorph-amount-label">本月余额</div>
+        <div class="neumorph-amount">
+          <span class="currency">¥</span>3,256.80
+        </div>
+        <div class="neumorph-stats">
+          <div class="neumorph-stat income">
+            <div class="neumorph-stat-header">
+              <div class="neumorph-stat-icon">↑</div>
+              <span class="neumorph-stat-label">收入</span>
+            </div>
+            <div class="neumorph-stat-value">¥5,840.00</div>
+          </div>
+          <div class="neumorph-stat expense">
+            <div class="neumorph-stat-header">
+              <div class="neumorph-stat-icon">↓</div>
+              <span class="neumorph-stat-label">支出</span>
+            </div>
+            <div class="neumorph-stat-value">¥2,583.20</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

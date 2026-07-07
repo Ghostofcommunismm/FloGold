@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>余额卡片创意设计方案</title>
+  <!-- 使用独特字体，避免 Inter/Roboto -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;900&family=Playfair+Display:wght@400;500;600;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* OKLCH 色彩系统 */
+    :root {
+      /* 暖色调中性色（带黄铜色倾向） */
+      --neutral-100: oklch(96% 0.01 80);
+      --neutral-200: oklch(92% 0.015 75);
+      --neutral-900: oklch(28% 0.02 60);
+
+      /* 黄铜金属色系 */
+      --bronze-light: oklch(85% 0.08 80);
+      --bronze-mid: oklch(68% 0.12 75);
+      --bronze-dark: oklch(52% 0.15 70);
+
+      /* 语义色 */
+      --income: oklch(65% 0.18 145);
+      --expense: oklch(55% 0.22 25);
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--neutral-100);
+      color: var(--neutral-900);
+      line-height: 1.5;
+      padding: 40px 24px;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 32px;
+      color: var(--bronze-dark);
+      letter-spacing: -0.02em;
+    }
+
+    .design-section {
+      margin-bottom: 56px;
+    }
+
+    .design-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: oklch(55% 0.02 60);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .pros-cons {
+      margin-top: 16px;
+      padding: 16px 20px;
+      background: oklch(96% 0.005 75);
+      border-radius: 16px;
+      font-size: 13px;
+      line-height: 1.7;
+      border: 1px solid oklch(90% 0.01 80);
+    }
+
+    .pros-cons strong {
+      font-weight: 600;
+      color: var(--bronze-dark);
+    }
+
+    /* ========== 方案 X1: 复古银行票据型 ========== */
+    .card-x1 {
+      background:
+        linear-gradient(135deg,
+          oklch(92% 0.02 80) 0%,
+          oklch(88% 0.03 75) 25%,
+          oklch(85% 0.025 70) 50%,
+          oklch(90% 0.028 78) 75%,
+          oklch(94% 0.015 82) 100%
+        );
+      border-radius: 8px; /* 稍锐利，不圆滑 */
+      padding: 24px 28px 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 8px 24px oklch(28% 0.02 60 / 0.12),
+        0 2px 6px oklch(28% 0.02 60 / 0.08),
+        inset 0 2px 0 oklch(98% 0.01 85),
+        inset 0 -2px 0 oklch(75% 0.03 70);
+      border: 3px double var(--bronze-mid);
+      margin-bottom: 20px;
+    }
+
+    /* 防伪纹理 - 复杂线条图案 */
+    .card-x1::before {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      background-image:
+        repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 2px,
+          oklch(85% 0.02 80 / 0.3) 2px,
+          oklch(85% 0.02 80 / 0.3) 4px
+        ),
+        repeating-linear-gradient(
+          -45deg,
+          transparent,
+          transparent 2px,
+          oklch(85% 0.02 80 / 0.2) 2px,
+          oklch(85% 0.02 80 / 0.2) 4px
+        );
+      opacity: .15;
+      pointer-events: none;
+      border-radius: 4px;
+    }
+
+    /* 顶部装饰边框 */
+    .card-x1-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid oklch(80% 0.04 75);
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .x1-ornament {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 30%, oklch(95% 0.06 85) 0%, transparent 40%),
+        linear-gradient(135deg, var(--bronze-mid), var(--bronze-dark));
+      box-shadow:
+        0 2px 6px oklch(28% 0.02 60 / 0.15),
+        inset 0 -1px 0 oklch(75% 0.03 70);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .x1-ornament svg {
+      width: 16px;
+      height: 16px;
+      fill: oklch(98% 0.01 85);
+      opacity: .8;
+    }
+
+    .x1-brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--bronze-dark);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .x1-serial {
+      font-family: 'Space Grotesk', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      color: oklch(55% 0.02 60);
+      letter-spacing: 0.1em;
+      opacity: .6;
+    }
+
+    /* 主数字区 */
+    .x1-main {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 18px;
+    }
+
+    .x1-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: oklch(48% 0.02 60);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .x1-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--bronze-dark);
+      letter-spacing: -0.02em;
+      line-height: 1;
+      margin-bottom: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .x1-amount .cur {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--bronze-mid);
+    }
+
+    /* 底部统计区 - 装饰性边框包裹 */
+    .x1-stats-wrapper {
+      position: relative;
+      z-index: 1;
+      border: 1px solid oklch(80% 0.03 75);
+      border-radius: 6px;
+      padding: 14px 16px;
+      background: oklch(96% 0.01 82 / 0.6);
+    }
+
+    .x1-stats {
+      display: flex;
+      gap: 24px;
+      justify-content: space-between;
+    }
+
+    .x1-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .x1-stat-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      color: oklch(55% 0.02 60);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .x1-stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+
+    .x1-stat.in .x1-stat-value { color: var(--income); }
+    .x1-stat.out .x1-stat-value { color: var(--expense); }
+
+    /* ========== 方案 X2: Art Deco 鎏金浮雕型 ========== */
+    .card-x2 {
+      background:
+        radial-gradient(ellipse at 50% 0%, oklch(75% 0.08 85) 0%, transparent 50%),
+        linear-gradient(180deg,
+          oklch(38% 0.04 65) 0%,
+          oklch(42% 0.05 70) 30%,
+          oklch(36% 0.045 60) 60%,
+          oklch(32% 0.04 55) 100%
+        );
+      border-radius: 24px; /* 几何圆角 */
+      padding: 28px 24px 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 12px 48px oklch(20% 0.05 50 / 0.3),
+        0 4px 12px oklch(20% 0.05 50 / 0.2),
+        inset 0 3px 0 oklch(85% 0.08 85 / 0.4),
+        inset 0 -2px 0 oklch(20% 0.04 50);
+      border: 2px solid oklch(70% 0.06 80 / 0.3);
+    }
+
+    /* 几何装饰图案 */
+    .card-x2::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200%;
+      height: 100%;
+      background-image:
+        repeating-linear-gradient(
+          90deg,
+          transparent,
+          transparent 40px,
+          oklch(85% 0.06 85 / 0.08) 40px,
+          oklch(85% 0.06 85 / 0.08) 80px
+        );
+      opacity: .12;
+      pointer-events: none;
+    }
+
+    /* 顶部几何图案 */
+    .x2-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .x2-pattern-left,
+    .x2-pattern-right {
+      width: 48px;
+      height: 2px;
+      background:
+        linear-gradient(90deg, transparent, oklch(85% 0.08 85 / 0.6)),
+        repeating-linear-gradient(
+          90deg,
+          oklch(85% 0.08 85 / 0.5),
+          oklch(85% 0.08 85 / 0.5) 4px,
+          transparent 4px,
+          transparent 8px
+        );
+      box-shadow: 0 1px 0 oklch(85% 0.08 85 / 0.3);
+    }
+
+    .x2-pattern-center {
+      width: 40px;
+      height: 40px;
+      position: relative;
+    }
+
+    .x2-pattern-center::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 50%, oklch(85% 0.08 85) 20%, transparent 25%),
+        conic-gradient(
+          from 0deg,
+          oklch(85% 0.08 85 / 0.6) 0deg,
+          transparent 30deg,
+          oklch(85% 0.08 85 / 0.6) 60deg,
+          transparent 90deg,
+          oklch(85% 0.08 85 / 0.6) 120deg,
+          transparent 150deg,
+          oklch(85% 0.08 85 / 0.6) 180deg,
+          transparent 210deg,
+          oklch(85% 0.08 85 / 0.6) 240deg,
+          transparent 270deg,
+          oklch(85% 0.08 85 / 0.6) 300deg,
+          transparent 330deg,
+          oklch(85% 0.08 85 / 0.6) 360deg
+        );
+    }
+
+    /* 主数字区 */
+    .x2-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: oklch(85% 0.08 85 / 0.5);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .x2-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
+      font-weight: 900;
+      color: oklch(92% 0.06 88);
+      letter-spacing: 0.02em;
+      line-height: 1;
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+      font-variant-numeric: tabular-nums;
+      text-shadow:
+        0 2px 8px oklch(20% 0.05 50 / 0.5),
+        0 0 20px oklch(85% 0.08 85 / 0.3);
+    }
+
+    .x2-amount .cur {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 500;
+      background: linear-gradient(180deg, oklch(92% 0.06 88), oklch(85% 0.08 85));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* 底部统计 - 横向排列 */
+    .x2-stats {
+      display: flex;
+      gap: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .x2-stat {
+      flex: 1;
+      text-align: center;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: oklch(85% 0.08 85 / 0.08);
+      border: 1px solid oklch(85% 0.08 85 / 0.15);
+      box-shadow:
+        inset 0 1px 0 oklch(85% 0.08 85 / 0.2),
+        inset 0 -1px 0 oklch(20% 0.04 50 / 0.1);
+    }
+
+    .x2-stat-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      color: oklch(85% 0.08 85 / 0.4);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .x2-stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+
+    .x2-stat.in .x2-stat-value { color: oklch(75% 0.12 145); }
+    .x2-stat.out .x2-stat-value { color: oklch(65% 0.16 25); }
+
+    /* ========== 方案 X3: 铜版雕刻质感型 ========== */
+    .card-x3 {
+      background: linear-gradient(135deg,
+        oklch(78% 0.08 75) 0%,
+        oklch(72% 0.1 70) 30%,
+        oklch(68% 0.095 72) 60%,
+        oklch(75% 0.085 78) 100%
+      );
+      border-radius: 4px; /* 锐利直角 */
+      padding: 22px 24px 18px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        4px 4px 16px oklch(28% 0.02 60 / 0.25),
+        -2px -2px 8px oklch(98% 0.01 85 / 0.4),
+        inset 2px 2px 4px oklch(98% 0.01 85 / 0.3),
+        inset -2px -2px 4px oklch(60% 0.08 70 / 0.15);
+      border: 1px solid oklch(85% 0.08 85 / 0.2);
+      margin-bottom: 16px;
+    }
+
+    /* 铜版雕刻纹理 */
+    .card-x3::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='engrave'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='3' seed='15' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.72 0 0 0 0 0.6 0 0 0 0 0.5 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23engrave)'/%3E%3C/svg%3E");
+      opacity: .18;
+      pointer-events: none;
+    }
+
+    /* 高光反射 */
+    .card-x3::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 40%;
+      background: linear-gradient(180deg,
+        oklch(98% 0.01 85 / 0.25) 0%,
+        transparent 100%
+      );
+      pointer-events: none;
+    }
+
+    .x3-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .x3-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: oklch(45% 0.03 60);
+      letter-spacing: 0.03em;
+    }
+
+    .x3-subtitle {
+      font-family: 'Space Grotesk', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      color: oklch(60% 0.02 60);
+      letter-spacing: 0.05em;
+      opacity: .7;
+    }
+
+    /* 鎏金装饰 */
+    .x3-monogram {
+      width: 44px;
+      height: 44px;
+      border-radius: 2px;
+      background:
+        linear-gradient(135deg, oklch(85% 0.08 85), oklch(75% 0.1 78)),
+        radial-gradient(ellipse at 30% 30%, oklch(98% 0.01 85 / 0.6) 0%, transparent 60%);
+      box-shadow:
+        2px 2px 6px oklch(28% 0.02 60 / 0.2),
+        inset 1px 1px 0 oklch(98% 0.01 85 / 0.4),
+        inset -1px -1px 0 oklch(60% 0.08 70 / 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 900;
+      color: oklch(45% 0.03 60);
+      letter-spacing: 0;
+    }
+
+    .x3-main {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid oklch(60% 0.04 70 / 0.3);
+    }
+
+    .x3-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: oklch(52% 0.02 60);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .x3-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 34px;
+      font-weight: 700;
+      color: oklch(32% 0.03 55);
+      letter-spacing: -0.01em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      text-shadow:
+        1px 1px 0 oklch(98% 0.01 85 / 0.5),
+        2px 2px 4px oklch(28% 0.02 60 / 0.15);
+    }
+
+    .x3-amount .cur {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 500;
+      color: oklch(60% 0.06 70);
+    }
+
+    .x3-stats {
+      display: flex;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .x3-stat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 12px;
+      border-radius: 2px;
+      background: oklch(85% 0.08 85 / 0.12);
+      box-shadow:
+        inset 1px 1px 0 oklch(98% 0.01 85 / 0.2),
+        inset -1px -1px 0 oklch(60% 0.08 70 / 0.1);
+    }
+
+    .x3-stat-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .x3-stat-icon {
+      width: 14px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .x3-stat-icon svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .x3-stat.in .x3-stat-icon svg { stroke: oklch(55% 0.12 145); }
+    .x3-stat.out .x3-stat-icon svg { stroke: oklch(50% 0.16 25); }
+
+    .x3-stat-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      color: oklch(52% 0.02 60);
+      letter-spacing: 0.06em;
+    }
+
+    .x3-stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .x3-stat.in .x3-stat-value { color: oklch(45% 0.12 145); }
+    .x3-stat.out .x3-stat-value { color: oklch(40% 0.16 25); }
+
+    /* ========== 方案 X4: 立体铸造质感型 ========== */
+    .card-x4 {
+      /* 不对称布局 - 左侧装饰区，右侧数据区 */
+      display: flex;
+      gap: 16px;
+      background: var(--neutral-100);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow:
+        12px 12px 32px oklch(28% 0.02 60 / 0.15),
+        -6px -6px 16px oklch(98% 0.01 85),
+        inset 4px 4px 8px oklch(98% 0.01 85 / 0.5),
+        inset -3px -3px 6px oklch(28% 0.02 60 / 0.08);
+      border: 1px solid oklch(92% 0.01 80);
+    }
+
+    .x4-left {
+      flex-shrink: 0;
+      width: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* 铸造徽章 */
+    .x4-badge {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at 40% 40%, oklch(85% 0.08 85 / 0.6) 0%, transparent 50%),
+        linear-gradient(135deg,
+          oklch(68% 0.12 75) 0%,
+          oklch(72% 0.11 78) 25%,
+          oklch(65% 0.13 70) 50%,
+          oklch(70% 0.12 76) 75%,
+          oklch(75% 0.1 80) 100%
+        );
+      box-shadow:
+        4px 4px 12px oklch(28% 0.02 60 / 0.3),
+        -2px -2px 6px oklch(98% 0.01 85 / 0.5),
+        inset 2px 2px 4px oklch(98% 0.01 85 / 0.3),
+        inset -2px -2px 4px oklch(60% 0.08 70 / 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* 金属纹理 */
+    .x4-badge::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border-radius: 12px;
+      background-image:
+        repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 2px,
+          oklch(98% 0.01 85 / 0.15) 2px,
+          oklch(98% 0.01 85 / 0.15) 4px
+        );
+      opacity: .3;
+    }
+
+    .x4-badge-icon {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 900;
+      color: oklch(35% 0.03 55);
+      text-shadow:
+        1px 1px 0 oklch(98% 0.01 85 / 0.6),
+        2px 2px 4px oklch(28% 0.02 60 / 0.2);
+    }
+
+    .x4-year {
+      font-family: 'Space Grotesk', monospace;
+      font-size: 9px;
+      font-weight: 500;
+      color: oklch(55% 0.02 60);
+      letter-spacing: 0.1em;
+      opacity: .6;
+    }
+
+    .x4-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .x4-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .x4-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: oklch(50% 0.02 60);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .x4-tag {
+      font-family: 'Space Grotesk', monospace;
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--bronze-mid);
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: oklch(85% 0.08 85 / 0.15);
+      letter-spacing: 0.05em;
+    }
+
+    .x4-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--neutral-900);
+      letter-spacing: -0.02em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .x4-amount .cur {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--bronze-mid);
+    }
+
+    .x4-divider {
+      height: 1px;
+      background: linear-gradient(90deg,
+        oklch(85% 0.08 85 / 0.2),
+        oklch(85% 0.08 85 / 0.4),
+        oklch(85% 0.08 85 / 0.2)
+      );
+    }
+
+    .x4-stats {
+      display: flex;
+      gap: 8px;
+    }
+
+    .x4-stat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: oklch(92% 0.01 80);
+      box-shadow:
+        inset 2px 2px 4px oklch(98% 0.01 85 / 0.4),
+        inset -1px -1px 2px oklch(28% 0.02 60 / 0.05);
+    }
+
+    .x4-stat-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 9px;
+      font-weight: 500;
+      color: oklch(55% 0.02 60);
+      letter-spacing: 0.08em;
+    }
+
+    .x4-stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .x4-stat.in .x4-stat-value { color: oklch(50% 0.15 145); }
+    .x4-stat.out .x4-stat-value { color: oklch(45% 0.18 25); }
+  </style>
+</head>
+<body>
+  <h2>余额卡片创意设计方案</h2>
+
+  <!-- 方案 X1 -->
+  <div class="design-section">
+    <div class="design-label">方案 X1：复古银行票据型</div>
+    <div class="card-x1">
+      <div class="card-x1-header">
+        <div class="x1-ornament">
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="x1-brand">GOLDEN LEDGER</div>
+        <div class="x1-serial">№ 8826</div>
+      </div>
+      <div class="x1-main">
+        <div class="x1-label">本月余额</div>
+        <div class="x1-amount"><span class="cur">¥</span>12,856.42</div>
+      </div>
+      <div class="x1-stats-wrapper">
+        <div class="x1-stats">
+          <div class="x1-stat in">
+            <div class="x1-stat-label">收入</div>
+            <div class="x1-stat-value">¥25,000.00</div>
+          </div>
+          <div class="x1-stat out">
+            <div class="x1-stat-label">支出</div>
+            <div class="x1-stat-value">¥12,143.58</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pros-cons">
+      <strong>设计意图：</strong>复古银行票据美学，双线边框、防伪纹理、星形装饰、序列号标识。<br>
+      <strong>独特性：</strong>锐利圆角（8px）、双线边框、斜线纹理图案 - 不是泛化的圆角卡片。<br>
+      <strong>质感：</strong>暖色调中性背景 + 黄铜装饰 + 手工票据感。<br>
+      <strong>高度：</strong>约 120px。
+    </div>
+  </div>
+
+  <!-- 方案 X2 -->
+  <div class="design-section">
+    <div class="design-label">方案 X2：Art Deco 鎏金浮雕型</div>
+    <div class="card-x2">
+      <div class="x2-header">
+        <div class="x2-pattern-left"></div>
+        <div class="x2-pattern-center"></div>
+        <div class="x2-pattern-right"></div>
+      </div>
+      <div class="x2-label">本月余额</div>
+      <div class="x2-amount"><span class="cur">¥</span>12,856.42</div>
+      <div class="x2-stats">
+        <div class="x2-stat in">
+          <div class="x2-stat-label">收入</div>
+          <div class="x2-stat-value">¥25,000</div>
+        </div>
+        <div class="x2-stat out">
+          <div class="x2-stat-label">支出</div>
+          <div class="x2-stat-value">¥12,144</div>
+        </div>
+      </div>
+    </div>
+    <div class="pros-cons">
+      <strong>设计意图：</strong>Art Deco（装饰艺术）美学，几何图案、放射状线条、鎏金质感。<br>
+      <strong>独特性：</strong>几何装饰图案（顶部放射线条）、鎏金数字、深色金属背景 - 不是泛化的渐变卡片。<br>
+      <strong>质感：</strong>深色金属 + 鎏金光泽 + 几何装饰艺术元素。<br>
+      <strong>高度：</strong>约 135px。
+    </div>
+  </div>
+
+  <!-- 方案 X3 -->
+  <div class="design-section">
+    <div class="design-label">方案 X3：铜版雕刻质感型</div>
+    <div class="card-x3">
+      <div class="x3-header">
+        <div>
+          <div class="x3-title">轻记账</div>
+          <div class="x3-subtitle">MONTHLY BALANCE</div>
+        </div>
+        <div class="x3-monogram">¥</div>
+      </div>
+      <div class="x3-main">
+        <div class="x3-label">本月结余</div>
+        <div class="x3-amount"><span class="cur">¥</span>12,856.42</div>
+      </div>
+      <div class="x3-stats">
+        <div class="x3-stat in">
+          <div class="x3-stat-header">
+            <div class="x3-stat-icon">
+              <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            </div>
+            <div class="x3-stat-label">收入</div>
+          </div>
+          <div class="x3-stat-value">¥25,000</div>
+        </div>
+        <div class="x3-stat out">
+          <div class="x3-stat-header">
+            <div class="x3-stat-icon">
+              <svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+            </div>
+            <div class="x3-stat-label">支出</div>
+          </div>
+          <div class="x3-stat-value">¥12,144</div>
+        </div>
+      </div>
+    </div>
+    <div class="pros-cons">
+      <strong>设计意图：</strong>铜版印刷质感，雕刻纹理、鎏金徽章、锐利直角。<br>
+      <strong>独特性：</strong>锐利圆角（4px）、雕刻纹理、鎏金徽章、不对称布局 - 不是泛化的圆角卡片。<br>
+      <strong>质感：</strong>黄铜金属 + 雕刻纹理 + 高光反射 + 立体浮雕阴影。<br>
+      <strong>高度：</strong>约 115px。
+    </div>
+  </div>
+
+  <!-- 方案 X4 -->
+  <div class="design-section">
+    <div class="design-label">方案 X4：立体铸造徽章型</div>
+    <div class="card-x4">
+      <div class="x4-left">
+        <div class="x4-badge">
+          <div class="x4-badge-icon">¥</div>
+        </div>
+        <div class="x4-year">2026</div>
+      </div>
+      <div class="x4-right">
+        <div class="x4-header">
+          <div class="x4-label">本月余额</div>
+          <div class="x4-tag">JULY</div>
+        </div>
+        <div class="x4-amount"><span class="cur">¥</span>12,856.42</div>
+        <div class="x4-divider"></div>
+        <div class="x4-stats">
+          <div class="x4-stat in">
+            <div class="x4-stat-label">收入</div>
+            <div class="x4-stat-value">¥25k</div>
+          </div>
+          <div class="x4-stat out">
+            <div class="x4-stat-label">支出</div>
+            <div class="x4-stat-value">¥12k</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pros-cons">
+      <strong>设计意图：</strong>铸造徽章美学，立体浮雕、不对称布局、Neumorphism 阴影。<br>
+      <strong>独特性：</strong>不对称布局（左侧徽章 + 右侧数据）、铸造徽章、立体阴影 - 不是泛化的居中卡片。<br>
+      <strong>质感：</strong>铸造金属徽章 + 立体浮雕阴影 + Neumorphism 内凹效果。<br>
+      <strong>高度：</strong>约 100px（最紧凑）。
+    </div>
+  </div>
+
+  <div style="margin-top: 48px; padding: 20px; background: oklch(96% 0.01 82); border-radius: 16px; border: 2px solid oklch(85% 0.08 85 / 0.3);">
+    <strong style="font-size: 15px; font-family: 'Playfair Display', serif; color: var(--bronze-dark);">设计哲学说明</strong>
+    <p style="font-size: 13px; margin-top: 12px; line-height: 1.8; color: var(--neutral-900);">
+      这些设计遵循 <strong>Impeccable 高品质设计原则</strong>，避免泛 AI 审美：
+      <br><br>
+      <strong>✅ 独特字体</strong>：Playfair Display（编辑风）+ Cormorant Garamond（复古衬线）+ Space Grotesk（技术感） - 避免 Inter/Roboto<br>
+      <strong>✅ OKLCH 色彩</strong>：感知均匀的黄铜色系 + 暖色调中性色 - 避免纯黑纯白<br>
+      <strong>✅ 不对称布局</strong>：打破居中模板（方案 X3、X4）<br>
+      <strong>✅ 几何装饰</strong>：Art Deco 线条、票据边框、铸造徽章 - 不是无意义的火花线<br>
+      <strong>✅ 立体质感</strong>：浮雕阴影、雕刻纹理、鎏金光泽 - 不是泛化的毛玻璃<br>
+      <strong>✅ 锐利圆角</strong>：票据型（8px）、雕刻型（4px） - 不是泛化的 16-20px 大圆角
+    </p>
+  </div>
+</body>
+</html>

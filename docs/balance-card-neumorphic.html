@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>余额卡片拟物风格设计方案</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #f9f9f9;
+      --text-primary: #2d2d2d;
+      --text-secondary: #6b6b6b;
+      --text-muted: #a8a8a8;
+      --income: #5AE89C;
+      --expense: #F06B7E;
+    }
+
+    body {
+      font-family: 'DM Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.5;
+      padding: 32px 24px;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #d4a574;
+      color: var(--text-primary);
+    }
+
+    .design-section {
+      margin-bottom: 48px;
+    }
+
+    .design-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .pros-cons {
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: rgba(212, 165, 116, 0.08);
+      border-radius: 12px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    /* ========== 方案 A: 黄铜浮雕紧凑型 ========== */
+    .card-a {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, .08) 0%, transparent 40%, rgba(0, 0, 0, .05) 100%),
+        linear-gradient(160deg, #C9B896 0%, #D4C4A8 15%, #B8A67C 35%, #A8956C 55%, #C9B896 75%, #D4C4A8 100%);
+      border-radius: 18px;
+      padding: 18px 20px 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 8px 32px rgba(139, 105, 20, .25),
+        0 3px 8px rgba(0, 0, 0, .15),
+        inset 0 1px 0 rgba(255, 255, 255, .3),
+        inset 0 -1px 0 rgba(139, 105, 20, .2);
+      margin-bottom: 16px;
+    }
+
+    /* 金属纹理 */
+    .card-a::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent,
+          transparent 1px,
+          rgba(255, 255, 255, .1) 1px,
+          rgba(255, 255, 255, .1) 2px
+        ),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, .03) 2px,
+          rgba(0, 0, 0, .03) 4px
+        );
+      opacity: .15;
+      pointer-events: none;
+    }
+
+    /* 光泽反射 */
+    .card-a::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, .15) 0%, transparent 40%);
+      pointer-events: none;
+    }
+
+    .card-a-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-a-brand {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(139, 105, 20, .7);
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .3);
+    }
+
+    .card-a-chip {
+      width: 36px;
+      height: 26px;
+      border-radius: 5px;
+      background: linear-gradient(145deg, #E8D4B0, #D4BC90, #C4A870, #D4BC90);
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, .3),
+        inset 0 1px 0 rgba(255, 255, 255, .5),
+        inset 0 -1px 0 rgba(139, 105, 20, .3);
+      position: relative;
+    }
+
+    .card-a-chip::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 22px;
+      height: 16px;
+      border: 1.5px solid rgba(139, 105, 20, .4);
+      border-radius: 2px;
+    }
+
+    .card-a-chip::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 16px;
+      border: 1px solid rgba(139, 105, 20, .25);
+      border-radius: 1px;
+    }
+
+    .card-a-label {
+      font-size: 11px;
+      color: rgba(139, 105, 20, .8);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .25);
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-a-amount {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: #2D2820;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      text-shadow:
+        0 1px 0 rgba(255, 255, 255, .2),
+        0 2px 4px rgba(0, 0, 0, .1);
+      position: relative;
+      z-index: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card-a-amount .cur {
+      font-size: 16px;
+      font-weight: 500;
+      background: linear-gradient(180deg, #B8A67C, #8B6914);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .card-a-stats {
+      display: flex;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-a-stat {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, .04);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .15),
+        inset 0 -1px 0 rgba(139, 105, 20, .08);
+    }
+
+    .card-a-stat-label {
+      font-size: 10px;
+      color: rgba(139, 105, 20, .6);
+      letter-spacing: .04em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card-a-stat-label svg {
+      width: 12px;
+      height: 12px;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .card-a-stat-label svg.in { stroke: #5AE89C; }
+    .card-a-stat-label svg.out { stroke: #F06B7E; }
+
+    .card-a-stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: rgba(45, 40, 32, .9);
+    }
+
+    .card-a-stat.in .card-a-stat-value { color: #4A9E7C; }
+    .card-a-stat.out .card-a-stat-value { color: #C85A6E; }
+
+    /* ========== 方案 B: 复古纸质收据型 ========== */
+    .card-b {
+      background:
+        linear-gradient(180deg, rgba(255, 252, 245, .9) 0%, rgba(252, 248, 240, .9) 100%);
+      border-radius: 3px;
+      padding: 16px 18px 14px;
+      position: relative;
+      box-shadow:
+        0 4px 16px rgba(0, 0, 0, .08),
+        0 1px 3px rgba(0, 0, 0, .05);
+      border: 1px solid rgba(212, 165, 116, .2);
+      margin-bottom: 12px;
+    }
+
+    /* 纸张纹理 */
+    .card-b::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+      opacity: .15;
+      pointer-events: none;
+      border-radius: inherit;
+    }
+
+    /* 锯齿边缘 */
+    .card-b::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 12px;
+      background: linear-gradient(135deg, transparent 33.33%, #f9f9f9 33.33%, #f9f9f9 66.67%, transparent 66.67%);
+      background-size: 8px 12px;
+      background-position: bottom;
+    }
+
+    .card-b-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed rgba(212, 165, 116, .3);
+    }
+
+    .card-b-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #8B6914;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .card-b-date {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: 'DM Sans', monospace;
+    }
+
+    .card-b-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .card-b-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .card-b-amount {
+      font-family: 'DM Sans', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #2D2820;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card-b-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(212, 165, 116, .3), transparent);
+      margin: 10px 0 8px;
+    }
+
+    .card-b-footer {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .card-b-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .card-b-stat-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: .03em;
+    }
+
+    .card-b-stat-value {
+      font-family: 'DM Sans', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card-b-stat.in .card-b-stat-value { color: #4A9E7C; }
+    .card-b-stat.out .card-b-stat-value { color: #C85A6E; }
+
+    .card-b-stamp {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid rgba(212, 165, 116, .4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #B89614;
+      letter-spacing: .05em;
+      transform: rotate(-15deg);
+      box-shadow:
+        inset 0 1px 2px rgba(255, 255, 255, .2),
+        0 1px 3px rgba(0, 0, 0, .05);
+    }
+
+    /* ========== 方案 C: 皮革钱包质感型 ========== */
+    .card-c {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, .05) 0%, transparent 50%, rgba(0, 0, 0, .08) 100%),
+        linear-gradient(160deg, #4A3C2D 0%, #5A4A3A 20%, #4A3C2D 40%, #3A2C1D 60%, #5A4A3A 80%, #4A3C2D 100%);
+      border-radius: 16px;
+      padding: 18px 18px 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 10px 40px rgba(0, 0, 0, .3),
+        0 3px 10px rgba(0, 0, 0, .2),
+        inset 0 1px 0 rgba(255, 255, 255, .08),
+        inset 0 -1px 0 rgba(0, 0, 0, .15);
+      border: 1px solid rgba(90, 70, 50, .3);
+    }
+
+    /* 皮革纹理 */
+    .card-c::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='leather'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0 0.2 0 0 0 0.1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23leather)'/%3E%3C/svg%3E");
+      opacity: .25;
+      pointer-events: none;
+      border-radius: inherit;
+    }
+
+    /* 缝线效果 */
+    .card-c::after {
+      content: '';
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      border: 1px dashed rgba(212, 168, 83, .15);
+      border-radius: 12px;
+      pointer-events: none;
+    }
+
+    .card-c-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-c-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #D4A843, #B89614);
+      box-shadow:
+        0 2px 6px rgba(0, 0, 0, .3),
+        inset 0 1px 0 rgba(255, 255, 255, .3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #4A3C2D;
+    }
+
+    .card-c-brand {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(212, 168, 83, .6);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .card-c-label {
+      font-size: 11px;
+      color: rgba(212, 168, 83, .7);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-c-amount {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 30px;
+      font-weight: 700;
+      color: #F5F2EC;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      margin-bottom: 14px;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, .4);
+      position: relative;
+      z-index: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card-c-amount .cur {
+      font-size: 15px;
+      font-weight: 500;
+      background: linear-gradient(180deg, #F0D080, #D4A843);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card-c-stats {
+      display: flex;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-c-stat {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .06);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .05);
+    }
+
+    .card-c-stat-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .card-c-stat-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-c-stat-icon.in {
+      background: rgba(90, 232, 156, .15);
+      box-shadow: inset 0 1px 0 rgba(90, 232, 156, .3);
+    }
+
+    .card-c-stat-icon.out {
+      background: rgba(240, 107, 126, .15);
+      box-shadow: inset 0 1px 0 rgba(240, 107, 126, .3);
+    }
+
+    .card-c-stat-icon svg {
+      width: 10px;
+      height: 10px;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .card-c-stat-icon.in svg { stroke: #5AE89C; }
+    .card-c-stat-icon.out svg { stroke: #F06B7E; }
+
+    .card-c-stat-label {
+      font-size: 9px;
+      color: rgba(255, 255, 255, .4);
+      letter-spacing: .04em;
+    }
+
+    .card-c-stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card-c-stat.in .card-c-stat-value { color: #5AE89C; }
+    .card-c-stat.out .card-c-stat-value { color: #F06B7E; }
+
+    /* ========== 方案 D: 立体浮雕阴影型 ========== */
+    .card-d {
+      background: linear-gradient(145deg, #f0f0f0, #ffffff);
+      border-radius: 20px;
+      padding: 20px 22px 18px;
+      position: relative;
+      box-shadow:
+        8px 8px 20px rgba(0, 0, 0, .15),
+        -4px -4px 12px rgba(255, 255, 255, .9),
+        inset 2px 2px 4px rgba(255, 255, 255, .8),
+        inset -1px -1px 3px rgba(0, 0, 0, .05);
+    }
+
+    .card-d-inner {
+      background: linear-gradient(145deg, #e8e8e8, #f5f5f5);
+      border-radius: 16px;
+      padding: 16px 18px 14px;
+      box-shadow:
+        inset 4px 4px 10px rgba(0, 0, 0, .1),
+        inset -2px -2px 6px rgba(255, 255, 255, .6);
+    }
+
+    .card-d-label {
+      font-size: 11px;
+      color: #B89614;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .5);
+    }
+
+    .card-d-amount {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 34px;
+      font-weight: 700;
+      color: #2D2820;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, .08);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card-d-amount .cur {
+      font-size: 17px;
+      font-weight: 500;
+      color: #B89614;
+    }
+
+    .card-d-stats {
+      display: flex;
+      gap: 10px;
+    }
+
+    .card-d-stat {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: linear-gradient(145deg, #f5f5f5, #e8e8e8);
+      box-shadow:
+        3px 3px 8px rgba(0, 0, 0, .08),
+        -2px -2px 5px rgba(255, 255, 255, .7);
+    }
+
+    .card-d-stat-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .card-d-stat-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      box-shadow:
+        2px 2px 5px rgba(0, 0, 0, .1),
+        -1px -1px 3px rgba(255, 255, 255, .8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-d-stat-icon.in {
+      background: linear-gradient(145deg, #5AE89C, #48C886);
+    }
+
+    .card-d-stat-icon.out {
+      background: linear-gradient(145deg, #F06B7E, #D85A6E);
+    }
+
+    .card-d-stat-icon svg {
+      width: 12px;
+      height: 12px;
+      fill: none;
+      stroke: white;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .card-d-stat-label {
+      font-size: 10px;
+      color: var(--text-secondary);
+      letter-spacing: .04em;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, .5);
+    }
+
+    .card-d-stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, .05);
+    }
+
+    .card-d-stat.in .card-d-stat-value { color: #48C886; }
+    .card-d-stat.out .card-d-stat-value { color: #D85A6E; }
+
+    /* ========== 原方案对比 ========== */
+    .card-original {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, .6) 0%, transparent 30%, transparent 70%, rgba(255, 255, 255, .3) 100%),
+        linear-gradient(160deg, #2C2926 0%, #3A3530 20%, #2F2B26 40%, #342F2A 60%, #28241F 80%, #1E1B17 100%);
+      border: 1px solid rgba(184, 134, 11, .25);
+      border-radius: 20px;
+      padding: 24px 24px 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 12px 40px rgba(0, 0, 0, .15),
+        0 4px 12px rgba(0, 0, 0, .1);
+    }
+
+    .orig-info {
+      margin-top: 16px;
+      padding: 16px;
+      background: rgba(0, 0, 0, .04);
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .orig-info strong {
+      color: var(--text-primary);
+    }
+
+    .orig-info ul {
+      margin: 8px 0 0 16px;
+    }
+
+    .orig-info li {
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h2>余额卡片拟物风格设计方案</h2>
+
+  <!-- 原方案分析 -->
+  <div class="design-section">
+    <div class="design-label">原方案分析（当前设计）</div>
+    <div class="card-original">
+      <!-- 简化展示原方案核心元素 -->
+      <div style="color: rgba(212, 168, 83, .6); font-size: 10px; letter-spacing: .12em; margin-bottom: 8px;">WEALTH FINANCE</div>
+      <div style="color: rgba(212, 168, 83, .7); font-size: 12px; letter-spacing: .06em; margin-bottom: 6px;">本月余额</div>
+      <div style="color: #F5F2EC; font-size: 40px; font-weight: 700; margin-bottom: 16px;">¥12,856.42</div>
+      <div style="display: flex; gap: 10px;">
+        <div style="flex: 1; background: rgba(255,255,255,.06); border-radius: 14px; padding: 12px;">
+          <div style="font-size: 10px; color: rgba(255,255,255,.35);">收入</div>
+          <div style="font-size: 16px; color: #5AE89C;">¥25,000.00</div>
+        </div>
+        <div style="flex: 1; background: rgba(255,255,255,.06); border-radius: 14px; padding: 12px;">
+          <div style="font-size: 10px; color: rgba(255,255,255,.35);">支出</div>
+          <div style="font-size: 16px; color: #F06B7E;">¥12,143.58</div>
+        </div>
+      </div>
+      <div style="position: absolute; bottom: 18px; right: 24px; font-size: 13px; color: rgba(212,168,83,.1); letter-spacing: .15em;">•••• 8826</div>
+    </div>
+    <div class="orig-info">
+      <strong>原方案优点：</strong>深色金属质感、全息光泽、刷纹纹理，高级感强。<br>
+      <strong>存在问题：</strong>
+      <ul>
+        <li>高度过高（约 180px）</li>
+        <li>装饰元素过多（芯片、品牌名、卡号水印）</li>
+        <li>数字字号过大（40px），视觉权重过高</li>
+        <li>信息密度低，核心数据分散</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 方案 A -->
+  <div class="design-section">
+    <div class="design-label">方案 A：黄铜浮雕紧凑型（推荐）</div>
+    <div class="card-a">
+      <div class="card-a-top">
+        <div class="card-a-brand">GOLD ACCOUNT</div>
+        <div class="card-a-chip"></div>
+      </div>
+      <div class="card-a-label">本月余额</div>
+      <div class="card-a-amount"><span class="cur">¥</span>12,856.42</div>
+      <div class="card-a-stats">
+        <div class="card-a-stat in">
+          <div class="card-a-stat-label">
+            <svg class="in" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            收入
+          </div>
+          <div class="card-a-stat-value">¥25,000.00</div>
+        </div>
+        <div class="card-a-stat out">
+          <div class="card-a-stat-label">
+            <svg class="out" viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+            支出
+          </div>
+          <div class="card-a-stat-value">¥12,143.58</div>
+        </div>
+      </div>
+    </div>
+    <div class="pros-cons">
+      <strong>高度：</strong>约 110px（减少 40%）<br>
+      <strong>特点：</strong>黄铜金属质感、刷纹纹理、光泽反射、浮雕阴影，保留高级感但压缩布局。芯片缩小，数字字号降至 32px，移除卡号水印。<br>
+      <strong>风格：</strong>复古金属、质感精致、光影立体。
+    </div>
+  </div>
+
+  <!-- 方案 B -->
+  <div class="design-section">
+    <div class="design-label">方案 B：复古纸质收据型</div>
+    <div class="card-b">
+      <div class="card-b-header">
+        <div class="card-b-title">轻记账 · 月度账单</div>
+        <div class="card-b-date">2026.07</div>
+      </div>
+      <div class="card-b-row">
+        <div class="card-b-label">本月结余</div>
+        <div class="card-b-amount">¥12,856.42</div>
+      </div>
+      <div class="card-b-divider"></div>
+      <div class="card-b-footer">
+        <div class="card-b-stat in">
+          <div class="card-b-stat-label">收入 TOTAL</div>
+          <div class="card-b-stat-value">¥25,000.00</div>
+        </div>
+        <div class="card-b-stat out">
+          <div class="card-b-stat-label">支出 EXPENSE</div>
+          <div class="card-b-stat-value">¥12,143.58</div>
+        </div>
+      </div>
+      <div class="card-b-stamp">PAID</div>
+    </div>
+    <div class="pros-cons">
+      <strong>高度：</strong>约 90px（减少 50%）<br>
+      <strong>特点：</strong>纸张纹理、锯齿边缘、虚线分隔、印章装饰、复古收据风格。信息横向排列，极致紧凑。<br>
+      <strong>风格：</strong>怀旧纸质、手工质感、复古情怀。
+    </div>
+  </div>
+
+  <!-- 方案 C -->
+  <div class="design-section">
+    <div class="design-label">方案 C：皮革钱包质感型</div>
+    <div class="card-c">
+      <div class="card-c-header">
+        <div class="card-c-logo">¥</div>
+        <div class="card-c-brand">WEALTH CARD</div>
+      </div>
+      <div class="card-c-label">本月余额</div>
+      <div class="card-c-amount"><span class="cur">¥</span>12,856.42</div>
+      <div class="card-c-stats">
+        <div class="card-c-stat in">
+          <div class="card-c-stat-header">
+            <div class="card-c-stat-icon in">
+              <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            </div>
+            <div class="card-c-stat-label">收入</div>
+          </div>
+          <div class="card-c-stat-value">¥25,000</div>
+        </div>
+        <div class="card-c-stat out">
+          <div class="card-c-stat-header">
+            <div class="card-c-stat-icon out">
+              <svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+            </div>
+            <div class="card-c-stat-label">支出</div>
+          </div>
+          <div class="card-c-stat-value">¥12,144</div>
+        </div>
+      </div>
+    </div>
+    <div class="pros-cons">
+      <strong>高度：</strong>约 115px（减少 36%）<br>
+      <strong>特点：</strong>皮革纹理、缝线边框、金色logo、深色质感、内凹阴影。保留深色金属风格但简化装饰。<br>
+      <strong>风格：</strong>皮质奢华、手工质感、高级钱包。
+    </div>
+  </div>
+
+  <!-- 方案 D -->
+  <div class="design-section">
+    <div class="design-label">方案 D：立体浮雕阴影型</div>
+    <div class="card-d">
+      <div class="card-d-inner">
+        <div class="card-d-label">本月余额</div>
+        <div class="card-d-amount"><span class="cur">¥</span>12,856.42</div>
+        <div class="card-d-stats">
+          <div class="card-d-stat in">
+            <div class="card-d-stat-row">
+              <div class="card-d-stat-icon in">
+                <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </div>
+              <div class="card-d-stat-label">收入</div>
+            </div>
+            <div class="card-d-stat-value">¥25,000.00</div>
+          </div>
+          <div class="card-d-stat out">
+            <div class="card-d-stat-row">
+              <div class="card-d-stat-icon out">
+                <svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+              </div>
+              <div class="card-d-stat-label">支出</div>
+            </div>
+            <div class="card-d-stat-value">¥12,143.58</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pros-cons">
+      <strong>高度：</strong>约 125px（减少 30%）<br>
+      <strong>特点：</strong>双层浮雕结构、凸起外框、内凹阴影、Neumorphism 风格、柔和光影。<br>
+      <strong>风格：</strong>现代拟物、立体阴影、柔和质感。
+    </div>
+  </div>
+
+  <div style="margin-top: 48px; padding: 16px; background: rgba(212, 165, 116, 0.12); border-radius: 12px;">
+    <strong style="font-size: 14px;">推荐选择：</strong>
+    <p style="font-size: 13px; margin-top: 8px; line-height: 1.7;">
+      <strong>方案 A（黄铜浮雕）</strong> 最符合你喜欢的风格 —— 金属质感、光影效果、复古质感，同时高度压缩 40%，信息密度提升。<br><br>
+      若偏爱<strong>怀旧纸质</strong>，选择<strong>方案 B</strong>（复古收据，高度最紧凑）。<br>
+      若偏爱<strong>皮质奢华</strong>，选择<strong>方案 C</strong>（皮革钱包，保留深色质感）。<br>
+      若偏爱<strong>立体阴影</strong>，选择<strong>方案 D</strong>（Neumorphism 风格）。
+    </p>
+  </div>
+</body>
+</html>
