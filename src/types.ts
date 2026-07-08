@@ -12,6 +12,9 @@ export interface Transaction {
   tag: string
   merchant?: string
   location?: string
+  note?: string
+  accountId?: number
+  assetId?: number
 }
 
 export interface Asset {

@@ -35,6 +35,15 @@
           :budget-limit="budget.monthlyLimit"
         />
 
+        <!-- 快捷记账 -->
+        <QuickLog
+          :transactions="transactions"
+          :categories="categories"
+          :sub-categories="subCategories"
+          :days="30"
+          @pick="onQuickLogPick"
+        />
+
         <!-- 快捷分类 -->
         <section v-if="uiSettings.showCategoryFilter" class="category-section">
           <div
@@ -45,45 +54,36 @@
             :style="{ animationDelay: idx * 0.04 + 's' }"
             @click="activeCategory = cat.name"
           >
-            <CategoryIcon :name="cat.name" />
+            <CategoryIcon :icon="cat.icon" />
             <span class="cat-label">{{ cat.name }}</span>
           </div>
         </section>
-
-        <!-- 快捷记账 -->
-        <QuickLog
-          :transactions="transactions"
-          :categories="categories"
-          :sub-categories="subCategories"
-          :days="30"
-          @pick="onQuickLogPick"
-        />
       </div>
 
       <!-- transaction-drawer: 占满剩余空间，内部滚动 -->
       <div class="transaction-drawer">
+        <!-- 交易列表头部：抽屉第一层 -->
+        <div class="drawer-header">
+          <h2 class="section-title">最近交易</h2>
+          <div class="month-picker">
+            <button class="month-nav month-nav-prev" @click="shiftMonth(-1)" aria-label="上一月">
+              <ChevronLeft :size="14" :stroke-width="2.2" />
+            </button>
+            <div class="month-picker-label" @click="showDatePicker = true">
+              <span class="month">{{ currentMonth }}</span>
+              <span class="year">{{ currentYearNum }}</span>
+            </div>
+            <button class="month-nav month-nav-next" @click="shiftMonth(1)" aria-label="下一月">
+              <ChevronRight :size="14" :stroke-width="2.2" />
+            </button>
+          </div>
+        </div>
+
         <div class="transaction-list-section">
           <!-- 抽屉拖拽指示器 -->
           <div class="drawer-handle">
             <div class="drawer-indicator">
               <span class="drawer-bar"></span>
-            </div>
-          </div>
-
-          <!-- 交易列表头部 -->
-          <div class="drawer-header">
-            <h2 class="section-title">最近交易</h2>
-            <div class="month-picker">
-              <button class="month-nav month-nav-prev" @click="shiftMonth(-1)" aria-label="上一月">
-                <ChevronLeft :size="14" :stroke-width="2.2" />
-              </button>
-              <div class="month-picker-label" @click="showDatePicker = true">
-                <span class="month">{{ currentMonth }}</span>
-                <span class="year">{{ currentYearNum }}</span>
-              </div>
-              <button class="month-nav month-nav-next" @click="shiftMonth(1)" aria-label="下一月">
-                <ChevronRight :size="14" :stroke-width="2.2" />
-              </button>
             </div>
           </div>
 
@@ -741,7 +741,7 @@
                   :class="{ active: form.category === cat.name }"
                   @click="selectCategory(cat.name)"
                 >
-                  <CategoryIcon :name="cat.name" />
+                  <CategoryIcon :icon="cat.icon" />
                   <span class="chip-name">{{ cat.name }}</span>
                 </button>
               </div>
@@ -988,7 +988,7 @@ import QuickLog from './components/QuickLog.vue'
 import AssetTab from './components/AssetTab.vue'
 import { buildAssetFromTransaction } from './asset-utils'
 import type { Transaction, Category, SubCategories, Budget, RecurringItem, ReminderSettings, AppData, UISettings, Asset, AssetCardStyle } from './types'
-import { loadData, saveData, todayStr, currentMonthKey, prevMonthKey, lastYearSameMonthKey, formatDisplayDate } from './storage'
+import { loadData, saveData, getStorage, todayStr, currentMonthKey, prevMonthKey, lastYearSameMonthKey, formatDisplayDate } from './storage'
 import { shouldTriggerToday, recurringToTransaction, shouldShowReminder, markReminderShown, isReminderAlreadyShown } from './recurring'
 
 // ========== 应用数据（从本地存储加载） ==========
@@ -2127,9 +2127,10 @@ function onDateSelect(year: number, month: number) {
 }
 
 // ========== 分类图标映射 ==========
+// 统一返回 lucide 图标名（emoji 也会通过 getLucideIconName 归一化）
 function getCategoryIcon(cat: string): string {
   const found = categories.value.find(c => c.name === cat)
-  return found?.icon ?? 'Package'
+  return getLucideIconName(found?.icon ?? 'Package')
 }
 
 // ========== 数字键盘逻辑 ==========
@@ -2354,7 +2355,40 @@ function checkReminder() {
 }
 
 // ========== 初始化 ==========
-onMounted(() => {
+onMounted(async () => {
+  // 异步加载：从 storage adapter（web = localStorage，native = SQLite）拉数据
+  // web 模式下 loadData() 已经把 localStorage 同步读进 appData，
+  // 这里再做一次 adapter.exportAll() 是为了确认 storage 单例已就绪
+  try {
+    const storage = await getStorage()
+    const snap = await storage.exportAll()
+    // 用异步加载到的 snapshot 覆盖同步 loadData() 的结果（native 模式才有差异）
+    appData.value = {
+      transactions: snap.transactions,
+      categories: snap.categories,
+      subCategories: snap.subCategories,
+      budget: snap.budget,
+      recurring: snap.recurring,
+      reminder: snap.reminder,
+      uiSettings: snap.uiSettings,
+      nextId: snap.nextId,
+      nextRecurringId: snap.nextRecurringId,
+      assets: snap.assets,
+      assetCategories: snap.assetCategories,
+      nextAssetId: snap.nextAssetId,
+    }
+    // 把异步数据回灌到本地 refs（否则 script setup 里的初值仍是同步 loadData 的结果）
+    transactions.value = [...snap.transactions]
+    categories.value = [{ name: '全部', icon: 'LayoutGrid' }, ...snap.categories]
+    subCategories.value = { ...snap.subCategories }
+    budget.value = { ...snap.budget }
+    recurring.value = [...snap.recurring]
+    reminder.value = { ...snap.reminder }
+    uiSettings.value = { ...snap.uiSettings }
+  } catch (e) {
+    console.error('[App] storage init failed, using defaults', e)
+  }
+
   recalcTotals()
 
   // 检查周期性记账
@@ -2421,11 +2455,15 @@ defineExpose({ deleteTransaction })
      保留卡片阴影的左右延伸 */
   overflow: visible;
   -webkit-overflow-scrolling: touch;
-  padding: 0 20px 100px;
+  //padding: 0 0px 100px;
   //padding-bottom: 100px;
   scrollbar-width: none;
   -ms-overflow-style: none;
   will-change: opacity, transform;
+}
+/* 除首页外的 page-shell 统一留 20px 左右内边距，避免内容贴边 */
+.page-shell:not(.home-fixed-layout) {
+  padding: 0 20px;
 }
 .page-shell::-webkit-scrollbar {
   display: none;
@@ -2851,32 +2889,35 @@ defineExpose({ deleteTransaction })
   padding: 0 20px;
 }
 
-/* 交易抽屉（占满剩余空间和全宽，内部滚动） */
+/* 交易抽屉外壳：不再自身滚动，header 钉在顶部，列表区单独滚动 */
 .transaction-drawer {
   flex: 1;
   min-height: 0;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* 底部留出导航栏空间 */
+  //padding-bottom: 80px;
+  /* 滑动时阻止容器滚动 */
+  touch-action: pan-y;
+}
+
+/* ============ 交易列表区域（抽屉内的滚动容器） ============ */
+.transaction-list-section {
+  flex: 1;
+  min-height: 0;
+  background: #ffffff;
+  //border-radius: 24px 24px 0 0;
+  box-shadow: var(--shadow-md);
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  /* 底部留出导航栏空间 */
-  padding-bottom: 80px;
-  /* 滑动时阻止容器滚动 */
-  touch-action: pan-y;
 }
-.transaction-drawer::-webkit-scrollbar {
+.transaction-list-section::-webkit-scrollbar {
   display: none;
-}
-
-/* ============ 交易列表区域（抽屉内部） ============ */
-.transaction-list-section {
-  background: #ffffff;
-  border-radius: 24px 24px 0 0;
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
-  margin: 0 20px;
 }
 
 /* 抽屉拖拽指示器（已隐藏，不再需要拖拽） */
@@ -2911,19 +2952,23 @@ defineExpose({ deleteTransaction })
   background: rgba(0, 0, 0, 0.12);
 }
 
-/* 抽屉头部 */
+/* 抽屉头部：固定在抽屉顶部，列表滚动时保持可见 */
 .drawer-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20px 26px 12px;
-  //border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: #ffffff;
   user-select: none;
+  border-radius: 24px 24px 0 0;
 }
 
 /* 抽屉内容区 */
 .drawer-content {
-  padding: 16px 20px 0;
+  padding: 16px 20px 100px 20px;
   /* 无需单独滚动，由 transaction-drawer 统一处理滚动 */
 }
 
@@ -3766,7 +3811,7 @@ defineExpose({ deleteTransaction })
   padding: 8px 20px 16px;
   padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
   background: transparent;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  //border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   /* Apple风格渐变模糊伪元素 */
   isolation: isolate;
 }
@@ -3779,14 +3824,14 @@ defineExpose({ deleteTransaction })
   /* 初始状态：有 backdrop-filter 但背景色极淡，模糊效果几乎不可见 */
   background: rgba(249, 249, 249, 0.01);
   -webkit-backdrop-filter: saturate(180%) blur(24px);
-  backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: blur(24px);
   box-shadow: none;
   transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* 底部渐变过渡层 + 模糊效果 */
 .stats-top-bar::after {
-  content: '';
+  //content: '';
   position: absolute;
   top: 100%;
   left: 0;
@@ -5322,6 +5367,7 @@ defineExpose({ deleteTransaction })
 }
 
 :root[data-theme="dark"] .drawer-header {
+  background: rgba(45, 41, 37, 0.95);
   border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
