@@ -1,54 +1,39 @@
 <template>
   <div class="cico" :class="colorClass">
-    <component :is="iconComponent" :size="24" :stroke-width="1.6" />
+    <IconDisplay :icon="resolvedIcon" :size="24" :stroke-width="1.6" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import {
-  LayoutGrid, Utensils, Car, ShoppingBag, Gamepad2,
-  Heart, Home, BookOpen, Gift, Package,
-  Coffee, Apple, IceCream, Pizza, Wine,
-  Bike, Train, Bus, Plane, CarTaxiFront,
-  ShoppingCart, Store, Tag, Shirt, Watch,
-  Banknote, Wallet, TrendingUp, PiggyBank, Landmark,
-  Film, Music, Tv, Ticket, Guitar,
-  HeartPulse, Pill, Stethoscope, Activity, Hospital,
-  Building2, Lamp, Bed, Bath, Key,
-  GraduationCap, Pencil, Notebook, Lightbulb,
-  CircleDollarSign, CreditCard, Coins
-} from '../utils/icons'
+import IconDisplay from './IconDisplay.vue'
+import { getLucideIconName } from '../utils/emojiToLucide'
 
-const props = defineProps<{ name: string }>()
+const props = defineProps<{ icon: string }>()
 
-interface IconDef {
-  component: any
-  cls: string
+/**
+ * lucide 图标名 → 配色 class
+ * 视觉风格与原 CategoryIcon 一致（薄色背景 + 主色描边），
+ * 统一通过 lucide 图标库渲染（兼容 emoji 入参，内部走 getLucideIconName 归一化）。
+ */
+const colorMap: Record<string, string> = {
+  LayoutGrid: 'c-all',
+  Utensils: 'c-food',
+  Car: 'c-trn',
+  ShoppingBag: 'c-shp',
+  Gamepad2: 'c-ent',
+  Heart: 'c-hlt',
+  HeartPulse: 'c-hlt',
+  Pill: 'c-hlt',
+  Stethoscope: 'c-hlt',
+  Home: 'c-home',
+  BookOpen: 'c-edu',
+  Gift: 'c-gift',
+  Package: 'c-other',
 }
 
-const map: Record<string, IconDef> = {
-  '全部': { cls: 'c-all', component: LayoutGrid },
-  '餐饮': { cls: 'c-food', component: Utensils },
-  '交通': { cls: 'c-trn', component: Car },
-  '购物': { cls: 'c-shp', component: ShoppingBag },
-  '娱乐': { cls: 'c-ent', component: Gamepad2 },
-  '健康': { cls: 'c-hlt', component: Heart },
-  '医疗': { cls: 'c-hlt', component: HeartPulse },
-  '居家': { cls: 'c-home', component: Home },
-  '教育': { cls: 'c-edu', component: BookOpen },
-  '人情': { cls: 'c-gift', component: Gift },
-  '其他': { cls: 'c-other', component: Package }
-}
-
-const fallback: IconDef = {
-  cls: 'c-other',
-  component: Package
-}
-
-const def = computed(() => map[props.name] || fallback)
-const iconComponent = computed(() => def.value.component)
-const colorClass = computed(() => def.value.cls)
+const resolvedIcon = computed(() => getLucideIconName(props.icon))
+const colorClass = computed(() => colorMap[resolvedIcon.value] || 'c-other')
 </script>
 
 <style scoped>
