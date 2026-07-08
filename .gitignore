@@ -29,6 +29,10 @@ dist-ssr
 # Debug screenshots & temp files
 *-screenshot.png
 *-debug.png
+
+# Android release keystore —— 丢失则用户无法升级，必须从备份恢复
+*.keystore
+android/keystore.properties
 playwright-test.png
 debug-borders.png
 heatmap-debug.png

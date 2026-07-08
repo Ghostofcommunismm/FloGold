@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.example.vue3capacitor',
-  appName: 'Vue3 Capacitor App',
+  appId: 'com.flogold.app',
+  appName: 'FloGold',
   webDir: 'dist',
   plugins: {
     StatusBar: {

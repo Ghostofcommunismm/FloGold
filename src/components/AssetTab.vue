@@ -196,7 +196,7 @@ function handleViewTransaction(id: number) {
   -webkit-transform: translate3d(0, 0, 0);
   /* Apple风格渐变模糊：顶部模糊强度最大，向下递减 */
   background: transparent;
-  border-bottom: 1px solid transparent;
+  //border-bottom: 1px solid transparent;
   transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   isolation: isolate;
 }
@@ -209,14 +209,14 @@ function handleViewTransaction(id: number) {
   /* 初始状态：有 backdrop-filter 但背景色极淡，模糊效果几乎不可见 */
   background: rgba(249, 249, 249, 0.01);
   -webkit-backdrop-filter: saturate(180%) blur(24px);
-  backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: blur(24px);
   box-shadow: none;
   transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* 底部渐变过渡层 + 模糊效果 */
 .page-header::after {
-  content: '';
+  //content: '';
   position: absolute;
   top: 100%;
   left: 0;
@@ -227,7 +227,7 @@ function handleViewTransaction(id: number) {
   /* 初始状态：极淡渐变背景 + 模糊效果 */
   background: linear-gradient(to bottom, rgba(249, 249, 249, 0.01), rgba(249, 249, 249, 0));
   -webkit-backdrop-filter: saturate(180%) blur(24px);
-  backdrop-filter: saturate(180%) blur(24px);
+  //backdrop-filter: saturate(180%) blur(24px);
   pointer-events: none;
   transition: background 0.3s ease;
 }
