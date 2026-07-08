@@ -29,7 +29,7 @@
                   :class="{ active: form.category === cat.name }"
                   @click="selectCategory(cat)"
                 >
-                  <span class="chip-icon">{{ cat.icon }}</span>
+                  <span class="chip-icon"><IconDisplay :icon="cat.icon" :size="16" /></span>
                   <span>{{ cat.name }}</span>
                 </button>
               </div>
@@ -136,6 +136,7 @@
 import { ref, watch, computed } from 'vue'
 import type { Asset, Category } from '../types'
 import { todayStr } from '../storage'
+import IconDisplay from './IconDisplay.vue'
 
 const props = defineProps<{
   show: boolean
@@ -153,7 +154,7 @@ const isEdit = computed(() => !!props.asset)
 const form = ref({
   name: '',
   category: '',
-  icon: '📦',
+  icon: 'Package',
   purchasePrice: '' as string | number,
   purchaseDate: todayStr(),
   currentValue: '' as string | number,
@@ -196,7 +197,7 @@ watch(() => props.show, (v) => {
   } else {
     // 新增模式：默认值
     Object.assign(form.value, {
-      name: '', category: props.assetCategories[0]?.name ?? '其他', icon: props.assetCategories[0]?.icon ?? '📦',
+      name: '', category: props.assetCategories[0]?.name ?? '其他', icon: props.assetCategories[0]?.icon ?? 'Package',
       purchasePrice: '', purchaseDate: todayStr(), currentValue: '',
       brand: '', model: '', serialNumber: '', location: '', owner: '', channel: '',
       usefulLife: 5, salvageRate: 0.1, depreciationType: 'straight', note: '',

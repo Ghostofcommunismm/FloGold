@@ -30,7 +30,7 @@
           <!-- 搜索结果 -->
           <div class="search-results">
             <div v-if="filtered.length === 0" class="empty-state">
-              <span class="empty-icon">🔍</span>
+              <span class="empty-icon"><IconDisplay icon="Search" :size="48" /></span>
               <span class="empty-text">{{ keyword ? '未找到相关记录' : '输入关键词搜索交易记录' }}</span>
             </div>
             <div v-else class="result-list">
@@ -41,13 +41,13 @@
               >
                 <div class="result-left">
                   <div class="result-icon-box" :class="tx.type">
-                    <span>{{ tx.icon }}</span>
+                    <IconDisplay :icon="getLucideIconName(tx.icon)" :size="21" />
                   </div>
                   <div class="result-info">
                     <span class="result-name" v-html="highlight(tx.name)"></span>
                     <span class="result-meta">
                       {{ tx.category }}<template v-if="tx.subCategory"> · {{ tx.subCategory }}</template> · {{ formatDate(tx.date) }}
-                      <template v-if="tx.merchant"> · 📍 {{ tx.merchant }}</template>
+                      <template v-if="tx.merchant"> · <IconDisplay icon="MapPin" :size="14" /> {{ tx.merchant }}</template>
                     </span>
                   </div>
                 </div>
@@ -67,6 +67,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import type { Transaction } from '../types'
 import { formatDisplayDate } from '../storage'
+import IconDisplay from './IconDisplay.vue'
 
 const props = defineProps<{
   show: boolean

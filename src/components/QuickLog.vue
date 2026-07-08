@@ -13,7 +13,7 @@
         @click="onPick(item)"
       >
         <div class="ql-icon-wrap">
-          <span class="ql-emoji">{{ item.emoji }}</span>
+          <IconDisplay :icon="item.icon" :size="21" />
         </div>
         <span class="ql-name">{{ item.subCategory }}</span>
       </button>
@@ -25,6 +25,8 @@
 import { computed } from 'vue'
 import type { Transaction, Category, SubCategories } from '../types'
 import { vReveal } from '../useAnimations'
+import IconDisplay from './IconDisplay.vue'
+import { getLucideIconName } from '../utils/emojiToLucide'
 
 interface QuickSub {
   key: string
@@ -32,7 +34,7 @@ interface QuickSub {
   subCategory: string
   count: number
   amount: number
-  emoji: string  // 对齐历史交易风格，从最近一笔取 emoji
+  icon: string  // Lucide 图标名称（兼容 emoji）
 }
 
 const props = withDefaults(
@@ -50,22 +52,22 @@ const emit = defineEmits<{
   (e: 'pick', payload: { category: string; subCategory: string }): void
 }>()
 
-// 兜底 emoji: 当没有该 subCategory 的交易时,用 category 默认 emoji
-function fallbackEmoji(category: string): string {
+// 兜底图标: 当没有该 subCategory 的交易时,用 category 默认图标
+function fallbackIcon(category: string): string {
   const cat = props.categories.find((c) => c.name === category)
-  return cat?.icon || '📦'
+  return cat?.icon || 'Package'
 }
 
-// 在 transactions 里找(category, subCategory)最近一笔的 emoji
-function pickEmoji(category: string, subCategory: string): string {
+// 在 transactions 里找(category, subCategory)最近一笔的图标
+function pickIcon(category: string, subCategory: string): string {
   // 按 id 倒序 = 按创建顺序倒序,最新一笔在前
   for (let i = props.transactions.length - 1; i >= 0; i--) {
     const t = props.transactions[i]
     if (t.category === category && t.subCategory === subCategory && t.icon) {
-      return t.icon
+      return getLucideIconName(t.icon)
     }
   }
-  return fallbackEmoji(category)
+  return fallbackIcon(category)
 }
 
 const topSubs = computed<QuickSub[]>(() => {
@@ -105,7 +107,7 @@ const topSubs = computed<QuickSub[]>(() => {
         subCategory: v.subCategory,
         count: v.count,
         amount: v.amount,
-        emoji: pickEmoji(v.category, v.subCategory),
+        icon: pickIcon(v.category, v.subCategory),
       }
     })
 })
@@ -187,20 +189,6 @@ function onPick(item: QuickSub) {
   margin-bottom: 8px;
 }
 
-/* emoji - 跟下面 tx-icon-emoji 同字号(21px) */
-.ql-emoji {
-  font-size: 21px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  /* emoji 字体回退: 苹果/微软/Noto Color */
-  font-family:
-    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji',
-    'Twemoji Mozilla', sans-serif;
-  text-align: center;
-}
-
 .ql-name {
   font-size: 13px;
   font-weight: 600;
@@ -222,7 +210,7 @@ function onPick(item: QuickSub) {
   }
 }
 
-/* 深色模式: emoji 不需要特殊处理，但背景容器同步 */
+/* 深色模式 */
 :root[data-theme="dark"] .ql-icon-wrap {
   background: rgba(201, 123, 123, 0.20);
 }

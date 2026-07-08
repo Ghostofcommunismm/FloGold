@@ -14,7 +14,7 @@
             <!-- 名称行 -->
             <div class="detail-section">
               <div class="name-row">
-                <div class="item-icon">{{ asset.icon || '📦' }}</div>
+                <div class="item-icon"><IconDisplay :icon="asset.icon || 'Package'" :size="26" /></div>
                 <div class="detail-name">{{ asset.name }}</div>
               </div>
               <div class="detail-badges">
@@ -132,6 +132,7 @@
 import { computed } from 'vue'
 import { calculateCurrentValue } from '../asset-utils'
 import type { Asset } from '../types'
+import IconDisplay from './IconDisplay.vue'
 
 const props = defineProps<{
   show: boolean

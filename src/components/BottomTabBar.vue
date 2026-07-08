@@ -1,6 +1,14 @@
 <template>
   <div class="liquid-tab-glass">
     <div class="capsule-inner">
+      <!-- 流动光影效果 -->
+      <div class="glow-wave">
+        <div class="glow-spot g1"></div>
+        <div class="glow-spot g2"></div>
+        <div class="glow-spot g3"></div>
+        <div class="glow-spot g4"></div>
+      </div>
+
       <!-- 首页 -->
       <button
         class="tab-item"
@@ -107,7 +115,7 @@ function ripple(e: MouseEvent) {
     linear-gradient(135deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.18) 48%, rgba(255, 255, 255, 0.34)),
     rgba(255, 255, 255, 0.22);
   -webkit-backdrop-filter: blur(18px) saturate(168%);
-  backdrop-filter: blur(18px) saturate(168%);
+  backdrop-filter: blur(4px) saturate(168%);
   box-shadow:
     0 18px 42px rgba(61, 56, 48, 0.20),
     0 6px 18px rgba(61, 56, 48, 0.12),
@@ -150,6 +158,119 @@ function ripple(e: MouseEvent) {
   /* 兜底模糊效果 - 确保所有情况都有模糊 */
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
   backdrop-filter: blur(16px) saturate(1.4);
+}
+
+/* 流动光影效果容器 */
+.glow-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 0 0 34px 34px;
+}
+
+/* 模糊光斑 */
+.glow-spot {
+  position: absolute;
+  bottom: -8px;
+  width: 80px;
+  height: 24px;
+  border-radius: 50%;
+  filter: blur(12px);
+  mix-blend-mode: screen;
+  opacity: 0.7;
+  animation: glowFlow var(--flow-duration, 3s) ease-in-out infinite;
+  animation-delay: var(--flow-delay, 0s);
+}
+
+.g1 {
+  left: -20px;
+  background: radial-gradient(ellipse, rgba(156, 39, 176, 0.65) 0%, rgba(255, 235, 59, 0.55) 50%, transparent 70%);
+  --flow-delay: 0s;
+  --flow-duration: 3.2s;
+}
+
+.g2 {
+  left: 15%;
+  background: radial-gradient(ellipse, rgba(255, 235, 59, 0.6) 0%, rgba(156, 39, 176, 0.5) 60%, transparent 80%);
+  --flow-delay: 0.8s;
+  --flow-duration: 4s;
+}
+
+.g3 {
+  left: 55%;
+  background: radial-gradient(ellipse, rgba(186, 104, 200, 0.6) 0%, rgba(255, 235, 59, 0.5) 55%, transparent 75%);
+  --flow-delay: 1.6s;
+  --flow-duration: 3.5s;
+}
+
+.g4 {
+  left: 85%;
+  background: radial-gradient(ellipse, rgba(255, 235, 59, 0.55) 0%, rgba(156, 39, 176, 0.45) 60%, transparent 85%);
+  --flow-delay: 2.4s;
+  --flow-duration: 4.2s;
+}
+
+/* 流动动画 */
+@keyframes glowFlow {
+  0%, 100% {
+    transform: translateX(0) scaleX(0.7);
+    opacity: 0.55;
+    bottom: -6px;
+  }
+  25% {
+    transform: translateX(40px) scaleX(1.1);
+    opacity: 0.8;
+    bottom: -10px;
+    filter: blur(14px);
+  }
+  50% {
+    transform: translateX(80px) scaleX(1.25);
+    opacity: 0.9;
+    bottom: -14px;
+    filter: blur(16px);
+  }
+  75% {
+    transform: translateX(50px) scaleX(0.85);
+    opacity: 0.7;
+    bottom: -8px;
+    filter: blur(12px);
+  }
+}
+
+/* 深色模式的光影效果 */
+:root[data-theme="dark"] .glow-spot {
+  opacity: 0.75;
+  filter: blur(14px);
+}
+
+:root[data-theme="dark"] .g1 {
+  background: radial-gradient(ellipse, rgba(186, 104, 200, 0.7) 0%, rgba(255, 235, 59, 0.6) 45%, transparent 70%);
+}
+
+:root[data-theme="dark"] .g2 {
+  background: radial-gradient(ellipse, rgba(255, 235, 59, 0.65) 0%, rgba(186, 104, 200, 0.55) 55%, transparent 75%);
+}
+
+:root[data-theme="dark"] .g3 {
+  background: radial-gradient(ellipse, rgba(200, 130, 220, 0.65) 0%, rgba(255, 245, 100, 0.55) 50%, transparent 75%);
+}
+
+:root[data-theme="dark"] .g4 {
+  background: radial-gradient(ellipse, rgba(255, 245, 100, 0.6) 0%, rgba(186, 104, 200, 0.5) 55%, transparent 80%);
+}
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .glow-spot {
+    animation: none;
+    transform: translateX(30px) scaleX(0.9);
+    opacity: 0.6;
+    bottom: -8px;
+  }
 }
 
 .capsule-inner::before,
@@ -322,7 +443,6 @@ function ripple(e: MouseEvent) {
   position: relative;
   overflow: visible;
   z-index: 3;
-  transform: translateY(-3px);
   touch-action: manipulation;
 }
 

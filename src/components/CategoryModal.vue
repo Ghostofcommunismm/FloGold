@@ -15,7 +15,7 @@
             <div v-if="showAdd" class="add-section">
               <div class="add-row">
                 <div class="icon-picker" @click="pickIcon">
-                  <span class="picked-icon">{{ newIcon }}</span>
+                  <span class="picked-icon"><IconDisplay :icon="newIcon" :size="22" /></span>
                 </div>
                 <input
                   v-model="newName"
@@ -29,12 +29,12 @@
               <!-- 图标选择 -->
               <div v-if="showIconPicker" class="icon-grid">
                 <button
-                  v-for="emoji in iconList"
-                  :key="emoji"
+                  v-for="icon in iconList"
+                  :key="icon"
                   class="icon-option"
-                  :class="{ active: newIcon === emoji }"
-                  @click="selectIcon(emoji)"
-                >{{ emoji }}</button>
+                  :class="{ active: newIcon === icon }"
+                  @click="selectIcon(icon)"
+                ><IconDisplay :icon="icon" :size="18" /></button>
               </div>
             </div>
           </Transition>
@@ -47,7 +47,7 @@
               class="cat-list-item"
             >
               <div class="cat-list-left">
-                <span class="cat-list-icon">{{ cat.icon }}</span>
+                <span class="cat-list-icon"><IconDisplay :icon="getLucideIconName(cat.icon)" :size="20" /></span>
                 <span class="cat-list-name">{{ cat.name }}</span>
                 <span v-if="cat.isDefault" class="cat-list-default">默认</span>
               </div>
@@ -67,7 +67,7 @@
               :key="'sub-' + cat.name"
               class="sub-cat-group"
             >
-              <div class="sub-cat-header">{{ cat.icon }} {{ cat.name }}</div>
+              <div class="sub-cat-header"><IconDisplay :icon="getLucideIconName(cat.icon)" :size="16" /> {{ cat.name }}</div>
               <div class="sub-cat-tags">
                 <span
                   v-for="sub in (localSubCategories[cat.name] || [])"
@@ -120,6 +120,8 @@
 <script setup lang="ts">
 import { ref, watch, computed, nextTick } from 'vue'
 import type { Category, SubCategories } from '../types'
+import IconDisplay from './IconDisplay.vue'
+import { getLucideIconName } from '../utils/emojiToLucide'
 
 const props = defineProps<{
   show: boolean
@@ -136,7 +138,7 @@ const localCategories = ref<{ name: string; icon: string; isDefault: boolean }[]
 const localSubCategories = ref<SubCategories>({})
 const showAdd = ref(false)
 const newName = ref('')
-const newIcon = ref('📦')
+const newIcon = ref('Package')
 const showIconPicker = ref(false)
 
 const showAddSub = ref(false)
@@ -145,7 +147,7 @@ const newSubName = ref('')
 const subNameError = ref('')
 const subInputRef = ref<HTMLInputElement | null>(null)
 
-const iconList = ['🍜','🚗','🛍️','🎮','🏠','💊','📚','🎁','📦','☕','🍔','🍕','🍜','🍣','🍰','🧋','🚇','✈️','🚕','🚲','⛽','🅿️','👔','👟','💻','📱','🎧','💄','🛋️','💡','🎬','🎵','⚽','🏀','🏊','🎮','🎪','🏫','✏️','📖','🎓','🏥','💉','💊','🩺','🦷','💰','💵','💳','📈','🏠','🏢','🐶','🐱','🌸','🎨','✂️','🔧','🧹','🎁','🎉','🍻']
+const iconList = ['Utensils', 'Car', 'ShoppingBag', 'Gamepad2', 'Home', 'HeartPulse', 'BookOpen', 'Gift', 'Package', 'Coffee', 'Pizza', 'Utensils', 'Cake', 'Coffee', 'Train', 'Plane', 'CarTaxiFront', 'Bike', 'Truck', 'ParkingCircle', 'Shirt', 'ShoppingBag', 'Laptop', 'Smartphone', 'Headphones', 'HandHeart', 'Lamp', 'Lightbulb', 'Film', 'Music', 'Circle', 'Circle', 'Circle', 'Gamepad2', 'Ticket', 'School', 'Pencil', 'Book', 'GraduationCap', 'Hospital', 'Syringe', 'Pill', 'Stethoscope', 'Circle', 'Banknote', 'Wallet', 'CreditCard', 'TrendingUp', 'Home', 'Building2', 'Dog', 'Cat', 'Flower2', 'Palette', 'Scissors', 'Wrench', 'Brush', 'Gift', 'PartyPopper', 'Wine']
 
 watch(() => props.show, (v) => {
   if (v) {
@@ -155,7 +157,7 @@ watch(() => props.show, (v) => {
     showAdd.value = false
     showIconPicker.value = false
     newName.value = ''
-    newIcon.value = '📦'
+    newIcon.value = 'Package'
   }
 })
 
@@ -175,7 +177,7 @@ function addCategory() {
   localCategories.value.push({ name, icon: newIcon.value, isDefault: false })
   localSubCategories.value[name] = ['其他']
   newName.value = ''
-  newIcon.value = '📦'
+  newIcon.value = 'Package'
   showAdd.value = false
   emitSave()
 }

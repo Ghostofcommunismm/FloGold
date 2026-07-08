@@ -1,174 +1,185 @@
 <template>
   <div class="app-container">
     <!-- ===== 首页（home） ===== -->
-    <AnimatePresence mode="wait">
+    <!-- 首页固定布局：顶部固定 + 底部抽屉占满剩余空间 -->
     <motion.section
       v-if="activeTab === 'home'"
       key="home"
-      class="page-shell"
+      class="page-shell home-fixed-layout"
       :initial="{ opacity: 0, y: 10 }"
       :animate="{ opacity: 1, y: 0 }"
       :exit="{ opacity: 0, y: -8 }"
       :transition="springs.steady"
-      @scroll.passive="onPageScroll"
     >
-    <!-- 顶部栏 -->
-    <header class="top-bar" :class="{ scrolled }">
-      <div class="greeting-box">
-        <span class="greeting-text">{{ greetingText }}</span>
-      </div>
-      <div class="top-bar-right">
-        <div class="bell-box neumorph-circle" @click="openSearch">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-          </svg>
-        </div>
-      </div>
-    </header>
-
-    <!-- 余额卡片 - 核心拟物 -->
-    <BalanceCard
-      :animated-balance="animatedBalance"
-      :total-income="totalIncome"
-      :total-expense="totalExpense"
-      :month-expense="monthExpense"
-      :month-expense-prev="prevSelectedMonthExpense"
-      :budget-limit="budget.monthlyLimit"
-    />
-
-    <!-- 快捷分类 -->
-    <section v-if="uiSettings.showCategoryFilter" class="category-section">
-      <div
-        v-for="(cat, idx) in categories"
-        :key="cat.name"
-        class="cat-btn"
-        :class="{ active: activeCategory === cat.name }"
-        :style="{ animationDelay: idx * 0.04 + 's' }"
-        @click="activeCategory = cat.name"
-      >
-        <CategoryIcon :name="cat.name" />
-        <span class="cat-label">{{ cat.name }}</span>
-      </div>
-    </section>
-
-    <!-- 快捷记账：最近 30 天常用二级分类 -->
-    <QuickLog
-      :transactions="transactions"
-      :categories="categories"
-      :sub-categories="subCategories"
-      :days="30"
-      @pick="onQuickLogPick"
-    />
-
-    <!-- 交易列表 -->
-    <section class="transaction-section">
-      <div class="section-header">
-        <h2 class="section-title">最近交易</h2>
-        <div class="month-picker">
-          <button class="month-nav month-nav-prev" @click="shiftMonth(-1)" aria-label="上一月">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 18 9 12 15 6"/>
-            </svg>
-          </button>
-          <div class="month-picker-label" @click="showDatePicker = true">
-            <span class="month">{{ currentMonth }}</span>
-            <span class="year">{{ currentYearNum }}</span>
+      <!-- fixed-header-area: 顶部固定区域 -->
+      <div class="fixed-header-area">
+        <!-- 顶部栏 -->
+        <header class="top-bar">
+          <div class="greeting-box">
+            <span class="greeting-text">{{ greetingText }}</span>
           </div>
-          <button class="month-nav month-nav-next" @click="shiftMonth(1)" aria-label="下一月">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div v-if="filteredTransactions.length === 0" class="tx-empty">
-        <span class="tx-empty-icon">📒</span>
-        <span class="tx-empty-text">本月暂无交易记录</span>
-        <button class="tx-empty-btn" @click="openAddModal">记一笔</button>
-      </div>
-
-      <template v-else>
-        <div v-for="group in transactionGroups" :key="group.date" class="tx-group">
-          <div class="tx-group-label">
-            <span>{{ group.label }}</span>
-            <span class="tx-group-meta">{{ group.totalText }}</span>
-          </div>
-          <TransitionGroup name="list" tag="div" class="transaction-list">
-            <div
-              v-for="(tx, index) in group.items"
-              :key="tx.id"
-              class="tx-swipe-wrap"
-              :class="{ dragging: swiping && swipeCurrentId === tx.id, deleting: deletingId === tx.id }"
-              :style="{ animationDelay: index * 0.04 + 's' }"
-              :data-tx-id="tx.id"
-            >
-              <!-- 滑动操作按钮（背景层，宽度随滑动进度拉伸） -->
-              <div class="tx-swipe-actions" :style="actionsStyle(tx.id)">
-                <button
-                  class="tx-swipe-btn edit"
-                  :style="btnStyle(tx.id, 0)"
-                  @click.stop="onSwipeEdit(tx)"
-                >
-                  <span class="tx-swipe-inner" :style="innerStyle(tx.id, 0)">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                    <span>编辑</span>
-                  </span>
-                </button>
-                <button
-                  class="tx-swipe-btn delete"
-                  :style="btnStyle(tx.id, 1)"
-                  @click.stop="onSwipeDelete(tx)"
-                >
-                  <span class="tx-swipe-inner" :style="innerStyle(tx.id, 1)">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                    </svg>
-                    <span>{{ deleteLabel(tx.id) }}</span>
-                  </span>
-                </button>
-              </div>
-              <!-- 卡片内容（前景层，可滑动） -->
-              <div
-                class="tx-card"
-                :class="{ swiped: swipedId === tx.id, swiping: swiping && swipeCurrentId === tx.id }"
-                :style="cardStyle(tx.id)"
-                @pointerdown="onSwipeStart($event, tx.id)"
-                @pointermove="onSwipeMove"
-                @pointerup="onSwipeEnd"
-                @pointercancel="onSwipeEnd"
-              >
-                <div class="tx-main">
-                  <div class="tx-left">
-                    <div class="tx-icon-box" :class="tx.type">
-                      <span class="tx-icon-emoji">{{ tx.icon }}</span>
-                    </div>
-                    <div class="tx-info">
-                      <span class="tx-name">{{ tx.name }}</span>
-                      <span class="tx-category">
-                        {{ tx.category }}<template v-if="tx.subCategory"> · {{ tx.subCategory }}</template>
-                        <template v-if="tx.merchant"> · 📍 {{ tx.merchant }}</template>
-                      </span>
-                    </div>
-                  </div>
-                  <div class="tx-right">
-                    <span class="tx-amount" :class="tx.type">
-                      {{ tx.type === 'income' ? '+' : '-' }}¥{{ tx.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
+          <div class="top-bar-right">
+            <div class="bell-box neumorph-circle" @click="openSearch">
+              <Search :size="20" :stroke-width="2" />
             </div>
-          </TransitionGroup>
+          </div>
+        </header>
+
+        <!-- 余额卡片 -->
+        <BalanceCard
+          :animated-balance="animatedBalance"
+          :total-income="totalIncome"
+          :total-expense="totalExpense"
+          :month-expense="monthExpense"
+          :month-expense-prev="prevSelectedMonthExpense"
+          :budget-limit="budget.monthlyLimit"
+        />
+
+        <!-- 快捷分类 -->
+        <section v-if="uiSettings.showCategoryFilter" class="category-section">
+          <div
+            v-for="(cat, idx) in categories"
+            :key="cat.name"
+            class="cat-btn"
+            :class="{ active: activeCategory === cat.name }"
+            :style="{ animationDelay: idx * 0.04 + 's' }"
+            @click="activeCategory = cat.name"
+          >
+            <CategoryIcon :name="cat.name" />
+            <span class="cat-label">{{ cat.name }}</span>
+          </div>
+        </section>
+
+        <!-- 快捷记账 -->
+        <QuickLog
+          :transactions="transactions"
+          :categories="categories"
+          :sub-categories="subCategories"
+          :days="30"
+          @pick="onQuickLogPick"
+        />
+      </div>
+
+      <!-- transaction-drawer: 占满剩余空间，内部滚动 -->
+      <div class="transaction-drawer">
+        <div class="transaction-list-section">
+          <!-- 抽屉拖拽指示器 -->
+          <div class="drawer-handle">
+            <div class="drawer-indicator">
+              <span class="drawer-bar"></span>
+            </div>
+          </div>
+
+          <!-- 交易列表头部 -->
+          <div class="drawer-header">
+            <h2 class="section-title">最近交易</h2>
+            <div class="month-picker">
+              <button class="month-nav month-nav-prev" @click="shiftMonth(-1)" aria-label="上一月">
+                <ChevronLeft :size="14" :stroke-width="2.2" />
+              </button>
+              <div class="month-picker-label" @click="showDatePicker = true">
+                <span class="month">{{ currentMonth }}</span>
+                <span class="year">{{ currentYearNum }}</span>
+              </div>
+              <button class="month-nav month-nav-next" @click="shiftMonth(1)" aria-label="下一月">
+                <ChevronRight :size="14" :stroke-width="2.2" />
+              </button>
+            </div>
+          </div>
+
+          <!-- 交易内容区（可滚动） -->
+          <div class="drawer-content">
+            <div v-if="filteredTransactions.length === 0" class="tx-empty">
+              <div class="tx-empty-icon">
+                <BookOpen :size="44" :stroke-width="1.6" />
+              </div>
+              <span class="tx-empty-text">本月暂无交易记录</span>
+              <button class="tx-empty-btn" @click="openAddModal">记一笔</button>
+            </div>
+
+            <template v-else>
+              <div v-for="group in transactionGroups" :key="group.date" class="tx-group">
+                <div class="tx-group-label">
+                  <span>{{ group.label }}</span>
+                  <span class="tx-group-meta">{{ group.totalText }}</span>
+                </div>
+                <TransitionGroup name="list" tag="div" class="transaction-list">
+                  <div
+                    v-for="(tx, index) in group.items"
+                    :key="tx.id"
+                    class="tx-swipe-wrap"
+                    :class="{ dragging: swiping && swipeCurrentId === tx.id, deleting: deletingId === tx.id }"
+                    :style="{ animationDelay: index * 0.04 + 's' }"
+                    :data-tx-id="tx.id"
+                  >
+                    <!-- 滑动操作按钮（背景层，宽度随滑动进度拉伸） -->
+                    <div class="tx-swipe-actions" :style="actionsStyle(tx.id)">
+                      <button
+                        class="tx-swipe-btn edit"
+                        :style="btnStyle(tx.id, 0)"
+                        @click.stop="onSwipeEdit(tx)"
+                      >
+                        <span class="tx-swipe-inner" :style="innerStyle(tx.id, 0)">
+                          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                          <span>编辑</span>
+                        </span>
+                      </button>
+                      <button
+                        class="tx-swipe-btn delete"
+                        :style="btnStyle(tx.id, 1)"
+                        @click.stop="onSwipeDelete(tx)"
+                      >
+                        <span class="tx-swipe-inner" :style="innerStyle(tx.id, 1)">
+                          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                          </svg>
+                          <span>{{ deleteLabel(tx.id) }}</span>
+                        </span>
+                      </button>
+                    </div>
+                    <!-- 卡片内容（前景层，可滑动） -->
+                    <div
+                      class="tx-card"
+                      :class="{ swiped: swipedId === tx.id, swiping: swiping && swipeCurrentId === tx.id }"
+                      :style="cardStyle(tx.id)"
+                      @pointerdown="onSwipeStart($event, tx.id)"
+                      @pointermove="onSwipeMove"
+                      @pointerup="onSwipeEnd"
+                      @pointercancel="onSwipeEnd"
+                    >
+                      <div class="tx-main">
+                        <div class="tx-left">
+                          <div class="tx-icon-box" :class="tx.type">
+                            <IconDisplay :icon="getLucideIconName(tx.icon)" :size="21" />
+                          </div>
+                          <div class="tx-info">
+                            <span class="tx-name">{{ tx.name }}</span>
+                            <span class="tx-category">
+                              {{ tx.category }}<template v-if="tx.subCategory"> · {{ tx.subCategory }}</template>
+                              <template v-if="tx.merchant"> · <IconDisplay icon="MapPin" :size="14" /> {{ tx.merchant }}</template>
+                            </span>
+                          </div>
+                        </div>
+                        <div class="tx-right">
+                          <span class="tx-amount" :class="tx.type">
+                            {{ tx.type === 'income' ? '+' : '-' }}¥{{ tx.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </TransitionGroup>
+              </div>
+            </template>
+          </div>
         </div>
-      </template>
-    </section>
+      </div>
     </motion.section>
 
-    <!-- ===== 统计页（stats） ===== -->
+    <AnimatePresence mode="wait">
     <motion.section
       v-if="activeTab === 'stats'"
       key="stats"
@@ -180,13 +191,13 @@
       @scroll.passive="onPageScroll"
     >
       <!-- 统计顶部栏 -->
-      <header class="stats-top-bar">
+      <header class="stats-top-bar" :class="{ scrolled }">
         <div class="stats-header-left">
           <h2 class="stats-title">统计分析</h2>
           <span class="stats-period-badge">{{ statsPeriod === 'week' ? '本周' : statsPeriod === 'month' ? '本月' : '本年' }}</span>
         </div>
         <button class="report-btn neumorph-pill" @click="showReport = true">
-          📋 报告
+          <IconDisplay icon="ClipboardList" :size="16" /> 报告
         </button>
       </header>
 
@@ -239,7 +250,7 @@
       <section v-reveal class="stats-chart-section">
         <div class="chart-area">
           <div v-if="categoryStatsList.length === 0" class="chart-empty">
-            <span class="empty-icon">📊</span>
+            <span class="empty-icon"><IconDisplay icon="ChartBar" :size="44" :stroke-width="1.6" /></span>
             <span class="empty-text">暂无{{ statsType === 'expense' ? '支出' : '收入' }}数据</span>
           </div>
           <template v-else>
@@ -296,7 +307,7 @@
                   }"
                 >
                   <span class="tag-dot" :style="{ background: label.color }"></span>
-                  {{ label.icon }} {{ label.name }}
+                  <IconDisplay :icon="getLucideIconName(label.icon)" :size="16" /> {{ label.name }}
                 </div>
               </template>
             </div>
@@ -310,7 +321,7 @@
               >
                 <div class="rank-header" @click="toggleCategory(cat.name)">
                   <div class="rank-color-dot" :style="{ background: cat.color }"></div>
-                  <span class="rank-cat-icon">{{ cat.icon }}</span>
+                  <span class="rank-cat-icon"><IconDisplay :icon="getLucideIconName(cat.icon)" :size="18" /></span>
                   <span class="rank-cat-name">{{ cat.name }}</span>
                   <div class="rank-bar-track">
                     <div class="rank-bar-fill" :style="{ width: (cat.percent * 100).toFixed(1) + '%', background: cat.color }"></div>
@@ -386,7 +397,7 @@
               :class="{ active: trendCategory === cat.name }"
               @click="setTrendCategory(cat.name)"
             >
-              <span class="trend-cat-icon">{{ cat.icon }}</span>
+              <span class="trend-cat-icon"><IconDisplay :icon="getLucideIconName(cat.icon)" :size="16" /></span>
               <span>{{ cat.name }}</span>
             </button>
           </div>
@@ -576,7 +587,7 @@
       <header class="profile-header">
         <div class="user-card">
           <div class="avatar-large">
-            <span class="avatar-emoji">💰</span>
+            <span class="avatar-emoji"><IconDisplay icon="Wallet" :size="28" /></span>
             <span class="vip-badge">VIP</span>
           </div>
           <h2 class="user-name">记账小能手</h2>
@@ -608,7 +619,7 @@
           @click="uiSettings.showCategoryFilter = !uiSettings.showCategoryFilter"
         >
           <div class="menu-left">
-            <span class="menu-icon" :style="{ background: 'rgba(212,165,116,0.15)' }">🗂️</span>
+            <span class="menu-icon" :style="{ background: 'rgba(212,165,116,0.15)' }"><IconDisplay icon="Folder" :size="20" /></span>
             <div class="menu-label-stack">
               <span class="menu-label">首页分类筛选</span>
               <span class="menu-label-hint">{{ uiSettings.showCategoryFilter ? '已显示 · 关闭后首页将隐藏分类条' : '已隐藏 · 开启后首页将显示分类条' }}</span>
@@ -624,7 +635,7 @@
           @click="uiSettings.theme = uiSettings.theme === 'dark' ? 'light' : 'dark'"
         >
           <div class="menu-left">
-            <span class="menu-icon" :style="{ background: 'rgba(110,110,130,0.15)' }">{{ uiSettings.theme === 'dark' ? '🌙' : '☀️' }}</span>
+            <span class="menu-icon" :style="{ background: 'rgba(110,110,130,0.15)' }"><IconDisplay :icon="uiSettings.theme === 'dark' ? 'Moon' : 'Sun'" :size="20" /></span>
             <div class="menu-label-stack">
               <span class="menu-label">深色模式</span>
               <span class="menu-label-hint">{{ uiSettings.theme === 'dark' ? '已开启 · 护眼深色主题' : '已关闭 · 开启后切换为深色主题' }}</span>
@@ -637,7 +648,7 @@
         <!-- 资产卡片风格(三选一) -->
         <div class="menu-row neumorph style-picker-row">
           <div class="menu-left">
-            <span class="menu-icon" :style="{ background: 'rgba(212,175,55,0.15)' }">💎</span>
+            <span class="menu-icon" :style="{ background: 'rgba(212,175,55,0.15)' }"><IconDisplay icon="Gem" :size="20" /></span>
             <div class="menu-label-stack">
               <span class="menu-label">资产卡片风格</span>
               <span class="menu-label-hint">顶部总值卡片的视觉风格 · 当前: {{ assetCardStyleLabel }}</span>
@@ -662,7 +673,7 @@
           @click="handleMenuClick(item)"
         >
           <div class="menu-left">
-            <span class="menu-icon" :style="{ background: item.bgColor }">{{ item.icon }}</span>
+            <span class="menu-icon" :style="{ background: item.bgColor }"><IconDisplay :icon="getLucideIconName(item.icon)" :size="20" /></span>
             <span class="menu-label">{{ item.label }}</span>
           </div>
           <div class="menu-right">
@@ -939,7 +950,7 @@
       <Transition name="modal">
         <div v-if="showReminderAlert" class="reminder-overlay" @click.self="showReminderAlert = false">
           <div class="reminder-card">
-            <span class="reminder-emoji">⏰</span>
+            <span class="reminder-emoji"><IconDisplay icon="Clock" :size="28" /></span>
             <h3 class="reminder-title">记账提醒</h3>
             <p class="reminder-text">今天还没有记账哦，快来记一笔吧！</p>
             <div class="reminder-actions">
@@ -962,6 +973,9 @@ import { springs, useCountUp, STAGGER_STEP, vReveal } from './useAnimations'
 import BottomTabBar from './components/BottomTabBar.vue'
 import BalanceCard from './components/BalanceCard.vue'
 import CategoryIcon from './components/CategoryIcon.vue'
+import IconDisplay from './components/IconDisplay.vue'
+import { Search, ChevronLeft, ChevronRight, BookOpen } from './utils/icons'
+import { getLucideIconName } from './utils/emojiToLucide'
 import BudgetModal from './components/BudgetModal.vue'
 import CategoryModal from './components/CategoryModal.vue'
 import RecurringModal from './components/RecurringModal.vue'
@@ -987,7 +1001,7 @@ const selectedMonth = ref(new Date().getMonth() + 1)
 const currentMonth = computed(() => selectedMonth.value + '月')
 const currentYearNum = computed(() => selectedYear.value)
 // 顶部问候语：按当前小时切换，昵称先复用「我的」页中的用户名
-const userNickname = '记账小能手'
+const userNickname = 'Lawrence'
 const greetingText = computed(() => {
   const h = new Date().getHours()
   let word = '晚上好'
@@ -997,7 +1011,7 @@ const greetingText = computed(() => {
   else if (h >= 14 && h <= 17) word = '傍晚好'
   else if (h >= 18 && h <= 22) word = '晚上好'
   else word = '深夜好'
-  return `${word}，${userNickname}`
+  return `${word}，${userNickname} 👋`
 })
 // 所选月份的 YYYY-MM key（驱动首页余额/预算/交易列表）
 const selectedMonthKey = computed(
@@ -1011,7 +1025,7 @@ const assetTabRef = ref<InstanceType<typeof AssetTab> | null>(null)
 const showAddModal = ref(false)
 const scrolled = ref(false)
 
-// 各页面独立滚动位置
+// ========== 各页面独立滚动位置 ==========
 const scrollPositions = reactive<Record<string, number>>({ home: 0, stats: 0, profile: 0 })
 
 const onPageScroll = (e: Event) => {
@@ -1022,7 +1036,7 @@ const onPageScroll = (e: Event) => {
 
 // 从存储中恢复的数据
 const transactions = ref<Transaction[]>(appData.value.transactions)
-const categories = ref<Category[]>([{ name: '全部', icon: '📋' }, ...appData.value.categories])
+const categories = ref<Category[]>([{ name: '全部', icon: 'LayoutGrid' }, ...appData.value.categories])
 const subCategories = ref<SubCategories>(appData.value.subCategories)
 const budget = ref<Budget>(appData.value.budget)
 const recurring = ref<RecurringItem[]>(appData.value.recurring)
@@ -1274,6 +1288,8 @@ function onSwipeStart(e: PointerEvent, id: number) {
   swipeMoved = false
   swiping.value = true
   inDeleteZone.value = false
+  // 阻止默认滚动行为
+  e.preventDefault()
 }
 
 function onSwipeMove(e: PointerEvent) {
@@ -1283,6 +1299,10 @@ function onSwipeMove(e: PointerEvent) {
   // 垂直滑动不处理
   if (Math.abs(dy) > Math.abs(dx) && !swipeMoved) {
     return
+  }
+  // 横向滑动时阻止默认行为（防止抽屉滚动）
+  if (Math.abs(dx) > Math.abs(dy)) {
+    e.preventDefault()
   }
   swipeMoved = true
   // 基于起始偏移 + 本轮位移计算，直接跟手
@@ -1644,7 +1664,7 @@ const categoryStatsList = computed<CategoryStats[]>(() => {
     const catInfo = categories.value.find(c => c.name === name)
     list.push({
       name,
-      icon: catInfo?.icon ?? '📦',
+      icon: catInfo?.icon ?? 'Package',
       amount: val.amount,
       count: val.count,
       percent: statsTotal.value > 0 ? val.amount / statsTotal.value : 0,
@@ -2059,13 +2079,13 @@ interface MenuItem {
 }
 
 const menuItems = computed<MenuItem[]>(() => [
-  { icon: '🔍', label: '搜索记录', bgColor: 'rgba(212,165,116,0.15)', action: 'search' },
-  { icon: '📋', label: '收支报告', badge: '月/年', badgeType: 'success', bgColor: 'rgba(126,203,124,0.15)', action: 'report' },
-  { icon: '🎯', label: '预算管理', badge: budget.value.monthlyLimit > 0 ? `¥${budget.value.monthlyLimit}` : '未设置', badgeType: budget.value.monthlyLimit > 0 ? 'success' : 'warn', bgColor: 'rgba(212,165,116,0.15)', action: 'budget' },
-  { icon: '🔄', label: '周期性记账', badge: recurring.value.length > 0 ? `${recurring.value.filter(r => r.enabled).length}项` : '未设置', badgeType: recurring.value.length > 0 ? 'success' : 'warn', bgColor: 'rgba(110,184,227,0.15)', action: 'recurring' },
-  { icon: '🏷️', label: '分类设置', bgColor: 'rgba(110,184,227,0.15)', action: 'category' },
-  { icon: '🔔', label: '记账提醒', badge: reminder.value.enabled ? reminder.value.time : '未开启', badgeType: reminder.value.enabled ? 'success' : 'warn', bgColor: 'rgba(244,114,182,0.15)', action: 'notify' },
-  { icon: 'ℹ️', label: '关于我们', bgColor: 'rgba(148,163,184,0.15)', action: 'about' },
+  { icon: 'Search', label: '搜索记录', bgColor: 'rgba(212,165,116,0.15)', action: 'search' },
+  { icon: 'ClipboardList', label: '收支报告', badge: '月/年', badgeType: 'success', bgColor: 'rgba(126,203,124,0.15)', action: 'report' },
+  { icon: 'Target', label: '预算管理', badge: budget.value.monthlyLimit > 0 ? `¥${budget.value.monthlyLimit}` : '未设置', badgeType: budget.value.monthlyLimit > 0 ? 'success' : 'warn', bgColor: 'rgba(212,165,116,0.15)', action: 'budget' },
+  { icon: 'RefreshCw', label: '周期性记账', badge: recurring.value.length > 0 ? `${recurring.value.filter(r => r.enabled).length}项` : '未设置', badgeType: recurring.value.length > 0 ? 'success' : 'warn', bgColor: 'rgba(110,184,227,0.15)', action: 'recurring' },
+  { icon: 'Tag', label: '分类设置', bgColor: 'rgba(110,184,227,0.15)', action: 'category' },
+  { icon: 'Bell', label: '记账提醒', badge: reminder.value.enabled ? reminder.value.time : '未开启', badgeType: reminder.value.enabled ? 'success' : 'warn', bgColor: 'rgba(244,114,182,0.15)', action: 'notify' },
+  { icon: 'Info', label: '关于我们', bgColor: 'rgba(148,163,184,0.15)', action: 'about' },
 ])
 
 // ========== 资产卡片风格(三选一) ==========
@@ -2109,7 +2129,7 @@ function onDateSelect(year: number, month: number) {
 // ========== 分类图标映射 ==========
 function getCategoryIcon(cat: string): string {
   const found = categories.value.find(c => c.name === cat)
-  return found?.icon ?? '📦'
+  return found?.icon ?? 'Package'
 }
 
 // ========== 数字键盘逻辑 ==========
@@ -2251,7 +2271,7 @@ function saveBudget(limit: number) {
 
 // ========== 分类管理 ==========
 function saveCategories(cats: Category[], subs: SubCategories) {
-  categories.value = [{ name: '全部', icon: '📋' }, ...cats]
+  categories.value = [{ name: '全部', icon: 'LayoutGrid' }, ...cats]
   subCategories.value = subs
   showCategory.value = false
 }
@@ -2399,9 +2419,10 @@ defineExpose({ deleteTransaction })
      hidden 会裁切所有子元素的 box-shadow 水平外延,导致卡片阴影左右被截断。
      clip 行为类似 hidden(裁切内容溢出)但不裁切 box-shadow 等视觉外延,
      保留卡片阴影的左右延伸 */
-  /* overflow: clip auto; */
+  overflow: visible;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 100px;
+  padding: 0 20px 100px;
+  //padding-bottom: 100px;
   scrollbar-width: none;
   -ms-overflow-style: none;
   will-change: opacity, transform;
@@ -2488,48 +2509,77 @@ defineExpose({ deleteTransaction })
   inset: 0;
   border-radius: inherit;
   z-index: -1;
-  /* 渐变模糊：初始状态就有模糊效果 */
-  background: rgba(249, 249, 249, 0.88);
+  /* 初始状态：有 backdrop-filter 但背景色极淡，模糊效果几乎不可见 */
+  background: rgba(249, 249, 249, 0.01);
   -webkit-backdrop-filter: saturate(180%) blur(24px);
-  backdrop-filter: saturate(180%) blur(24px);
-  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.04);
+  //backdrop-filter: saturate(180%) blur(24px);
+  box-shadow: none;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* 底部渐变过渡层：从背景色渐变到透明 */
+/* 底部渐变过渡层：从背景色渐变到透明 + 模糊效果 */
 .top-bar::after {
   content: '';
   position: absolute;
   /* 在顶栏底部创建渐变过渡 */
-  top: 102%;
+  bottom: -20px;
   left: 0;
   right: 0;
   height: 20px;
   /* 负边际延伸到顶栏外部 */
   margin-top: -1px;
   z-index: -1;
-  /* 从顶栏背景色渐变到透明 */
-  background: linear-gradient(to bottom, rgba(249, 249, 249, 0.88), rgba(249, 249, 249, 0));
-  pointer-events: none;
+  /* 初始状态：极淡渐变背景 + 模糊效果 */
+  //background: linear-gradient(to bottom, rgba(249, 249, 249, 0.01), rgba(249, 249, 249, 0));
+  //-webkit-backdrop-filter: saturate(180%) blur(24px);
+  //backdrop-filter: saturate(180%) blur(24px);
+  //pointer-events: none;
+  //transition: background 0.3s ease;
 }
 
-/* 滚动后：增加下边框分隔线 */
+/* 滚动后：显示模糊效果和下边框分隔线 */
+.top-bar.scrolled::before {
+  background: rgba(249, 249, 249, 0.88);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.04);
+}
+
+.top-bar.scrolled::after {
+  /* 从顶栏背景色渐变到透明 */
+  background: linear-gradient(to bottom, rgba(249, 249, 249, 0.88), rgba(249, 249, 249, 0));
+}
+
 .top-bar.scrolled {
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-/* 深色模式顶栏 */
+/* 深色模式顶栏 - 初始状态背景色极淡 */
 :root[data-theme="dark"] .top-bar::before {
-  background: rgba(45, 41, 37, 0.85);
+  background: rgba(45, 41, 37, 0.01);
   -webkit-backdrop-filter: saturate(180%) blur(26px);
   backdrop-filter: saturate(180%) blur(26px);
+}
+
+:root[data-theme="dark"] .top-bar::after {
+  background: linear-gradient(to bottom, rgba(45, 41, 37, 0.01), rgba(45, 41, 37, 0));
+  -webkit-backdrop-filter: saturate(180%) blur(26px);
+  backdrop-filter: saturate(180%) blur(26px);
+}
+
+:root[data-theme="dark"] .top-bar.scrolled::before {
+  background: rgba(45, 41, 37, 0.85);
   box-shadow: 0 1px 12px rgba(0, 0, 0, 0.15);
 }
+
+:root[data-theme="dark"] .top-bar.scrolled::after {
+  background: linear-gradient(to bottom, rgba(45, 41, 37, 0.85), rgba(45, 41, 37, 0));
+}
+
 :root[data-theme="dark"] .top-bar.scrolled {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .top-bar-right {
-  display: flex;
+  display: none;
   gap: 8px;
 }
 
@@ -2785,6 +2835,99 @@ defineExpose({ deleteTransaction })
 }
 .cat-btn.active .cat-label { color: var(--accent); }
 
+/* ============ 首页固定布局容器 ============ */
+.home-fixed-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* 顶部固定区域（不可滚动） */
+.fixed-header-area {
+  flex-shrink: 0;
+  overflow: visible;
+  padding: 0 20px;
+}
+
+/* 交易抽屉（占满剩余空间和全宽，内部滚动） */
+.transaction-drawer {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* 底部留出导航栏空间 */
+  padding-bottom: 80px;
+  /* 滑动时阻止容器滚动 */
+  touch-action: pan-y;
+}
+.transaction-drawer::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============ 交易列表区域（抽屉内部） ============ */
+.transaction-list-section {
+  background: #ffffff;
+  border-radius: 24px 24px 0 0;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  margin: 0 20px;
+}
+
+/* 抽屉拖拽指示器（已隐藏，不再需要拖拽） */
+.drawer-handle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0 8px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.drawer-indicator {
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+.drawer-bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.08);
+  transition: background 0.2s ease;
+}
+
+.transaction-drawer.expanded .drawer-bar {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* 抽屉头部 */
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 26px 12px;
+  //border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  user-select: none;
+}
+
+/* 抽屉内容区 */
+.drawer-content {
+  padding: 16px 20px 0;
+  /* 无需单独滚动，由 transaction-drawer 统一处理滚动 */
+}
+
+
 /* ============ 交易区域 ============ */
 .section-header {
   display: flex;
@@ -2871,7 +3014,7 @@ defineExpose({ deleteTransaction })
   position: relative;
   overflow: hidden;
   border-radius: 16px;
-  margin-bottom: 10px;
+  //margin-bottom: 10px;
   opacity: 0;
   animation: fadeSlideIn 0.4s ease forwards;
   transition: height 0.35s cubic-bezier(0.4, 0, 0.6, 1), margin-bottom 0.35s cubic-bezier(0.4, 0, 0.6, 1), opacity 0.25s ease;
@@ -3633,14 +3776,15 @@ defineExpose({ deleteTransaction })
   inset: 0;
   border-radius: inherit;
   z-index: -1;
-  /* 渐变模糊：保持原有大小 */
-  background: rgba(249, 249, 249, 0.88);
+  /* 初始状态：有 backdrop-filter 但背景色极淡，模糊效果几乎不可见 */
+  background: rgba(249, 249, 249, 0.01);
   -webkit-backdrop-filter: saturate(180%) blur(24px);
   backdrop-filter: saturate(180%) blur(24px);
-  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* 底部渐变过渡层 */
+/* 底部渐变过渡层 + 模糊效果 */
 .stats-top-bar::after {
   content: '';
   position: absolute;
@@ -3650,20 +3794,49 @@ defineExpose({ deleteTransaction })
   height: 20px;
   margin-top: -1px;
   z-index: -1;
-  /* 从顶栏背景色渐变到透明 */
-  background: linear-gradient(to bottom, rgba(249, 249, 249, 0.88), rgba(249, 249, 249, 0));
+  /* 初始状态：极淡渐变背景 + 模糊效果 */
+  background: linear-gradient(to bottom, rgba(249, 249, 249, 0.01), rgba(249, 249, 249, 0));
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
   pointer-events: none;
+  transition: background 0.3s ease;
 }
 
-/* 深色模式统计页顶栏 */
-:root[data-theme="dark"] .stats-top-bar {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+/* 滚动后：显示模糊效果 */
+.stats-top-bar.scrolled::before {
+  background: rgba(249, 249, 249, 0.88);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.04);
 }
+
+.stats-top-bar.scrolled::after {
+  /* 从顶栏背景色渐变到透明 */
+  background: linear-gradient(to bottom, rgba(249, 249, 249, 0.88), rgba(249, 249, 249, 0));
+}
+
+/* 深色模式统计页顶栏 - 初始状态背景色极淡 */
 :root[data-theme="dark"] .stats-top-bar::before {
-  background: rgba(45, 41, 37, 0.85);
+  background: rgba(45, 41, 37, 0.01);
   -webkit-backdrop-filter: saturate(180%) blur(26px);
   backdrop-filter: saturate(180%) blur(26px);
+}
+
+:root[data-theme="dark"] .stats-top-bar::after {
+  background: linear-gradient(to bottom, rgba(45, 41, 37, 0.01), rgba(45, 41, 37, 0));
+  -webkit-backdrop-filter: saturate(180%) blur(26px);
+  backdrop-filter: saturate(180%) blur(26px);
+}
+
+:root[data-theme="dark"] .stats-top-bar.scrolled::before {
+  background: rgba(45, 41, 37, 0.85);
   box-shadow: 0 1px 12px rgba(0, 0, 0, 0.15);
+}
+
+:root[data-theme="dark"] .stats-top-bar.scrolled::after {
+  background: linear-gradient(to bottom, rgba(45, 41, 37, 0.85), rgba(45, 41, 37, 0));
+}
+
+:root[data-theme="dark"] .stats-top-bar.scrolled {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .stats-header-left {
@@ -5138,5 +5311,27 @@ defineExpose({ deleteTransaction })
 }
 .reminder-now:active {
   transform: scale(0.96);
+}
+
+/* ============ 深色模式 ============ */
+:root[data-theme="dark"] .transaction-list-section {
+  background: rgba(45, 41, 37, 0.95);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.24),
+    0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+:root[data-theme="dark"] .drawer-header {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] .tx-card {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: var(--shadow-sm);
+}
+
+:root[data-theme="dark"] .tx-card:hover,
+:root[data-theme="dark"] .tx-card.swiped {
+  box-shadow: var(--shadow-md);
 }
 </style>

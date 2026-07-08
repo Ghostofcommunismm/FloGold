@@ -92,7 +92,7 @@
             <div v-else class="rank-list">
               <div v-for="(cat, i) in topCategories" :key="cat.name" class="rank-row">
                 <span class="rank-num">{{ i + 1 }}</span>
-                <span class="rank-icon">{{ cat.icon }}</span>
+                <span class="rank-icon"><IconDisplay :icon="getLucideIconName(cat.icon)" :size="16" /></span>
                 <span class="rank-name">{{ cat.name }}</span>
                 <div class="rank-bar-wrap">
                   <div class="rank-bar" :style="{ width: cat.percent * 100 + '%', background: cat.color }"></div>
@@ -156,7 +156,7 @@
 
           <!-- 报告总结 -->
           <div class="summary-box">
-            <h4 class="section-h">📊 报告总结</h4>
+            <h4 class="section-h"><IconDisplay icon="ChartBar" :size="15" /> 报告总结</h4>
             <div class="summary-content">
               <p>{{ reportSummary }}</p>
             </div>
@@ -170,6 +170,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { Transaction } from '../types'
+import IconDisplay from './IconDisplay.vue'
+import { getLucideIconName } from '../utils/emojiToLucide'
 
 const props = defineProps<{
   show: boolean
@@ -333,10 +335,10 @@ const topCategories = computed(() => {
 
 function getCategoryIcon(name: string): string {
   const map: Record<string, string> = {
-    '餐饮': '🍜', '交通': '🚗', '购物': '🛍️', '娱乐': '🎮',
-    '居家': '🏠', '医疗': '💊', '教育': '📚', '人情': '🎁', '其他': '📦',
+    '餐饮': 'Utensils', '交通': 'Car', '购物': 'ShoppingBag', '娱乐': 'Gamepad2',
+    '居家': 'Home', '医疗': 'HeartPulse', '教育': 'BookOpen', '人情': 'Gift', '其他': 'Package',
   }
-  return map[name] || '📦'
+  return map[name] || 'Package'
 }
 
 // 趋势图数据

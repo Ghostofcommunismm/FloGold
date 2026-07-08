@@ -79,7 +79,7 @@
 
           <!-- 已有列表 -->
           <div v-if="items.length === 0" class="empty-state">
-            <span class="empty-icon">🔄</span>
+            <span class="empty-icon"><IconDisplay icon="RefreshCw" :size="48" /></span>
             <span class="empty-text">暂无周期性记账，点击上方添加</span>
           </div>
           <div v-else class="recurring-list">
@@ -89,7 +89,7 @@
               class="recurring-item"
             >
               <div class="recurring-left">
-                <span class="recurring-icon">{{ item.icon }}</span>
+                <span class="recurring-icon"><IconDisplay :icon="getLucideIconName(item.icon)" :size="22" /></span>
                 <div class="recurring-info">
                   <span class="recurring-name">{{ item.name }}</span>
                   <span class="recurring-desc">{{ freqText(item) }} · {{ item.category }}</span>
@@ -108,7 +108,7 @@
           </div>
 
           <div class="info-box">
-            <p class="info-text">💡 周期性记账会在到期日自动添加一笔交易记录。打开App时自动检查并触发。</p>
+            <p class="info-text"><IconDisplay icon="Lightbulb" :size="16" /> 周期性记账会在到期日自动添加一笔交易记录。打开App时自动检查并触发。</p>
           </div>
         </div>
       </div>
@@ -119,6 +119,8 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import type { Category, RecurringItem } from '../types'
+import IconDisplay from './IconDisplay.vue'
+import { getLucideIconName } from '../utils/emojiToLucide'
 
 const props = defineProps<{
   show: boolean
@@ -142,7 +144,7 @@ const form = ref({
   amountStr: '',
   category: '',
   subCategory: '',
-  icon: '📦',
+  icon: 'Package',
   frequency: 'monthly' as 'daily' | 'weekly' | 'monthly',
   dayOfWeek: 1,
   dayOfMonth: 1,
@@ -164,7 +166,7 @@ function resetForm() {
     amountStr: '',
     category: props.categories[0]?.name || '其他',
     subCategory: props.subCategories[props.categories[0]?.name || '']?.[0] || '其他',
-    icon: props.categories[0]?.icon || '📦',
+    icon: props.categories[0]?.icon || 'Package',
     frequency: 'monthly',
     dayOfWeek: 1,
     dayOfMonth: 1,

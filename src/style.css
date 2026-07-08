@@ -51,7 +51,10 @@
 
 body {
   font-family: var(--sans);
-  background: var(--bg-primary);
+  background:
+          radial-gradient(ellipse 160% 70% at 0% 0%, rgb(220, 200, 140) 0%, transparent 50%),
+          radial-gradient(ellipse 100% 60% at 100% 0%, rgb(180, 160, 220) 0%, transparent 50%),
+          #f0f0f0;
   color: var(--text-primary);
   min-height: 100vh;
   overscroll-behavior-y: none;
@@ -69,7 +72,7 @@ html {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
-  padding: 0 20px 100px;
+  padding: 0 0 100px;
 }
 
 /* ============ 滚动揭示 v-reveal ============ */

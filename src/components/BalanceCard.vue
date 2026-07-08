@@ -120,18 +120,18 @@ const budgetUsage = computed(() => {
 /* ========== 克制版: 以浅暖底 + 淡金边 替代原来高饱和的黄铜金属 ==========
    思路：金色仅作 1 处强调(顶部右侧眼睛 hover)，其余收敛到中性卡其 */
 .bcard {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(250, 245, 240, 0.88) 100%);
-  border-radius: 20px;
-  padding: 14px 18px 14px;
+  //background:
+  //  linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(250, 245, 240, 0.88) 100%);
+  //border-radius: 20px;
+  padding-top: 14px;
   position: relative;
   overflow: hidden;
   margin-bottom: 14px;
-  border: 1px solid rgba(212, 165, 116, 0.18);
-  box-shadow:
-    0 4px 18px rgba(174, 168, 155, 0.10),
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  //border: 1px solid rgba(212, 165, 116, 0.18);
+  //box-shadow:
+  //  0 4px 18px rgba(174, 168, 155, 0.10),
+  //  0 1px 2px rgba(0, 0, 0, 0.04),
+  //  inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 /* 底部淡金光晕: 仅在卡片底部一道很弱的暖色光, 不抢戏 */
@@ -140,7 +140,7 @@ const budgetUsage = computed(() => {
   position: absolute;
   left: 0; right: 0; bottom: 0;
   height: 38%;
-  background: linear-gradient(180deg, transparent, rgba(212, 165, 116, 0.07));
+  //background: linear-gradient(180deg, transparent, rgba(212, 165, 116, 0.07));
   pointer-events: none;
   z-index: 0;
 }

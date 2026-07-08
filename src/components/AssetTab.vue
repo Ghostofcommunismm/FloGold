@@ -167,7 +167,7 @@ function handleViewTransaction(id: number) {
 
 <style scoped>
 .asset-tab {
-  padding: 0 0 120px 0;
+  padding: 0 0px 120px;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -206,14 +206,15 @@ function handleViewTransaction(id: number) {
   inset: 0;
   border-radius: inherit;
   z-index: -1;
-  /* 渐变模糊遮罩：保持原有大小 */
-  background: rgba(249, 249, 249, 0.88);
+  /* 初始状态：有 backdrop-filter 但背景色极淡，模糊效果几乎不可见 */
+  background: rgba(249, 249, 249, 0.01);
   -webkit-backdrop-filter: saturate(180%) blur(24px);
   backdrop-filter: saturate(180%) blur(24px);
-  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* 底部渐变过渡层 */
+/* 底部渐变过渡层 + 模糊效果 */
 .page-header::after {
   content: '';
   position: absolute;
@@ -223,9 +224,23 @@ function handleViewTransaction(id: number) {
   height: 20px;
   margin-top: -1px;
   z-index: -1;
+  /* 初始状态：极淡渐变背景 + 模糊效果 */
+  background: linear-gradient(to bottom, rgba(249, 249, 249, 0.01), rgba(249, 249, 249, 0));
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
+  pointer-events: none;
+  transition: background 0.3s ease;
+}
+
+/* 滚动后：显示模糊效果 */
+.page-header.scrolled::before {
+  background: rgba(249, 249, 249, 0.88);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.04);
+}
+
+.page-header.scrolled::after {
   /* 从顶栏背景色渐变到透明 */
   background: linear-gradient(to bottom, rgba(249, 249, 249, 0.88), rgba(249, 249, 249, 0));
-  pointer-events: none;
 }
 
 .page-header h1 {
@@ -239,18 +254,33 @@ function handleViewTransaction(id: number) {
   text-overflow: ellipsis;
 }
 
-/* 滚动后：增加下边框分隔线（与首页顶栏行为一致） */
+/* 滚动后：增加下边框分隔线 */
 .page-header.scrolled {
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-/* 深色模式顶栏 */
+/* 深色模式资产页顶栏 - 初始状态背景色极淡 */
 :root[data-theme="dark"] .page-header::before {
-  background: rgba(45, 41, 37, 0.85);
+  background: rgba(45, 41, 37, 0.01);
   -webkit-backdrop-filter: saturate(180%) blur(26px);
   backdrop-filter: saturate(180%) blur(26px);
+}
+
+:root[data-theme="dark"] .page-header::after {
+  background: linear-gradient(to bottom, rgba(45, 41, 37, 0.01), rgba(45, 41, 37, 0));
+  -webkit-backdrop-filter: saturate(180%) blur(26px);
+  backdrop-filter: saturate(180%) blur(26px);
+}
+
+:root[data-theme="dark"] .page-header.scrolled::before {
+  background: rgba(45, 41, 37, 0.85);
   box-shadow: 0 1px 12px rgba(0, 0, 0, 0.15);
 }
+
+:root[data-theme="dark"] .page-header.scrolled::after {
+  background: linear-gradient(to bottom, rgba(45, 41, 37, 0.85), rgba(45, 41, 37, 0));
+}
+
 :root[data-theme="dark"] .page-header.scrolled {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }

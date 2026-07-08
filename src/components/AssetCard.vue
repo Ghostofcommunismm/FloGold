@@ -5,7 +5,7 @@
 
     <!-- 顶部：图标 + 名称 -->
     <div class="ac-top">
-      <span class="ac-ic" aria-hidden="true">{{ asset.icon || '📦' }}</span>
+      <span class="ac-ic" aria-hidden="true"><IconDisplay :icon="asset.icon || 'Package'" :size="16" /></span>
       <span class="ac-nm">{{ asset.name }}</span>
     </div>
 
@@ -46,6 +46,7 @@
 import { computed } from 'vue'
 import { calculateCurrentValue } from '../asset-utils'
 import type { Asset } from '../types'
+import IconDisplay from './IconDisplay.vue'
 
 const props = defineProps<{ asset: Asset }>()
 defineEmits<{ (e: 'click'): void }>()

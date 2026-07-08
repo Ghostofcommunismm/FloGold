@@ -13,7 +13,7 @@
           <!-- 开启提醒 -->
           <div class="toggle-row" @click="local.enabled = !local.enabled">
             <div class="toggle-left">
-              <span class="toggle-icon">🔔</span>
+              <span class="toggle-icon"><IconDisplay icon="Bell" :size="22" /></span>
               <div class="toggle-info">
                 <span class="toggle-label">每日记账提醒</span>
                 <span class="toggle-desc">在指定时间提醒你记账</span>
@@ -69,6 +69,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { ReminderSettings } from '../types'
+import IconDisplay from './IconDisplay.vue'
 
 const props = defineProps<{
   show: boolean
