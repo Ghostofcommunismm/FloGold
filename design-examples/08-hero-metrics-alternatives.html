@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hero Metrics · 简约高级方案对比</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f3ee;
+      --bg-2: #ebe7df;
+      --card: rgba(255, 255, 255, 0.92);
+      --card-solid: #ffffff;
+      --ink: #2d2d2d;
+      --ink-2: #6b6b6b;
+      --ink-3: #a8a8a8;
+      --line: rgba(174, 168, 155, 0.18);
+      --line-2: rgba(174, 168, 155, 0.30);
+
+      --gold: #d4a574;
+      --gold-2: #c19463;
+      --gold-soft: #faf5f0;
+      --gold-deep: #8a5f1c;
+
+      --exp: #c97b7b;
+      --exp-bg: #f5e8e8;
+      --inc: #8ba888;
+      --inc-bg: #e8f0e5;
+
+      --shadow-sm: 0 2px 8px rgba(174,168,155,.12), 0 1px 2px rgba(174,168,155,.08);
+      --shadow-md: 0 4px 16px rgba(174,168,155,.15), 0 2px 6px rgba(174,168,155,.10);
+
+      --sans: 'Outfit', 'Noto Sans SC', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: linear-gradient(180deg, #e8e4db 0%, #f5f3ee 100%);
+      font-family: var(--sans);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 12px;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: var(--ink-2);
+      margin-bottom: 32px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    .scheme {
+      background: var(--bg);
+      padding: 24px;
+      border-radius: 24px;
+      box-shadow: var(--shadow-md);
+    }
+    .scheme-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .scheme-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .scheme-title::before {
+      content: '';
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--gold);
+    }
+    .scheme-tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+      background: var(--gold-soft);
+      color: var(--gold-deep);
+    }
+
+    .phone-frame {
+      width: 360px;
+      background: var(--bg);
+      border-radius: 20px;
+      padding: 16px 16px 20px;
+      margin: 0 auto;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,.06);
+    }
+
+    /* ==================== 方案 A：极简单卡 ==================== */
+    .scheme-a .hero-block {
+      background: var(--card-solid);
+      border-radius: 16px;
+      padding: 24px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .scheme-a .hero-main {
+      text-align: center;
+    }
+    .scheme-a .hero-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-3);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .scheme-a .hero-amount {
+      font-family: var(--sans);
+      font-size: 38px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -1px;
+      line-height: 1.1;
+    }
+    .scheme-a .hero-amount .cur {
+      font-size: 18px;
+      font-weight: 600;
+      vertical-align: super;
+      margin-right: 2px;
+      color: var(--ink-2);
+    }
+    .scheme-a .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+    .scheme-a .stat-item {
+      text-align: center;
+    }
+    .scheme-a .stat-item .val {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .scheme-a .stat-item .key {
+      font-size: 10px;
+      color: var(--ink-3);
+      margin-top: 2px;
+    }
+
+    /* ==================== 方案 B：双卡片对比 ==================== */
+    .scheme-b .hero-row {
+      display: flex;
+      gap: 10px;
+    }
+    .scheme-b .hero-main-card {
+      flex: 1.6;
+      background: linear-gradient(135deg, #1c1c24 0%, #2d2d38 100%);
+      border-radius: 16px;
+      padding: 20px 18px;
+      color: #f0ebe0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(28,28,36,.25);
+    }
+    .scheme-b .hero-main-card .label {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(240,235,224,.5);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .scheme-b .hero-main-card .amount {
+      font-family: var(--sans);
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+    .scheme-b .hero-main-card .amount .cur {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gold);
+      vertical-align: top;
+      margin-right: 2px;
+    }
+    .scheme-b .hero-side {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .scheme-b .mini-card {
+      background: var(--card-solid);
+      border-radius: 12px;
+      padding: 14px 12px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .scheme-b .mini-card .label {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--ink-3);
+      letter-spacing: 0.5px;
+    }
+    .scheme-b .mini-card .amount {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-top: 4px;
+    }
+    .scheme-b .mini-card .delta {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--exp);
+      margin-top: 3px;
+    }
+    .scheme-b .mini-card .delta.down { color: var(--inc); }
+
+    /* ==================== 方案 C：玻璃态卡片 ==================== */
+    .scheme-c .hero-block {
+      background: rgba(255,255,255,.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 28px 24px;
+      border: 1px solid rgba(255,255,255,.5);
+      box-shadow: 0 4px 24px rgba(174,168,155,.15);
+      position: relative;
+      overflow: hidden;
+    }
+    .scheme-c .hero-block::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: -80px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(212,165,116,.2) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .scheme-c .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .scheme-c .hero-main {
+      flex: 1;
+    }
+    .scheme-c .hero-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-3);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .scheme-c .hero-amount {
+      font-family: var(--sans);
+      font-size: 34px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+    .scheme-c .hero-amount .cur {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gold);
+      vertical-align: top;
+    }
+    .scheme-c .hero-trend {
+      text-align: right;
+    }
+    .scheme-c .trend-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 10px;
+      border-radius: 99px;
+      background: var(--exp-bg);
+      color: var(--exp);
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .scheme-c .trend-badge.down {
+      background: var(--inc-bg);
+      color: var(--inc);
+    }
+    .scheme-c .hero-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .scheme-c .metric-item {
+      text-align: center;
+      padding: 12px 8px;
+      background: rgba(255,255,255,.5);
+      border-radius: 10px;
+    }
+    .scheme-c .metric-item .val {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .scheme-c .metric-item .key {
+      font-size: 9px;
+      color: var(--ink-3);
+      margin-top: 3px;
+    }
+
+    /* ==================== 方案 D：仪表盘风格 ==================== */
+    .scheme-d .hero-block {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .scheme-d .hero-main-card {
+      background: var(--card-solid);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .scheme-d .hero-main-card .left {
+      display: flex;
+      flex-direction: column;
+    }
+    .scheme-d .hero-main-card .label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--ink-3);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .scheme-d .hero-main-card .amount {
+      font-family: var(--sans);
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-top: 6px;
+      line-height: 1.1;
+    }
+    .scheme-d .hero-main-card .amount .cur {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gold);
+    }
+    .scheme-d .hero-main-card .trend-arrow {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--exp);
+      margin-top: 4px;
+    }
+    .scheme-d .hero-main-card .trend-arrow.up { color: var(--exp); }
+    .scheme-d .hero-main-card .trend-arrow.down { color: var(--inc); }
+    .scheme-d .hero-main-card .right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .scheme-d .mini-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 10px;
+      border-radius: 99px;
+      background: var(--exp-bg);
+      color: var(--exp);
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .scheme-d .mini-badge.good { background: var(--inc-bg); color: var(--inc); }
+
+    .scheme-d .metric-strip {
+      display: flex;
+      gap: 10px;
+    }
+    .scheme-d .metric-card {
+      flex: 1;
+      background: var(--card-solid);
+      border-radius: 12px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .scheme-d .metric-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: var(--bg-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .scheme-d .metric-content .val {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .scheme-d .metric-content .key {
+      font-size: 9px;
+      color: var(--ink-3);
+    }
+
+    /* ==================== 方案 E：数字卡片 + 横条 ==================== */
+    .scheme-e .hero-block {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .scheme-e .hero-main-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 22px;
+      background: var(--card-solid);
+      border-radius: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .scheme-e .hero-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-3);
+      letter-spacing: 1px;
+    }
+    .scheme-e .hero-amount {
+      font-family: var(--sans);
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.5px;
+    }
+    .scheme-e .hero-amount .cur {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gold);
+      vertical-align: top;
+    }
+    .scheme-e .trend-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 4px 8px;
+      border-radius: 99px;
+      background: var(--exp-bg);
+      color: var(--exp);
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .scheme-e .trend-tag.down { background: var(--inc-bg); color: var(--inc); }
+
+    .scheme-e .metric-bar {
+      display: flex;
+      gap: 6px;
+    }
+    .scheme-e .metric-item {
+      flex: 1;
+      background: var(--card-solid);
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow-sm);
+      text-align: center;
+    }
+    .scheme-e .metric-item .val {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .scheme-e .metric-item .key {
+      font-size: 8px;
+      color: var(--ink-3);
+      margin-top: 2px;
+    }
+
+    /* ==================== 方案 F：超大数字居中 ==================== */
+    .scheme-f .hero-block {
+      background: linear-gradient(135deg, #faf8f5 0%, #f0ebe4 100%);
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      border: 1px solid var(--line);
+      position: relative;
+    }
+    .scheme-f .hero-block::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 60%;
+      background: linear-gradient(180deg, transparent 0%, rgba(212,165,116,.08) 100%);
+      border-radius: 0 0 20px 20px;
+      pointer-events: none;
+    }
+    .scheme-f .hero-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--ink-3);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .scheme-f .hero-amount {
+      font-family: var(--sans);
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -2px;
+      line-height: 1;
+      position: relative;
+      z-index: 1;
+    }
+    .scheme-f .hero-amount .cur {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--gold);
+      vertical-align: top;
+      margin-right: 4px;
+    }
+    .scheme-f .hero-sub {
+      font-size: 12px;
+      color: var(--ink-2);
+      margin-top: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .scheme-f .hero-sub span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin: 0 8px;
+    }
+    .scheme-f .hero-sub span::before {
+      content: '';
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+    .scheme-f .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .scheme-f .metric-item {
+      background: var(--card-solid);
+      border-radius: 10px;
+      padding: 12px 10px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .scheme-f .metric-item .val {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .scheme-f .metric-item .key {
+      font-size: 9px;
+      color: var(--ink-3);
+      margin-top: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hero Metrics · 简约高级方案</h1>
+  <p class="subtitle">统计页面顶部支出金额卡片设计对比</p>
+
+  <div class="container">
+    <!-- 方案 A -->
+    <div class="scheme scheme-a">
+      <div class="scheme-header">
+        <div class="scheme-title">方案 A：极简单卡</div>
+        <div class="scheme-tag">干净 · 聚焦</div>
+      </div>
+      <div class="phone-frame">
+        <div class="hero-block">
+          <div class="hero-main">
+            <div class="hero-label">本月总支出</div>
+            <div class="hero-amount"><span class="cur">¥</span>8,247.56</div>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-item">
+              <div class="val">¥275</div>
+              <div class="key">日均</div>
+            </div>
+            <div class="stat-item">
+              <div class="val">32笔</div>
+              <div class="key">记账笔数</div>
+            </div>
+            <div class="stat-item">
+              <div class="val">¥890</div>
+              <div class="key">单笔最高</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案 B -->
+    <div class="scheme scheme-b">
+      <div class="scheme-header">
+        <div class="scheme-title">方案 B：双卡片对比</div>
+        <div class="scheme-tag">深浅对比 · 信息分层</div>
+      </div>
+      <div class="phone-frame">
+        <div class="hero-row">
+          <div class="hero-main-card">
+            <div class="label">本月总支出</div>
+            <div class="amount"><span class="cur">¥</span>8,247</div>
+          </div>
+          <div class="hero-side">
+            <div class="mini-card">
+              <div class="label">日均</div>
+              <div class="amount">¥275</div>
+              <div class="delta">↑12%</div>
+            </div>
+            <div class="mini-card">
+              <div class="label">笔数</div>
+              <div class="amount">32</div>
+              <div class="delta down">↓5笔</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案 C -->
+    <div class="scheme scheme-c">
+      <div class="scheme-header">
+        <div class="scheme-title">方案 C：玻璃态卡片</div>
+        <div class="scheme-tag">柔和 · 现代</div>
+      </div>
+      <div class="phone-frame">
+        <div class="hero-block">
+          <div class="hero-top">
+            <div class="hero-main">
+              <div class="hero-label">本月总支出</div>
+              <div class="hero-amount"><span class="cur">¥</span>8,247.56</div>
+            </div>
+            <div class="hero-trend">
+              <div class="trend-badge">↑12% vs 上月</div>
+            </div>
+          </div>
+          <div class="hero-metrics">
+            <div class="metric-item">
+              <div class="val">¥275</div>
+              <div class="key">日均</div>
+            </div>
+            <div class="metric-item">
+              <div class="val">32</div>
+              <div class="key">笔数</div>
+            </div>
+            <div class="metric-item">
+              <div class="val">¥890</div>
+              <div class="key">最高</div>
+            </div>
+            <div class="metric-item">
+              <div class="val">68%</div>
+              <div class="key">预算</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案 D -->
+    <div class="scheme scheme-d">
+      <div class="scheme-header">
+        <div class="scheme-title">方案 D：仪表盘风格</div>
+        <div class="scheme-tag">图标 · 视觉丰富</div>
+      </div>
+      <div class="phone-frame">
+        <div class="hero-block">
+          <div class="hero-main-card">
+            <div class="left">
+              <div class="label">本月总支出</div>
+              <div class="amount"><span class="cur">¥</span>8,247</div>
+              <div class="trend-arrow up">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                +¥890 vs 上月
+              </div>
+            </div>
+            <div class="right">
+              <div class="mini-badge">预算 68%</div>
+              <div class="mini-badge good">储蓄率 32%</div>
+            </div>
+          </div>
+          <div class="metric-strip">
+            <div class="metric-card">
+              <div class="metric-icon">📅</div>
+              <div class="metric-content">
+                <div class="val">¥275</div>
+                <div class="key">日均</div>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon">📝</div>
+              <div class="metric-content">
+                <div class="val">32笔</div>
+                <div class="key">记账数</div>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon">⬆️</div>
+              <div class="metric-content">
+                <div class="val">¥890</div>
+                <div class="key">单笔最高</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案 E -->
+    <div class="scheme scheme-e">
+      <div class="scheme-header">
+        <div class="scheme-title">方案 E：横条 + 指标条</div>
+        <div class="scheme-tag">紧凑 · 信息条状</div>
+      </div>
+      <div class="phone-frame">
+        <div class="hero-block">
+          <div class="hero-main-row">
+            <div class="hero-label">本月总支出</div>
+            <div class="hero-amount"><span class="cur">¥</span>8,247.56</div>
+            <div class="trend-tag">↑12%</div>
+          </div>
+          <div class="metric-bar">
+            <div class="metric-item">
+              <div class="val">¥275</div>
+              <div class="key">日均</div>
+            </div>
+            <div class="metric-item">
+              <div class="val">32</div>
+              <div class="key">笔数</div>
+            </div>
+            <div class="metric-item">
+              <div class="val">¥890</div>
+              <div class="key">最高</div>
+            </div>
+            <div class="metric-item">
+              <div class="val">68%</div>
+              <div class="key">预算</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案 F -->
+    <div class="scheme scheme-f">
+      <div class="scheme-header">
+        <div class="scheme-title">方案 F：超大数字居中</div>
+        <div class="scheme-tag">震撼 · 突出金额</div>
+      </div>
+      <div class="phone-frame">
+        <div class="hero-block">
+          <div class="hero-label">本月总支出</div>
+          <div class="hero-amount"><span class="cur">¥</span>8,247</div>
+          <div class="hero-sub">
+            <span>日均 ¥275</span>
+            <span>32 笔</span>
+            <span>↑12% vs 上月</span>
+          </div>
+          <div class="metric-grid">
+            <div class="metric-item">
+              <div class="val">¥890</div>
+              <div class="key">单笔最高</div>
+            </div>
+            <div class="metric-item">
+              <div class="val">68%</div>
+              <div class="key">预算进度</div>
+            </div>
+            <div class="metric-item">
+              <div class="val">32%</div>
+              <div class="key">储蓄率</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

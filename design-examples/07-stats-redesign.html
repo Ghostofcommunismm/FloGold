@@ -1,0 +1,1899 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>统计分析 · 高密度改版</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* —— 与 FloGold 主色板一致 —— */
+      --bg: #f5f3ee;
+      --bg-2: #ebe7df;
+      --card: rgba(255, 255, 255, 0.92);
+      --card-solid: #ffffff;
+      --ink: #2d2d2d;
+      --ink-2: #6b6b6b;
+      --ink-3: #a8a8a8;
+      --ink-4: #d4cfc4;
+      --line: rgba(174, 168, 155, 0.18);
+      --line-2: rgba(174, 168, 155, 0.30);
+
+      --gold: #d4a574;
+      --gold-2: #c19463;
+      --gold-soft: #faf5f0;
+      --gold-deep: #8a5f1c;
+
+      --inc: #8ba888;
+      --inc-bg: #e8f0e5;
+      --exp: #c97b7b;
+      --exp-bg: #f5e8e8;
+      --warn: #e88b8b;
+      --blue: #6bb8e3;
+      --violet: #a78bfa;
+      --pink: #f472b6;
+
+      --c1: #e88b8b; /* 餐饮 */
+      --c2: #7ecb7c; /* 购物 */
+      --c3: #6bb8e3; /* 交通 */
+      --c4: #f5a962; /* 娱乐 */
+      --c5: #a78bfa; /* 生活 */
+      --c6: #f472b6; /* 居家 */
+      --c7: #38bdf8; /* 医疗 */
+      --c8: #c084fc; /* 学习 */
+      --c9: #94a3b8; /* 其他 */
+
+      --r-md: 16px;
+      --r-lg: 20px;
+      --r-xl: 24px;
+      --shadow-sm: 0 2px 8px rgba(174,168,155,.12), 0 1px 2px rgba(174,168,155,.08);
+      --shadow-md: 0 4px 16px rgba(174,168,155,.15), 0 2px 6px rgba(174,168,155,.10);
+      --shadow-lg: 0 8px 28px rgba(174,168,155,.20), 0 4px 12px rgba(174,168,155,.12);
+
+      --sans: 'Outfit', 'Noto Sans SC', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { background: transparent; }
+    body {
+      font-family: var(--sans);
+      background:
+        radial-gradient(ellipse 160% 70% at 0% 0%, rgb(220, 200, 140) 0%, transparent 50%),
+        radial-gradient(ellipse 100% 60% at 100% 0%, rgb(180, 160, 220) 0%, transparent 50%),
+        #f0f0f0;
+      color: var(--ink);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      justify-content: center;
+      padding: 24px 12px 60px;
+    }
+
+    .phone {
+      width: 390px;
+      background: var(--bg);
+      border-radius: 36px;
+      box-shadow: var(--shadow-lg), 0 0 0 8px #fff, 0 0 0 9px var(--line-2);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ============ Status Bar ============ */
+    .statusbar {
+      height: 44px;
+      padding: 14px 28px 0;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 14px; font-weight: 600;
+      color: var(--ink);
+    }
+    .statusbar .right { display: flex; gap: 5px; align-items: center; }
+    .statusbar svg { width: 16px; height: 16px; fill: currentColor; }
+
+    /* ============ Top Bar ============ */
+    .topbar {
+      padding: 4px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar .left { display: flex; align-items: center; gap: 10px; }
+    .topbar .title { font-size: 20px; font-weight: 700; letter-spacing: -.5px; }
+    .topbar .title .sub {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--ink-3);
+      margin-left: 6px;
+      letter-spacing: .5px;
+    }
+    .topbar .actions { display: flex; gap: 8px; }
+    .topbar .icon-btn {
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      background: var(--card);
+      box-shadow: var(--shadow-sm);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ink-2);
+    }
+    .topbar .icon-btn svg { width: 18px; height: 18px; }
+
+    /* ============ Period Switcher ============ */
+    .period {
+      margin: 6px 16px 14px;
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .period .p {
+      flex: 1;
+      text-align: center;
+      padding: 8px 0;
+      font-size: 12.5px;
+      color: var(--ink-2);
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .period .p.active {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(212,165,116,.4);
+    }
+
+    /* ============ Hero Metrics — 4-up grid ============ */
+    .hero-grid {
+      margin: 0 16px 12px;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 10px;
+    }
+    .hero-card {
+      background: var(--card);
+      border-radius: var(--r-md);
+      padding: 12px 14px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card.primary {
+      grid-row: span 2;
+      background: linear-gradient(135deg, #2a2540 0%, #14101f 50%, #0a0712 100%);
+      color: #f4f0e6;
+      padding: 14px 14px 12px;
+      box-shadow: var(--shadow-md), 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .hero-card.primary::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 140px; height: 140px;
+      background: radial-gradient(circle, rgba(212,175,55,.4) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-card.primary .label {
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: rgba(244,240,230,.55);
+      text-transform: uppercase;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hero-card.primary .label::before {
+      content: '';
+      width: 12px; height: 1px;
+      background: linear-gradient(90deg, var(--gold), transparent);
+    }
+    .hero-card.primary .v {
+      font-family: var(--sans);
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -.5px;
+      margin-top: 6px;
+      background: linear-gradient(100deg, #b48a3e 0%, #f4d577 50%, #fff8dc 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1.05;
+      font-variant-numeric: tabular-nums;
+    }
+    .hero-card.primary .v .cur {
+      font-size: 14px;
+      margin-right: 3px;
+      background: none;
+      -webkit-text-fill-color: var(--gold);
+      color: var(--gold);
+      vertical-align: 2px;
+      font-weight: 500;
+    }
+    .hero-card.primary .meta {
+      margin-top: auto;
+      display: flex;
+      gap: 8px;
+      font-size: 10.5px;
+      color: rgba(244,240,230,.5);
+      align-items: center;
+    }
+    .hero-card.primary .meta b {
+      color: #f87171;
+      font-family: var(--mono);
+      font-weight: 600;
+    }
+    .hero-card.primary .meta i {
+      font-style: normal;
+      font-family: var(--mono);
+      color: rgba(244,240,230,.7);
+    }
+    .hero-card.primary .row2 {
+      margin-top: 8px;
+      display: flex;
+      gap: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .hero-card.primary .row2 .item { flex: 1; }
+    .hero-card.primary .row2 .item .k {
+      font-size: 9.5px;
+      color: rgba(244,240,230,.45);
+      letter-spacing: .8px;
+      text-transform: uppercase;
+    }
+    .hero-card.primary .row2 .item .v2 {
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--mono);
+      margin-top: 1px;
+      color: #f4f0e6;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hero-card.mini { padding: 10px 12px; }
+    .hero-card.mini .label {
+      font-size: 10px;
+      color: var(--ink-3);
+      letter-spacing: .5px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .hero-card.mini .v {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-top: 4px;
+      letter-spacing: -.3px;
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+    }
+    .hero-card.mini .v .cur {
+      font-size: 11px;
+      color: var(--ink-3);
+      font-weight: 500;
+    }
+    .hero-card.mini .delta {
+      font-size: 10px;
+      margin-top: 2px;
+      font-weight: 600;
+      font-family: var(--mono);
+    }
+    .delta.up { color: var(--exp); }
+    .delta.down { color: var(--inc); }
+    .delta.flat { color: var(--ink-3); }
+
+    /* ============ Triple Stat Strip (compare + budget + saving) ============ */
+    .triple {
+      margin: 0 16px 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .triple-card {
+      background: var(--card);
+      border-radius: var(--r-md);
+      padding: 10px 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .triple-card .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10.5px;
+      color: var(--ink-3);
+      font-weight: 600;
+    }
+    .triple-card .head .badge {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 99px;
+      font-family: var(--mono);
+      font-weight: 600;
+    }
+    .badge.up { background: rgba(201,123,123,.12); color: var(--exp); }
+    .badge.down { background: rgba(139,168,136,.14); color: var(--inc); }
+    .badge.flat { background: rgba(168,168,168,.18); color: var(--ink-2); }
+    .triple-card .v {
+      font-family: var(--mono);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-top: 4px;
+      letter-spacing: -.3px;
+      font-variant-numeric: tabular-nums;
+    }
+    .triple-card .v .cur { font-size: 11px; color: var(--ink-3); margin-right: 2px; }
+    .triple-card .v .pct {
+      font-size: 11px;
+      margin-left: 4px;
+      font-weight: 600;
+    }
+    .triple-card.budget .progress {
+      height: 4px;
+      background: var(--line);
+      border-radius: 99px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .triple-card.budget .progress .fill {
+      height: 100%;
+      width: 80.4%;
+      background: linear-gradient(90deg, var(--gold) 0%, var(--exp) 100%);
+      border-radius: 99px;
+    }
+    .triple-card.budget .progress .fill.warn {
+      background: linear-gradient(90deg, var(--warn) 0%, var(--exp) 100%);
+    }
+    .triple-card.budget .progress-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9.5px;
+      color: var(--ink-3);
+      margin-top: 3px;
+      font-family: var(--mono);
+    }
+
+    /* ============ Generic Card ============ */
+    .card {
+      margin: 0 16px 12px;
+      background: var(--card);
+      border-radius: var(--r-lg);
+      padding: 14px 14px 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .card-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .card-title::before {
+      content: '';
+      width: 3px; height: 12px;
+      background: linear-gradient(180deg, var(--gold), var(--gold-2));
+      border-radius: 2px;
+    }
+    .card-sub {
+      font-size: 10.5px;
+      color: var(--ink-3);
+      font-family: var(--mono);
+    }
+    .card-tag {
+      font-size: 10px;
+      padding: 3px 7px;
+      border-radius: 6px;
+      background: var(--gold-soft);
+      color: var(--gold-deep);
+      font-weight: 600;
+    }
+
+    /* ============ Category: donut + ranked list side by side ============ */
+    .cat-row { display: flex; gap: 12px; align-items: stretch; }
+    .donut-box {
+      flex-shrink: 0;
+      width: 120px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .donut-svg { width: 110px; height: 110px; }
+    .donut-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    .donut-center .n {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -.3px;
+      line-height: 1;
+    }
+    .donut-center .l {
+      font-size: 9.5px;
+      color: var(--ink-3);
+      margin-top: 2px;
+      letter-spacing: 1px;
+    }
+    .donut-foot {
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--ink-3);
+      text-align: center;
+    }
+    .donut-foot b { color: var(--exp); font-family: var(--mono); font-weight: 600; }
+
+    .cat-list {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .cat-item {
+      display: grid;
+      grid-template-columns: 22px 1fr auto auto;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      padding: 4px 0;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background .15s;
+      position: relative;
+    }
+    .cat-item:hover { background: rgba(212,165,116,.06); }
+    .cat-item .icn {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .cat-item .icn svg { width: 13px; height: 13px; }
+    .cat-item .name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+    .cat-item .name .nm {
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .cat-item .name .ct {
+      font-size: 9.5px;
+      color: var(--ink-3);
+      font-family: var(--mono);
+    }
+    .cat-item .bar {
+      grid-column: 1 / -1;
+      height: 4px;
+      border-radius: 99px;
+      background: var(--line);
+      overflow: hidden;
+      margin-top: -2px;
+    }
+    .cat-item .bar .fg {
+      height: 100%;
+      border-radius: 99px;
+      transition: width .35s ease;
+    }
+    .cat-item .amt {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .cat-item .amt .p {
+      font-size: 10px;
+      color: var(--ink-3);
+      font-weight: 500;
+      margin-left: 3px;
+    }
+    .cat-item .chev {
+      width: 14px; height: 14px;
+      color: var(--ink-3);
+      transition: transform .25s ease;
+      flex-shrink: 0;
+    }
+    .cat-item.expanded .chev { transform: rotate(180deg); color: var(--ink-2); }
+
+    /* ============ 子类目展开区域 ============ */
+    .sub-wrap {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows .3s cubic-bezier(.22,1,.36,1);
+      overflow: hidden;
+    }
+    .cat-item.expanded .sub-wrap { grid-template-rows: 1fr; }
+    .sub-inner {
+      min-height: 0;
+      opacity: 0;
+      transition: opacity .25s ease .1s;
+    }
+    .cat-item.expanded .sub-inner { opacity: 1; }
+    .sub-list {
+      padding: 4px 0 6px 30px;
+      border-left: 1.5px dashed var(--line-2);
+      margin-left: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .sub-item {
+      display: grid;
+      grid-template-columns: 6px 1fr auto auto;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-size: 10.5px;
+      transition: background .12s;
+    }
+    .sub-item:hover { background: rgba(212,165,116,.05); }
+    .sub-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .sub-name {
+      color: var(--ink-2);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sub-count {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      color: var(--ink-3);
+    }
+    .sub-amount {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+    .sub-amount .sp {
+      font-size: 9px;
+      color: var(--ink-3);
+      font-weight: 500;
+      margin-left: 2px;
+    }
+    .sub-mini-bar {
+      grid-column: 2 / -1;
+      height: 2px;
+      border-radius: 99px;
+      background: var(--line);
+      overflow: hidden;
+      margin-top: -1px;
+    }
+    .sub-mini-bar .fg {
+      height: 100%;
+      border-radius: 99px;
+      opacity: .55;
+      transition: width .35s ease;
+    }
+
+    /* 头部右侧"全部展开/收起"小开关 */
+    .cat-tool-btn {
+      font-size: 10px;
+      color: var(--ink-3);
+      font-weight: 600;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: all .15s;
+      user-select: none;
+    }
+    .cat-tool-btn:hover { background: var(--gold-soft); color: var(--gold-deep); }
+
+    /* ============ Trend — Stacked bars ============ */
+    .trend-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .trend-tools { display: flex; gap: 4px; }
+    .tool-chip {
+      font-size: 10.5px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--ink-3);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tool-chip.active {
+      background: var(--gold-soft);
+      color: var(--gold-deep);
+    }
+    .trend-legend { display: flex; gap: 10px; font-size: 10px; color: var(--ink-3); }
+    .trend-legend .dot { display: inline-block; width: 7px; height: 7px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+
+    .trend-svg { width: 100%; height: 110px; display: block; }
+    .trend-tip {
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--ink-3);
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+    }
+    .trend-tip b { color: var(--exp); font-weight: 600; }
+
+    /* ============ Top merchants / tags — 2 columns ============ */
+    .rank-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .rank-col {
+      background: rgba(0,0,0,.015);
+      border-radius: 12px;
+      padding: 8px 10px;
+    }
+    .rank-col-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--ink-2);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .rank-col-title .more { font-size: 9px; color: var(--ink-3); font-weight: 500; }
+    .rank-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+      font-size: 11px;
+    }
+    .rank-row .rk {
+      width: 14px;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--ink-3);
+      flex-shrink: 0;
+    }
+    .rank-row:nth-child(1) .rk { color: var(--gold-deep); }
+    .rank-row:nth-child(2) .rk { color: var(--ink-2); }
+    .rank-row:nth-child(3) .rk { color: var(--gold); }
+    .rank-row .nm {
+      flex: 1;
+      font-weight: 500;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .rank-row .v {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ============ Weekday + Hour Distribution ============ */
+    .dist-row { display: grid; grid-template-columns: 1.45fr 1fr; gap: 10px; }
+    .dist-block { }
+    .dist-block .head {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-2);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .dist-block .head .peak {
+      font-size: 9.5px;
+      color: var(--gold-deep);
+      font-family: var(--mono);
+      font-weight: 600;
+      background: var(--gold-soft);
+      padding: 2px 6px;
+      border-radius: 99px;
+    }
+    .weekday-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; align-items: end; height: 64px; }
+    .wd-col { display: flex; flex-direction: column; align-items: center; gap: 3px; height: 100%; justify-content: end; }
+    .wd-col .bar {
+      width: 100%;
+      background: linear-gradient(180deg, var(--gold) 0%, var(--gold-2) 100%);
+      border-radius: 3px 3px 0 0;
+      min-height: 3px;
+      transition: all .3s;
+    }
+    .wd-col.peak .bar {
+      background: linear-gradient(180deg, var(--exp) 0%, #d96b6b 100%);
+      box-shadow: 0 0 6px rgba(201,123,123,.4);
+    }
+    .wd-col .lbl { font-size: 9px; color: var(--ink-3); font-weight: 600; }
+    .wd-col.peak .lbl { color: var(--exp); }
+    .wd-col .val { font-size: 8.5px; color: var(--ink-3); font-family: var(--mono); }
+
+    .hour-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 2px;
+    }
+    .hour-cell {
+      aspect-ratio: 1;
+      border-radius: 3px;
+      background: var(--line);
+      position: relative;
+    }
+    .hour-cell .t {
+      position: absolute;
+      bottom: -13px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 8px;
+      color: var(--ink-3);
+      font-family: var(--mono);
+    }
+    .hour-cells { padding-bottom: 14px; }
+
+    /* ============ Insights / Tips ============ */
+    .insight {
+      margin: 0 16px 12px;
+      background: linear-gradient(135deg, var(--gold-soft) 0%, #fff8e7 100%);
+      border: 1px solid rgba(212,165,116,.25);
+      border-radius: var(--r-md);
+      padding: 10px 12px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .insight .ic {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 10px rgba(212,165,116,.3);
+    }
+    .insight .ic svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2; }
+    .insight .body { flex: 1; }
+    .insight .t {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--gold-deep);
+      margin-bottom: 2px;
+    }
+    .insight .d {
+      font-size: 10.5px;
+      color: var(--ink-2);
+      line-height: 1.45;
+    }
+    .insight .d b { color: var(--ink); font-family: var(--mono); font-weight: 600; }
+
+    /* ============ Tabbar ============ */
+    .tabbar {
+      position: sticky;
+      bottom: 0;
+      margin: 0 12px;
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 22px;
+      padding: 8px 4px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      align-items: center;
+      box-shadow: 0 8px 24px rgba(174,168,155,.18);
+      border: 1px solid var(--line);
+    }
+    .tab {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 2px;
+      color: var(--ink-3);
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .tab svg { width: 20px; height: 20px; stroke-width: 1.8; }
+    .tab.active { color: var(--gold-deep); font-weight: 700; }
+    .tab.center svg {
+      width: 42px; height: 42px;
+      padding: 10px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #fff;
+      border-radius: 50%;
+      box-shadow: 0 6px 14px rgba(212,165,116,.45);
+      margin-top: -16px;
+    }
+    .tab.center span { display: none; }
+
+    /* ============ Scrollbar ============ */
+    .scroll { padding-bottom: 20px; }
+
+    /* ============ Bottom Sheet (自定义日期) ============ */
+    .sheet-mask {
+      position: absolute;
+      inset: 0;
+      background: rgba(20,15,8,.35);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s;
+      z-index: 50;
+    }
+    .sheet-mask.open { opacity: 1; pointer-events: auto; }
+
+    .sheet {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      background: var(--card-solid);
+      border-radius: 24px 24px 0 0;
+      padding: 14px 16px 22px;
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(.22,1,.36,1);
+      z-index: 51;
+      max-height: 88%;
+      overflow-y: auto;
+      box-shadow: 0 -10px 30px rgba(0,0,0,.18);
+    }
+    .sheet.open { transform: translateY(0); }
+    .sheet-handle {
+      width: 36px; height: 4px;
+      background: var(--ink-4);
+      border-radius: 99px;
+      margin: 0 auto 12px;
+    }
+    .sheet-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+    }
+    .sheet-title { font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
+    .sheet-close {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: var(--bg-2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ink-2);
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .quick-ranges {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .quick-range {
+      padding: 8px 6px;
+      border-radius: 10px;
+      background: var(--bg-2);
+      font-size: 11.5px;
+      color: var(--ink-2);
+      text-align: center;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .quick-range.active {
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(212,165,116,.3);
+    }
+
+    .range-display {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .range-box {
+      background: var(--bg-2);
+      border-radius: 12px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .range-box.active {
+      background: var(--gold-soft);
+      outline: 1.5px solid var(--gold);
+    }
+    .range-box .l {
+      font-size: 10px;
+      color: var(--ink-3);
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .range-box .v {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+    .range-box.active .v { color: var(--gold-deep); }
+    .range-arrow {
+      font-size: 14px;
+      color: var(--ink-3);
+      font-weight: 700;
+    }
+
+    .cal-wrap {
+      background: var(--bg-2);
+      border-radius: 14px;
+      padding: 12px 10px 10px;
+      margin-bottom: 14px;
+    }
+    .cal-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px;
+    }
+    .cal-nav {
+      display: flex; gap: 4px;
+    }
+    .cal-nav-btn {
+      width: 26px; height: 26px;
+      border-radius: 8px;
+      background: var(--card-solid);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--ink-2);
+      box-shadow: var(--shadow-sm);
+      font-size: 12px;
+    }
+    .cal-title {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: var(--mono);
+      color: var(--ink);
+    }
+    .cal-week {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 4px;
+    }
+    .cal-week div {
+      text-align: center;
+      font-size: 10px;
+      color: var(--ink-3);
+      font-weight: 600;
+      padding: 4px 0;
+    }
+    .cal-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-family: var(--mono);
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--ink);
+      position: relative;
+      transition: all .12s;
+    }
+    .cal-day.muted { color: var(--ink-4); }
+    .cal-day.today {
+      outline: 1px solid var(--gold);
+      color: var(--gold-deep);
+      font-weight: 700;
+    }
+    .cal-day:hover:not(.muted) { background: rgba(212,165,116,.18); }
+    .cal-day.start, .cal-day.end {
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 3px 8px rgba(212,165,116,.35);
+    }
+    .cal-day.in-range {
+      background: rgba(212,165,116,.22);
+      color: var(--gold-deep);
+      border-radius: 0;
+    }
+    .cal-day.start { border-radius: 8px 0 0 8px; }
+    .cal-day.end { border-radius: 0 8px 8px 0; }
+    .cal-day.start.end { border-radius: 8px; }
+
+    .sheet-footer {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .btn {
+      height: 44px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      border: none;
+      transition: transform .1s;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn-secondary {
+      background: var(--bg-2);
+      color: var(--ink-2);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(212,165,116,.35);
+    }
+
+    /* fade-in 卡片切换 */
+    .card, .hero-grid, .triple, .insight {
+      animation: fadeUp .35s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* responsive */
+    @media (max-width: 420px) {
+      .phone { width: 100%; border-radius: 0; box-shadow: none; }
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="phone">
+  <!-- Status bar -->
+  <div class="statusbar">
+    <span>9:41</span>
+    <div class="right">
+      <svg viewBox="0 0 24 24"><path d="M2 22h2v-8H2v8zm5 0h2V10H7v12zm5 0h2V6h-2v16zm5 0h2V2h-2v20z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 00-6 0zm-4-4l2 2a7.074 7.074 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/></svg>
+    </div>
+  </div>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="left">
+      <div class="title">统计分析<span class="sub" id="periodSub">NOV · 本月</span></div>
+    </div>
+    <div class="actions">
+      <div class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <div class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Period switcher -->
+  <div class="period" id="periodTabs" role="tablist">
+    <div class="p" data-period="day" role="tab">日</div>
+    <div class="p" data-period="week" role="tab">周</div>
+    <div class="p active" data-period="month" role="tab">月</div>
+    <div class="p" data-period="year" role="tab">年</div>
+    <div class="p" data-period="custom" role="tab">自定义</div>
+  </div>
+
+  <div class="scroll">
+    <!-- ============ Hero metrics — 4-up ============ -->
+    <div class="hero-grid">
+      <!-- Big card: total expense -->
+      <div class="hero-card primary">
+        <div class="label">本月总支出</div>
+        <div class="v"><span class="cur">¥</span>643.50</div>
+        <div class="meta">
+          <span>较上月</span>
+          <b>↑ 80.2%</b>
+          <i>·</i>
+          <span>日均 ¥21</span>
+        </div>
+        <div class="row2">
+          <div class="item">
+            <div class="k">笔数</div>
+            <div class="v2">12 笔</div>
+          </div>
+          <div class="item">
+            <div class="k">单笔最高</div>
+            <div class="v2">¥199</div>
+          </div>
+        </div>
+      </div>
+      <!-- Mini: daily avg -->
+      <div class="hero-card mini">
+        <div class="label">日均</div>
+        <div class="v"><span class="cur">¥</span>21.4</div>
+        <div class="delta up">↑ 13.6</div>
+      </div>
+      <!-- Mini: count -->
+      <div class="hero-card mini">
+        <div class="label">记账笔数</div>
+        <div class="v">12</div>
+        <div class="delta down">↓ 5</div>
+      </div>
+    </div>
+
+    <!-- ============ Triple: MoM / Budget / Saving ============ -->
+    <div class="triple">
+      <div class="triple-card">
+        <div class="head">
+          <span>同比环比</span>
+          <span class="badge up">↑80.2%</span>
+        </div>
+        <div class="v"><span class="cur">¥</span>357</div>
+        <div class="delta" style="font-size:10px;color:var(--ink-3);font-family:var(--mono);margin-top:1px;">vs 上月 ¥357</div>
+      </div>
+      <div class="triple-card budget">
+        <div class="head">
+          <span>月度预算</span>
+          <span class="badge up">80%</span>
+        </div>
+        <div class="v"><span class="cur">¥</span>643<span class="pct" style="color:var(--ink-3);">/800</span></div>
+        <div class="progress"><div class="fill warn"></div></div>
+        <div class="progress-row"><span>剩余 7 天</span><span>剩 ¥157</span></div>
+      </div>
+      <div class="triple-card">
+        <div class="head">
+          <span>储蓄率</span>
+          <span class="badge flat">—</span>
+        </div>
+        <div class="v">52<span class="pct" style="color:var(--inc);">%</span></div>
+        <div class="delta down" style="font-size:10px;color:var(--ink-3);font-family:var(--mono);margin-top:1px;">结余 ¥1,357</div>
+      </div>
+    </div>
+
+    <!-- ============ Insight ============ -->
+    <div class="insight">
+      <div class="ic">
+        <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+      </div>
+      <div class="body">
+        <div class="t">发现一处异常</div>
+        <div class="d">本周餐饮支出 <b>¥213</b>，比上周 <b>↑95%</b>。建议查看外卖订单明细。</div>
+      </div>
+    </div>
+
+    <!-- ============ Category: donut + ranked list (可展开二级类目) ============ -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">分类构成</div>
+        <span class="cat-tool-btn" id="catToggleAll">全部展开</span>
+      </div>
+      <div class="cat-row">
+        <div class="donut-box">
+          <svg class="donut-svg" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(174,168,155,.15)" stroke-width="14"/>
+            <!-- segments via stroke-dasharray on circles -->
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#e88b8b" stroke-width="14"
+              stroke-dasharray="88 251" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#7ecb7c" stroke-width="14"
+              stroke-dasharray="55 251" stroke-dashoffset="-88" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#6bb8e3" stroke-width="14"
+              stroke-dasharray="35 251" stroke-dashoffset="-143" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#f5a962" stroke-width="14"
+              stroke-dasharray="22 251" stroke-dashoffset="-178" transform="rotate(-90 50 50)"/>
+          </svg>
+          <div class="donut-center">
+            <div class="n">¥644</div>
+            <div class="l">总支出</div>
+          </div>
+          <div class="donut-foot">占月支出 <b>100%</b></div>
+        </div>
+        <div class="cat-list" id="catList">
+          <!-- 1. 餐饮 -->
+          <div class="cat-item expanded" data-cat="food" style="--c:#e88b8b;--cbg:rgba(232,139,139,.18);--cink:#c46767;">
+            <div class="icn" style="background:var(--cbg);color:var(--cink);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+            </div>
+            <div class="name">
+              <span class="nm">餐饮</span>
+              <span class="ct">8 笔</span>
+            </div>
+            <div class="amt">¥351.60<span class="p">54.6%</span></div>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            <div class="bar"><div class="fg" style="width:54.6%;background:linear-gradient(90deg,#e88b8b,#d96b6b);"></div></div>
+            <div class="sub-wrap">
+              <div class="sub-inner">
+                <div class="sub-list">
+                  <div class="sub-item">
+                    <div class="sub-dot" style="background:#e88b8b;"></div>
+                    <div class="sub-name">外卖</div>
+                    <div class="sub-count">5 笔</div>
+                    <div class="sub-amount">¥199<span class="sp">56.6%</span></div>
+                    <div class="sub-mini-bar"><div class="fg" style="width:56.6%;background:#e88b8b;"></div></div>
+                  </div>
+                  <div class="sub-item">
+                    <div class="sub-dot" style="background:#e88b8b;"></div>
+                    <div class="sub-name">聚餐</div>
+                    <div class="sub-count">1 笔</div>
+                    <div class="sub-amount">¥107<span class="sp">30.4%</span></div>
+                    <div class="sub-mini-bar"><div class="fg" style="width:30.4%;background:#e88b8b;"></div></div>
+                  </div>
+                  <div class="sub-item">
+                    <div class="sub-dot" style="background:#e88b8b;"></div>
+                    <div class="sub-name">早餐</div>
+                    <div class="sub-count">2 笔</div>
+                    <div class="sub-amount">¥45.6<span class="sp">13.0%</span></div>
+                    <div class="sub-mini-bar"><div class="fg" style="width:13%;background:#e88b8b;"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. 购物 -->
+          <div class="cat-item" data-cat="shop" style="--c:#7ecb7c;--cbg:rgba(126,203,124,.18);--cink:#5ba55a;">
+            <div class="icn" style="background:var(--cbg);color:var(--cink);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            </div>
+            <div class="name">
+              <span class="nm">购物</span>
+              <span class="ct">2 笔</span>
+            </div>
+            <div class="amt">¥145.00<span class="p">22.5%</span></div>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            <div class="bar"><div class="fg" style="width:22.5%;background:linear-gradient(90deg,#7ecb7c,#5ba55a);"></div></div>
+            <div class="sub-wrap">
+              <div class="sub-inner">
+                <div class="sub-list">
+                  <div class="sub-item">
+                    <div class="sub-dot" style="background:#7ecb7c;"></div>
+                    <div class="sub-name">日用品</div>
+                    <div class="sub-count">1 笔</div>
+                    <div class="sub-amount">¥86<span class="sp">59.3%</span></div>
+                    <div class="sub-mini-bar"><div class="fg" style="width:59.3%;background:#7ecb7c;"></div></div>
+                  </div>
+                  <div class="sub-item">
+                    <div class="sub-dot" style="background:#7ecb7c;"></div>
+                    <div class="sub-name">服饰</div>
+                    <div class="sub-count">1 笔</div>
+                    <div class="sub-amount">¥59<span class="sp">40.7%</span></div>
+                    <div class="sub-mini-bar"><div class="fg" style="width:40.7%;background:#7ecb7c;"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. 娱乐 -->
+          <div class="cat-item" data-cat="fun" style="--c:#6bb8e3;--cbg:rgba(107,184,227,.18);--cink:#4a93bc;">
+            <div class="icn" style="background:var(--cbg);color:var(--cink);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+            <div class="name">
+              <span class="nm">娱乐</span>
+              <span class="ct">1 笔</span>
+            </div>
+            <div class="amt">¥89.90<span class="p">14.0%</span></div>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            <div class="bar"><div class="fg" style="width:14%;background:linear-gradient(90deg,#6bb8e3,#4a93bc);"></div></div>
+            <div class="sub-wrap">
+              <div class="sub-inner">
+                <div class="sub-list">
+                  <div class="sub-item">
+                    <div class="sub-dot" style="background:#6bb8e3;"></div>
+                    <div class="sub-name">游戏内购</div>
+                    <div class="sub-count">1 笔</div>
+                    <div class="sub-amount">¥89.9<span class="sp">100%</span></div>
+                    <div class="sub-mini-bar"><div class="fg" style="width:100%;background:#6bb8e3;"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. 交通 -->
+          <div class="cat-item" data-cat="transport" style="--c:#f5a962;--cbg:rgba(245,169,98,.18);--cink:#c08542;">
+            <div class="icn" style="background:var(--cbg);color:var(--cink);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            </div>
+            <div class="name">
+              <span class="nm">交通</span>
+              <span class="ct">1 笔</span>
+            </div>
+            <div class="amt">¥57.00<span class="p">8.9%</span></div>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            <div class="bar"><div class="fg" style="width:8.9%;background:linear-gradient(90deg,#f5a962,#c08542);"></div></div>
+            <div class="sub-wrap">
+              <div class="sub-inner">
+                <div class="sub-list">
+                  <div class="sub-item">
+                    <div class="sub-dot" style="background:#f5a962;"></div>
+                    <div class="sub-name">打车</div>
+                    <div class="sub-count">1 笔</div>
+                    <div class="sub-amount">¥57<span class="sp">100%</span></div>
+                    <div class="sub-mini-bar"><div class="fg" style="width:100%;background:#f5a962;"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Trend: stacked bars ============ -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">每日趋势</div>
+        <div class="trend-tools">
+          <span class="tool-chip">收入</span>
+          <span class="tool-chip active">支出</span>
+          <span class="tool-chip">对比</span>
+        </div>
+      </div>
+      <div class="trend-legend">
+        <span><span class="dot" style="background:var(--exp);"></span>支出</span>
+        <span><span class="dot" style="background:var(--gold);"></span>日均 ¥21</span>
+      </div>
+      <svg class="trend-svg" viewBox="0 0 360 110" preserveAspectRatio="none">
+        <!-- baseline -->
+        <line x1="0" y1="100" x2="360" y2="100" stroke="rgba(174,168,155,.25)" stroke-dasharray="2 3"/>
+        <line x1="0" y1="60"  x2="360" y2="60"  stroke="rgba(174,168,155,.15)" stroke-dasharray="2 3"/>
+        <line x1="0" y1="20"  x2="360" y2="20"  stroke="rgba(174,168,155,.15)" stroke-dasharray="2 3"/>
+        <!-- avg line -->
+        <line x1="0" y1="78" x2="360" y2="78" stroke="var(--gold)" stroke-dasharray="3 3" stroke-width="1" opacity=".5"/>
+        <text x="355" y="76" text-anchor="end" font-size="8" fill="var(--gold-deep)" font-family="JetBrains Mono">avg</text>
+        <!-- bars (30 days, simplified) -->
+        <g>
+          <!-- Each bar: rect with rounded top. Values pre-computed to match totals roughly -->
+          <rect x="4"   y="92" width="8" height="8"  rx="1.5" fill="#e88b8b" opacity=".7"/>
+          <rect x="16"  y="80" width="8" height="20" rx="1.5" fill="#e88b8b" opacity=".75"/>
+          <rect x="28"  y="68" width="8" height="32" rx="1.5" fill="#e88b8b" opacity=".8"/>
+          <rect x="40"  y="85" width="8" height="15" rx="1.5" fill="#e88b8b" opacity=".7"/>
+          <rect x="52"  y="55" width="8" height="45" rx="1.5" fill="#e88b8b" opacity=".9"/>
+          <rect x="64"  y="78" width="8" height="22" rx="1.5" fill="#e88b8b" opacity=".75"/>
+          <rect x="76"  y="40" width="8" height="60" rx="1.5" fill="#e88b8b" opacity="1"/>
+          <rect x="88"  y="75" width="8" height="25" rx="1.5" fill="#e88b8b" opacity=".8"/>
+          <rect x="100" y="88" width="8" height="12" rx="1.5" fill="#e88b8b" opacity=".65"/>
+          <rect x="112" y="70" width="8" height="30" rx="1.5" fill="#e88b8b" opacity=".8"/>
+          <rect x="124" y="62" width="8" height="38" rx="1.5" fill="#e88b8b" opacity=".85"/>
+          <rect x="136" y="82" width="8" height="18" rx="1.5" fill="#e88b8b" opacity=".7"/>
+          <rect x="148" y="35" width="8" height="65" rx="1.5" fill="#e88b8b"/>
+          <rect x="160" y="78" width="8" height="22" rx="1.5" fill="#e88b8b" opacity=".75"/>
+          <rect x="172" y="86" width="8" height="14" rx="1.5" fill="#e88b8b" opacity=".7"/>
+          <rect x="184" y="58" width="8" height="42" rx="1.5" fill="#e88b8b" opacity=".85"/>
+          <rect x="196" y="72" width="8" height="28" rx="1.5" fill="#e88b8b" opacity=".8"/>
+          <rect x="208" y="80" width="8" height="20" rx="1.5" fill="#e88b8b" opacity=".75"/>
+          <rect x="220" y="48" width="8" height="52" rx="1.5" fill="#e88b8b" opacity=".9"/>
+          <rect x="232" y="84" width="8" height="16" rx="1.5" fill="#e88b8b" opacity=".7"/>
+          <rect x="244" y="76" width="8" height="24" rx="1.5" fill="#e88b8b" opacity=".8"/>
+          <rect x="256" y="30" width="8" height="70" rx="1.5" fill="#e88b8b"/>
+          <rect x="268" y="68" width="8" height="32" rx="1.5" fill="#e88b8b" opacity=".85"/>
+          <rect x="280" y="78" width="8" height="22" rx="1.5" fill="#e88b8b" opacity=".75"/>
+          <rect x="292" y="60" width="8" height="40" rx="1.5" fill="#e88b8b" opacity=".85"/>
+          <rect x="304" y="74" width="8" height="26" rx="1.5" fill="#e88b8b" opacity=".8"/>
+          <rect x="316" y="50" width="8" height="50" rx="1.5" fill="#e88b8b" opacity=".9"/>
+          <rect x="328" y="82" width="8" height="18" rx="1.5" fill="#e88b8b" opacity=".7"/>
+          <rect x="340" y="65" width="8" height="35" rx="1.5" fill="#e88b8b" opacity=".85"/>
+          <rect x="352" y="78" width="8" height="22" rx="1.5" fill="#e88b8b" opacity=".75"/>
+        </g>
+        <!-- x labels -->
+        <g font-size="8" fill="var(--ink-3)" font-family="JetBrains Mono" font-weight="600">
+          <text x="8"   y="108" text-anchor="middle">1</text>
+          <text x="80"  y="108" text-anchor="middle">7</text>
+          <text x="152" y="108" text-anchor="middle">14</text>
+          <text x="224" y="108" text-anchor="middle">21</text>
+          <text x="356" y="108" text-anchor="middle">30</text>
+        </g>
+      </svg>
+      <div class="trend-tip">
+        <span>峰值 <b>¥199 · 11/13</b></span>
+        <span>峰谷 ¥0 · 11/10</span>
+      </div>
+    </div>
+
+    <!-- ============ Top merchants + tags ============ -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">排行</div>
+        <span class="card-sub">TOP 5</span>
+      </div>
+      <div class="rank-2col">
+        <div class="rank-col">
+          <div class="rank-col-title">商户<span class="more">金额 ↓</span></div>
+          <div class="rank-row"><span class="rk">1</span><span class="nm">海底捞</span><span class="v">¥199</span></div>
+          <div class="rank-row"><span class="rk">2</span><span class="nm">盒马鲜生</span><span class="v">¥86</span></div>
+          <div class="rank-row"><span class="rk">3</span><span class="nm">瑞幸咖啡</span><span class="v">¥38</span></div>
+          <div class="rank-row"><span class="rk">4</span><span class="nm">滴滴出行</span><span class="v">¥57</span></div>
+          <div class="rank-row"><span class="rk">5</span><span class="nm">优衣库</span><span class="v">¥99</span></div>
+        </div>
+        <div class="rank-col">
+          <div class="rank-col-title">标签<span class="more">金额 ↓</span></div>
+          <div class="rank-row"><span class="rk">1</span><span class="nm">#外卖</span><span class="v">¥168</span></div>
+          <div class="rank-row"><span class="rk">2</span><span class="nm">#通勤</span><span class="v">¥98</span></div>
+          <div class="rank-row"><span class="rk">3</span><span class="nm">#日用品</span><span class="v">¥85</span></div>
+          <div class="rank-row"><span class="rk">4</span><span class="nm">#聚餐</span><span class="v">¥199</span></div>
+          <div class="rank-row"><span class="rk">5</span><span class="nm">#咖啡</span><span class="v">¥38</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Weekday + Hour distribution ============ -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">消费习惯</div>
+        <span class="card-sub">周内 · 时段</span>
+      </div>
+      <div class="dist-row">
+        <div class="dist-block">
+          <div class="head">周内分布<span class="peak">峰值 周日</span></div>
+          <div class="weekday-grid">
+            <div class="wd-col"><div class="bar" style="height:30%;"></div><div class="val">¥56</div><div class="lbl">一</div></div>
+            <div class="wd-col"><div class="bar" style="height:45%;"></div><div class="val">¥85</div><div class="lbl">二</div></div>
+            <div class="wd-col"><div class="bar" style="height:25%;"></div><div class="val">¥42</div><div class="lbl">三</div></div>
+            <div class="wd-col"><div class="bar" style="height:55%;"></div><div class="val">¥110</div><div class="lbl">四</div></div>
+            <div class="wd-col"><div class="bar" style="height:40%;"></div><div class="val">¥78</div><div class="lbl">五</div></div>
+            <div class="wd-col"><div class="bar" style="height:75%;"></div><div class="val">¥152</div><div class="lbl">六</div></div>
+            <div class="wd-col peak"><div class="bar" style="height:100%;"></div><div class="val">¥120</div><div class="lbl">日</div></div>
+          </div>
+        </div>
+        <div class="dist-block">
+          <div class="head">时段热力<span class="peak">19-21时</span></div>
+          <div class="hour-cells">
+            <div class="hour-grid">
+              <div class="hour-cell" style="background:rgba(212,165,116,.1);"></div>
+              <div class="hour-cell" style="background:rgba(212,165,116,.1);"></div>
+              <div class="hour-cell" style="background:rgba(212,165,116,.15);"></div>
+              <div class="hour-cell" style="background:rgba(212,165,116,.2);"></div>
+              <div class="hour-cell" style="background:rgba(232,139,139,.4);"></div>
+              <div class="hour-cell" style="background:rgba(232,139,139,.55);"></div>
+              <div class="hour-cell" style="background:rgba(232,139,139,.7);"></div>
+              <div class="hour-cell" style="background:rgba(232,139,139,.45);"></div>
+              <div class="hour-cell" style="background:rgba(212,165,116,.3);"></div>
+              <div class="hour-cell" style="background:rgba(212,165,116,.25);"></div>
+              <div class="hour-cell" style="background:rgba(212,165,116,.2);"></div>
+              <div class="hour-cell" style="background:rgba(212,165,116,.18);"></div>
+              <!-- 6 cols × 2 rows = 12 cells = 24h labeled every 2h -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--ink-3);font-family:var(--mono);margin-top:6px;padding:0 2px;">
+        <span>0时</span><span>6时</span><span>12时</span><span>18时</span><span>23时</span>
+      </div>
+    </div>
+
+    <!-- ============ Heatmap preview (compact) ============ -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">每日详情</div>
+        <span class="card-sub">10月 28日 - 11月 9日</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">
+        <!-- Row 1 -->
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.25);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-2);"><b style="color:var(--ink);">28</b><span>¥86</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.5);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-2);"><b style="color:var(--ink);">29</b><span>¥122</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.2);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-2);"><b style="color:var(--ink);">30</b><span>¥45</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.35);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-2);"><b style="color:var(--ink);">31</b><span>¥78</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.7);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;"><b style="color:#fff;">1</b><span>¥165</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.4);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-2);"><b style="color:var(--ink);">2</b><span>¥98</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.85);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;"><b style="color:#fff;">3</b><span>¥199</span></div>
+        <!-- Row 2 -->
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.5);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-2);"><b style="color:var(--ink);">4</b><span>¥120</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.3);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-2);"><b style="color:var(--ink);">5</b><span>¥62</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.1);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-3);"><b style="color:var(--ink-2);">6</b><span>¥12</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.55);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-2);"><b style="color:var(--ink);">7</b><span>¥132</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.4);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-2);"><b style="color:var(--ink);">8</b><span>¥95</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(212,165,116,.15);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-3);"><b style="color:var(--ink-2);">9</b><span>¥0</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.6);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;border:1.5px solid var(--gold);"><b style="color:#fff;">10</b><span>¥143</span></div>
+        <!-- Row 3 -->
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.35);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-2);"><b style="color:var(--ink);">11</b><span>¥82</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(232,139,139,.25);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-2);"><b style="color:var(--ink);">12</b><span>¥55</span></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(212,165,116,.12);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-3);opacity:.4;"><b style="color:var(--ink-2);">13</b></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(212,165,116,.12);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-3);opacity:.4;"><b style="color:var(--ink-2);">14</b></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(212,165,116,.12);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-3);opacity:.4;"><b style="color:var(--ink-2);">15</b></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(212,165,116,.12);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-3);opacity:.4;"><b style="color:var(--ink-2);">16</b></div>
+        <div style="aspect-ratio:1;border-radius:5px;background:rgba(212,165,116,.12);font-size:9px;font-family:var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink-3);opacity:.4;"><b style="color:var(--ink-2);">17</b></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:9.5px;color:var(--ink-3);font-family:var(--mono);">
+        <span>少</span>
+        <div style="display:flex;gap:2px;">
+          <div style="width:14px;height:8px;border-radius:2px;background:rgba(212,165,116,.1);"></div>
+          <div style="width:14px;height:8px;border-radius:2px;background:rgba(212,165,116,.3);"></div>
+          <div style="width:14px;height:8px;border-radius:2px;background:rgba(232,139,139,.5);"></div>
+          <div style="width:14px;height:8px;border-radius:2px;background:rgba(232,139,139,.75);"></div>
+          <div style="width:14px;height:8px;border-radius:2px;background:rgba(232,139,139,1);"></div>
+        </div>
+        <span>多</span>
+      </div>
+    </div>
+
+    <div style="height:80px;"></div>
+  </div>
+
+  <!-- ============ Tabbar ============ -->
+  <div class="tabbar">
+    <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 2l9 7.5V20a2 2 0 0 1-2 2h-4v-7h-6v7H5a2 2 0 0 1-2-2V9.5z"/></svg><span>首页</span></div>
+    <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>账单</span></div>
+    <div class="tab center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>+</span></div>
+    <div class="tab active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>统计</span></div>
+    <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>我的</span></div>
+  </div>
+
+  <!-- ============ Bottom Sheet · 自定义日期范围 ============ -->
+  <div class="sheet-mask" id="sheetMask"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-label="自定义日期范围">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">选择日期范围</div>
+      <div class="sheet-close" id="sheetClose">✕</div>
+    </div>
+
+    <!-- 快捷区间 -->
+    <div class="quick-ranges" id="quickRanges">
+      <div class="quick-range" data-range="today">今天</div>
+      <div class="quick-range" data-range="yesterday">昨天</div>
+      <div class="quick-range" data-range="thisWeek">本周</div>
+      <div class="quick-range" data-range="lastWeek">上周</div>
+      <div class="quick-range" data-range="last7">近 7 天</div>
+      <div class="quick-range active" data-range="last30">近 30 天</div>
+      <div class="quick-range" data-range="thisMonth">本月</div>
+      <div class="quick-range" data-range="lastMonth">上月</div>
+      <div class="quick-range" data-range="thisYear">今年</div>
+    </div>
+
+    <!-- 起止显示 -->
+    <div class="range-display">
+      <div class="range-box active" id="startBox">
+        <div class="l">开始</div>
+        <div class="v" id="startDateText">10/10</div>
+      </div>
+      <div class="range-arrow">→</div>
+      <div class="range-box" id="endBox">
+        <div class="l">结束</div>
+        <div class="v" id="endDateText">11/08</div>
+      </div>
+    </div>
+
+    <!-- 日历 -->
+    <div class="cal-wrap">
+      <div class="cal-head">
+        <div class="cal-title" id="calTitle">2026 年 11 月</div>
+        <div class="cal-nav">
+          <div class="cal-nav-btn" id="calPrev">‹</div>
+          <div class="cal-nav-btn" id="calNext">›</div>
+        </div>
+      </div>
+      <div class="cal-week">
+        <div>日</div><div>一</div><div>二</div><div>三</div>
+        <div>四</div><div>五</div><div>六</div>
+      </div>
+      <div class="cal-days" id="calDays"></div>
+    </div>
+
+    <div class="sheet-footer">
+      <button class="btn btn-secondary" id="resetBtn">重置</button>
+      <button class="btn btn-primary" id="confirmBtn">确定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ 周期切换 ============ */
+(function() {
+  const tabs = document.querySelectorAll('#periodTabs .p');
+  const periodSub = document.getElementById('periodSub');
+  const sheet = document.getElementById('sheet');
+  const sheetMask = document.getElementById('sheetMask');
+  const sheetClose = document.getElementById('sheetClose');
+  const calDays = document.getElementById('calDays');
+  const calTitle = document.getElementById('calTitle');
+  const calPrev = document.getElementById('calPrev');
+  const calNext = document.getElementById('calNext');
+  const startText = document.getElementById('startDateText');
+  const endText = document.getElementById('endDateText');
+  const startBox = document.getElementById('startBox');
+  const endBox = document.getElementById('endBox');
+  const quickRanges = document.querySelectorAll('#quickRanges .quick-range');
+  const confirmBtn = document.getElementById('confirmBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  // —— 标签文本映射
+  const SUB_TEXT = {
+    day:   () => {
+      const d = new Date();
+      return `${MONTHS[d.getMonth()]} ${d.getDate()} · 今日`;
+    },
+    week:  () => {
+      const r = getWeekRange(new Date());
+      return `${fmt(r.start)} - ${fmt(r.end)} · 本周`;
+    },
+    month: () => {
+      const d = new Date();
+      return `${MONTHS[d.getMonth()].toUpperCase()} · 本月`;
+    },
+    year:  () => {
+      return `${new Date().getFullYear()} · 全年`;
+    },
+    custom: (s, e) => `${fmt(s)} - ${fmt(e)} · 自定义`,
+  };
+
+  const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+  function fmt(d) {
+    if (!(d instanceof Date)) d = new Date(d);
+    return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function ymd(d) { return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
+  function sameDay(a, b) { return a && b && ymd(a) === ymd(b); }
+  function inRange(d, s, e) {
+    if (!s || !e) return false;
+    const t = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    return t > new Date(s.getFullYear(), s.getMonth(), s.getDate()).getTime()
+        && t < new Date(e.getFullYear(), e.getMonth(), e.getDate()).getTime();
+  }
+
+  // —— 周一为周首
+  function getWeekRange(d) {
+    const dt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const day = dt.getDay(); // 0..6, 0=Sun
+    const diffToMon = (day + 6) % 7;
+    const start = new Date(dt); start.setDate(dt.getDate() - diffToMon);
+    const end = new Date(start); end.setDate(start.getDate() + 6);
+    return { start, end };
+  }
+
+  // —— 周期状态
+  let currentPeriod = 'month';
+  let customStart = null;
+  let customEnd = null;
+  let calMonth = new Date().getMonth();
+  let calYear = new Date().getFullYear();
+  // 当前正选的是 start 还是 end
+  let picking = 'start';
+
+  function applyPeriod(p) {
+    currentPeriod = p;
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.period === p));
+    if (p === 'custom') {
+      // 打开 sheet
+      openSheet();
+      return;
+    }
+    let sub = '';
+    if (p === 'day') sub = SUB_TEXT.day();
+    else if (p === 'week') sub = SUB_TEXT.week();
+    else if (p === 'month') sub = SUB_TEXT.month();
+    else if (p === 'year') sub = SUB_TEXT.year();
+    periodSub.textContent = sub;
+    // 触发卡片淡入动画
+    pulseCards();
+  }
+
+  tabs.forEach(t => {
+    t.addEventListener('click', () => applyPeriod(t.dataset.period));
+  });
+
+  function pulseCards() {
+    const targets = document.querySelectorAll('.card, .hero-grid, .triple, .insight');
+    targets.forEach((el, i) => {
+      el.style.animation = 'none';
+      el.offsetHeight; // reflow
+      el.style.animation = `fadeUp .35s ease ${i*0.04}s both`;
+    });
+  }
+
+  /* ============ 分类构成 · 展开/收起 ============ */
+  const catList = document.getElementById('catList');
+  const catToggleAllBtn = document.getElementById('catToggleAll');
+  let allExpanded = false;
+
+  // 单击大类：手风琴模式（同时只展开一个）
+  catList.addEventListener('click', (e) => {
+    const item = e.target.closest('.cat-item');
+    if (!item) return;
+    // 子项点击不触发切换
+    if (e.target.closest('.sub-item')) return;
+
+    const wasExpanded = item.classList.contains('expanded');
+    // 收起其他
+    catList.querySelectorAll('.cat-item.expanded').forEach(el => {
+      if (el !== item) el.classList.remove('expanded');
+    });
+    item.classList.toggle('expanded', !wasExpanded);
+    syncToggleAllBtn();
+  });
+
+  function syncToggleAllBtn() {
+    const items = catList.querySelectorAll('.cat-item');
+    const expanded = catList.querySelectorAll('.cat-item.expanded').length;
+    allExpanded = expanded === items.length;
+    catToggleAllBtn.textContent = allExpanded ? '全部收起' : '全部展开';
+  }
+
+  catToggleAllBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const items = catList.querySelectorAll('.cat-item');
+    allExpanded = !allExpanded;
+    items.forEach(el => el.classList.toggle('expanded', allExpanded));
+    syncToggleAllBtn();
+  });
+
+  // 初始：让「餐饮」展开（HTML 中已带 expanded 类）
+  syncToggleAllBtn();
+
+  /* ============ 自定义 Sheet ============ */
+  function openSheet() {
+    sheet.classList.add('open');
+    sheetMask.classList.add('open');
+    if (!customStart) customStart = new Date();
+    if (!customEnd) customEnd = new Date();
+    calMonth = customStart.getMonth();
+    calYear = customStart.getFullYear();
+    renderCalendar();
+    updateRangeBoxes();
+  }
+  function closeSheet() {
+    sheet.classList.remove('open');
+    sheetMask.classList.remove('open');
+  }
+  sheetMask.addEventListener('click', closeSheet);
+  sheetClose.addEventListener('click', closeSheet);
+
+  /* ============ 日历渲染 ============ */
+  function renderCalendar() {
+    calTitle.textContent = `${calYear} 年 ${MONTHS[calMonth]}`;
+    const firstDay = new Date(calYear, calMonth, 1);
+    const startWeekday = firstDay.getDay(); // 0=Sun
+    const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
+    const prevLast = new Date(calYear, calMonth, 0).getDate();
+    const today = new Date();
+    const todayKey = ymd(today);
+
+    let html = '';
+    // 上月补位
+    for (let i = startWeekday - 1; i >= 0; i--) {
+      const day = prevLast - i;
+      html += `<div class="cal-day muted" data-d="${calYear}-${calMonth}-${day}" data-other="1">${day}</div>`;
+    }
+    // 当月
+    for (let d = 1; d <= lastDate; d++) {
+      const dt = new Date(calYear, calMonth, d);
+      let cls = 'cal-day';
+      if (ymd(dt) === todayKey) cls += ' today';
+      if (sameDay(dt, customStart)) cls += ' start';
+      if (sameDay(dt, customEnd)) cls += ' end';
+      if (sameDay(dt, customStart) && sameDay(dt, customEnd)) cls += ' end';
+      if (inRange(dt, customStart, customEnd)) cls += ' in-range';
+      html += `<div class="${cls}" data-d="${calYear}-${calMonth}-${d}">${d}</div>`;
+    }
+    // 下月补位到 6 行
+    const cellsUsed = startWeekday + lastDate;
+    const remain = (7 - cellsUsed % 7) % 7;
+    for (let i = 1; i <= remain; i++) {
+      html += `<div class="cal-day muted" data-d="${calYear}-${calMonth+2}-${i}" data-other="1">${i}</div>`;
+    }
+    calDays.innerHTML = html;
+
+    // 绑定点击
+    calDays.querySelectorAll('.cal-day:not(.muted)').forEach(el => {
+      el.addEventListener('click', () => {
+        const [y, m, d] = el.dataset.d.split('-').map(Number);
+        const picked = new Date(y, m - 1, d);
+        if (picking === 'start') {
+          customStart = picked;
+          if (!customEnd || customEnd < picked) customEnd = picked;
+          picking = 'end';
+        } else {
+          if (picked < customStart) {
+            customEnd = customStart;
+            customStart = picked;
+          } else {
+            customEnd = picked;
+          }
+          picking = 'start';
+        }
+        updateRangeBoxes();
+        renderCalendar();
+      });
+    });
+  }
+
+  function updateRangeBoxes() {
+    startText.textContent = customStart ? fmt(customStart) : '--/--';
+    endText.textContent = customEnd ? fmt(customEnd) : '--/--';
+    startBox.classList.toggle('active', picking === 'start');
+    endBox.classList.toggle('active', picking === 'end');
+  }
+
+  calPrev.addEventListener('click', () => {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+  });
+  calNext.addEventListener('click', () => {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+  });
+
+  /* ============ 快捷区间 ============ */
+  quickRanges.forEach(qr => {
+    qr.addEventListener('click', () => {
+      quickRanges.forEach(q => q.classList.remove('active'));
+      qr.classList.add('active');
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const r = qr.dataset.range;
+      if (r === 'today')       { customStart = new Date(today); customEnd = new Date(today); }
+      else if (r === 'yesterday') {
+        const y = new Date(today); y.setDate(today.getDate()-1);
+        customStart = y; customEnd = y;
+      }
+      else if (r === 'thisWeek')  { const x = getWeekRange(today); customStart = x.start; customEnd = x.end; }
+      else if (r === 'lastWeek')  {
+        const x = getWeekRange(today); x.start.setDate(x.start.getDate()-7); x.end.setDate(x.end.getDate()-7);
+        customStart = x.start; customEnd = x.end;
+      }
+      else if (r === 'last7')     { const s = new Date(today); s.setDate(today.getDate()-6); customStart = s; customEnd = today; }
+      else if (r === 'last30')    { const s = new Date(today); s.setDate(today.getDate()-29); customStart = s; customEnd = today; }
+      else if (r === 'thisMonth') { customStart = new Date(today.getFullYear(), today.getMonth(), 1); customEnd = new Date(today.getFullYear(), today.getMonth()+1, 0); }
+      else if (r === 'lastMonth') { customStart = new Date(today.getFullYear(), today.getMonth()-1, 1); customEnd = new Date(today.getFullYear(), today.getMonth(), 0); }
+      else if (r === 'thisYear')  { customStart = new Date(today.getFullYear(), 0, 1); customEnd = new Date(today.getFullYear(), 11, 31); }
+
+      calMonth = customStart.getMonth();
+      calYear = customStart.getFullYear();
+      picking = 'start';
+      updateRangeBoxes();
+      renderCalendar();
+    });
+  });
+
+  /* ============ 确认 / 重置 ============ */
+  confirmBtn.addEventListener('click', () => {
+    // 同步标签 active
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.period === 'custom'));
+    periodSub.textContent = SUB_TEXT.custom(customStart, customEnd);
+    closeSheet();
+    pulseCards();
+  });
+  resetBtn.addEventListener('click', () => {
+    const today = new Date();
+    customStart = new Date(today.getFullYear(), today.getMonth()-1, 10);
+    customEnd = new Date(today);
+    calMonth = customStart.getMonth();
+    calYear = customStart.getFullYear();
+    picking = 'start';
+    quickRanges.forEach(q => q.classList.remove('active'));
+    updateRangeBoxes();
+    renderCalendar();
+  });
+
+  /* ============ 初始化默认范围（近 30 天） ============ */
+  (function init() {
+    const today = new Date();
+    customStart = new Date(today); customStart.setDate(today.getDate() - 29);
+    customEnd = today;
+  })();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+/* 全屏基础样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 仅 html 作为文档滚动容器，body 不设 overflow/height，避免 body 成为滚动容器
+   导致 window.scrollY 失效 & position:sticky 失效 */
+html {
+  overflow-x: hidden;
+}
+body {
+  width: 100%;
+  background: #f5f6fa;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* 隐藏滚动条但保持滚动功能 */
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

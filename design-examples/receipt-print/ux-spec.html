@@ -1,0 +1,1019 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>打印小票 UX 规格 · FloGold</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f3ee;
+      --bg-2: #ebe7df;
+      --card: #ffffff;
+      --ink: #1f1d18;
+      --ink-2: #5a5751;
+      --ink-3: #9a958b;
+      --line: rgba(31, 29, 24, 0.08);
+      --line-2: rgba(31, 29, 24, 0.16);
+      --gold: #d4a574;
+      --gold-deep: #8a5f1c;
+      --gold-soft: #faf5f0;
+      --exp: #e08a5e;
+      --exp-2: #c46b3f;
+      --inc: #6ba886;
+      --inc-2: #4d8a64;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 14px rgba(0,0,0,0.06);
+      --shadow-lg: 0 24px 60px rgba(0,0,0,0.12);
+      --sans: 'Outfit', 'Noto Sans SC', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--ink);
+      padding: 48px 20px 80px;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    /* ============ Header ============ */
+    .page-head {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .page-head .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--card);
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gold-deep);
+      background: var(--gold-soft);
+      letter-spacing: 0.04em;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .page-head h1 {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .page-head h1 span {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .page-head p {
+      font-size: 14px;
+      color: var(--ink-3);
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* ============ Section ============ */
+    .section {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .section h2 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section h2 .num {
+      width: 28px; height: 28px;
+      background: var(--gold);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .section .sub {
+      font-size: 13px;
+      color: var(--ink-3);
+      margin-bottom: 24px;
+    }
+
+    /* ============ Concept ============ */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 760px) {
+      .concept-grid { grid-template-columns: 1fr; }
+    }
+    .concept-card {
+      padding: 20px;
+      background: var(--bg);
+      border-radius: 14px;
+      border-left: 3px solid var(--gold);
+    }
+    .concept-card .lab {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold-deep);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .concept-card .desc {
+      font-size: 13px;
+      color: var(--ink-2);
+    }
+
+    /* ============ Flow ============ */
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 8px;
+      align-items: stretch;
+    }
+    .flow-step {
+      background: var(--bg);
+      border-radius: 14px;
+      padding: 20px 16px;
+      position: relative;
+      text-align: center;
+      border: 1px solid var(--line);
+    }
+    .flow-step.idle { background: linear-gradient(180deg, var(--card) 0%, #ecf3ff 100%); border-color: rgba(59,130,246,0.2); }
+    .flow-step.printing { background: linear-gradient(180deg, var(--card) 0%, #fef3e8 100%); border-color: rgba(224,138,94,0.2); }
+    .flow-step.complete { background: linear-gradient(180deg, var(--card) 0%, #e6f5ed 100%); border-color: rgba(77,138,100,0.2); }
+    .flow-step.exit { background: linear-gradient(180deg, var(--card) 0%, #f0eee5 100%); border-color: var(--line-2); }
+
+    .flow-step .ic {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      margin: 0 auto 8px;
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: var(--shadow-sm);
+    }
+    .flow-step .num {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--ink-3);
+      letter-spacing: 0.1em;
+      font-weight: 600;
+    }
+    .flow-step .name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 2px 0;
+    }
+    .flow-step .time {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--gold-deep);
+      background: var(--gold-soft);
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+    .flow-step .desc {
+      font-size: 11.5px;
+      color: var(--ink-2);
+      line-height: 1.4;
+    }
+
+    @media (max-width: 760px) {
+      .flow { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ============ Receipt anatomy ============ */
+    .anatomy {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+    @media (max-width: 760px) {
+      .anatomy { grid-template-columns: 1fr; }
+    }
+    .anatomy-canvas {
+      background: linear-gradient(135deg, #1a1815 0%, #2a2620 100%);
+      padding: 24px 16px;
+      border-radius: 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .anatomy-receipt {
+      background: #fbf7ee;
+      width: 220px;
+      border-radius: 0;
+      padding: 16px 14px 0;
+      color: var(--paper-ink);
+      font-family: var(--mono);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+      position: relative;
+    }
+    .anatomy-receipt::before {
+      content: '';
+      position: absolute;
+      top: -5px; left: 0; right: 0;
+      height: 5px;
+      background: #fbf7ee;
+      -webkit-mask: radial-gradient(circle at 4px 4px, transparent 4px, #000 5px) 0 0 / 8px 5px repeat-x;
+      mask: radial-gradient(circle at 4px 4px, transparent 4px, #000 5px) 0 0 / 8px 5px repeat-x;
+    }
+    .anatomy-receipt .ar-head {
+      text-align: center;
+      padding: 4px 0 6px;
+      border-bottom: 1px dashed rgba(0,0,0,0.15);
+    }
+    .anatomy-receipt .ar-head .logo {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+    }
+    .anatomy-receipt .ar-head .logo .gold {
+      color: var(--gold-deep);
+    }
+    .anatomy-receipt .ar-head .sub {
+      font-size: 8px;
+      letter-spacing: 0.1em;
+      color: rgba(0,0,0,0.5);
+      margin-top: 2px;
+    }
+    .anatomy-receipt .ar-time {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      color: rgba(0,0,0,0.5);
+      padding: 5px 0;
+    }
+    .anatomy-receipt .ar-cat {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 5px 0;
+    }
+    .anatomy-receipt .ar-cat .ic {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.04);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+    }
+    .anatomy-receipt .ar-cat .text .lab {
+      font-size: 8px;
+      letter-spacing: 0.15em;
+      color: rgba(0,0,0,0.5);
+      text-transform: uppercase;
+    }
+    .anatomy-receipt .ar-cat .text .val {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .anatomy-receipt .ar-amount {
+      text-align: center;
+      padding: 10px 0 6px;
+    }
+    .anatomy-receipt .ar-amount .num {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--exp-2);
+      line-height: 1;
+      font-family: var(--mono);
+    }
+    .anatomy-receipt .ar-amount .cur {
+      font-size: 14px;
+      color: rgba(0,0,0,0.5);
+      vertical-align: top;
+      margin-right: 2px;
+    }
+    .anatomy-receipt .ar-amount .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      background: var(--exp-2);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      border-radius: 99px;
+      font-family: var(--sans);
+      margin-top: 5px;
+    }
+    .anatomy-receipt .ar-dot {
+      height: 1px;
+      background: repeating-linear-gradient(90deg, rgba(0,0,0,0.2) 0, rgba(0,0,0,0.2) 2px, transparent 2px, transparent 5px);
+      margin: 4px 0;
+    }
+    .anatomy-receipt .ar-detail {
+      font-size: 10px;
+    }
+    .anatomy-receipt .ar-detail .r {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+    .anatomy-receipt .ar-detail .r .lab {
+      color: rgba(0,0,0,0.5);
+    }
+    .anatomy-receipt .ar-detail .r .val {
+      font-family: var(--sans);
+      font-weight: 600;
+      max-width: 55%;
+      text-align: right;
+    }
+    .anatomy-receipt .ar-barcode {
+      padding: 8px 0;
+      display: flex;
+      align-items: flex-end;
+      gap: 1px;
+      height: 24px;
+    }
+    .anatomy-receipt .ar-barcode div {
+      width: 2px;
+      background: #1f1d18;
+    }
+    .anatomy-receipt .ar-barcode .code {
+      font-family: var(--mono);
+      text-align: center;
+      font-size: 8px;
+      letter-spacing: 0.25em;
+      color: rgba(0,0,0,0.5);
+      margin-top: 4px;
+    }
+    .anatomy-receipt .ar-barcode-wrap {
+      padding-bottom: 8px;
+    }
+    .anatomy-receipt .ar-footer {
+      text-align: center;
+      padding: 6px 0 6px;
+      border-top: 1px dashed rgba(0,0,0,0.15);
+    }
+    .anatomy-receipt .ar-footer .t {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+    }
+    .anatomy-receipt .ar-footer .s {
+      font-size: 7px;
+      letter-spacing: 0.1em;
+      color: rgba(0,0,0,0.5);
+      margin-top: 2px;
+    }
+    .anatomy-receipt .ar-tear {
+      position: relative;
+      height: 8px;
+      margin: 0 -14px;
+      background: #fbf7ee;
+      -webkit-mask: radial-gradient(circle at 4px 4px, #000 4px, transparent 5px) 0 0 / 8px 8px repeat-x;
+      mask: radial-gradient(circle at 4px 4px, #000 4px, transparent 5px) 0 0 / 8px 8px repeat-x;
+      transform: scaleY(-1);
+    }
+
+    .anatomy-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .legend-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border-radius: 10px;
+      align-items: flex-start;
+    }
+    .legend-item .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+    .legend-item .text {
+      flex: 1;
+    }
+    .legend-item .text .name {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+    .legend-item .text .desc {
+      font-size: 11px;
+      color: var(--ink-2);
+    }
+
+    /* ============ Timeline ============ */
+    .timeline-spec {
+      position: relative;
+    }
+    .timeline-spec::before {
+      content: '';
+      position: absolute;
+      top: 12px; bottom: 12px; left: 60px;
+      width: 2px;
+      background: linear-gradient(180deg, var(--gold) 0%, var(--line-2) 100%);
+    }
+    .ts-row {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 28px;
+      padding: 12px 0;
+      position: relative;
+    }
+    .ts-row .t {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+      background: var(--gold-soft);
+      padding: 4px 8px;
+      border-radius: 6px;
+      text-align: center;
+      height: fit-content;
+      position: relative;
+      z-index: 1;
+    }
+    .ts-row .desc {
+      font-size: 13px;
+      color: var(--ink-2);
+    }
+    .ts-row .desc b {
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .ts-row .desc .meta {
+      display: inline-block;
+      margin-left: 8px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--ink-3);
+      background: var(--bg-2);
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+
+    /* ============ Design tokens ============ */
+    .tokens {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 760px) {
+      .tokens { grid-template-columns: 1fr; }
+    }
+    .token {
+      padding: 14px;
+      background: var(--bg);
+      border-radius: 12px;
+    }
+    .token .name {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-2);
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .token .value {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .token .swatch {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .token .swatch div {
+      width: 100%;
+      height: 28px;
+      border-radius: 6px;
+    }
+
+    /* ============ Edge Cases ============ */
+    .case-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 760px) {
+      .case-list { grid-template-columns: 1fr; }
+    }
+    .case {
+      padding: 14px 16px;
+      background: var(--bg);
+      border-radius: 12px;
+    }
+    .case .lab {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 2px 8px;
+      border-radius: 99px;
+      margin-bottom: 8px;
+    }
+    .case.normal .lab { background: rgba(77,138,100,0.15); color: var(--inc-2); }
+    .case.error .lab { background: rgba(229,69,69,0.10); color: #c93030; }
+    .case.offline .lab { background: rgba(154,149,139,0.15); color: var(--ink-2); }
+    .case.share .lab { background: var(--gold-soft); color: var(--gold-deep); }
+    .case .name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .case .desc { font-size: 12px; color: var(--ink-2); line-height: 1.45; }
+
+    /* ============ Tech ============ */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 760px) {
+      .tech-grid { grid-template-columns: 1fr; }
+    }
+    .tech {
+      padding: 16px;
+      background: var(--bg);
+      border-radius: 12px;
+    }
+    .tech .ic {
+      width: 32px; height: 32px;
+      background: var(--card);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      color: var(--gold-deep);
+      font-size: 16px;
+    }
+    .tech .name {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .tech .desc {
+      font-size: 11.5px;
+      color: var(--ink-2);
+    }
+
+    /* ============ CTA ============ */
+    .cta {
+      background: linear-gradient(135deg, var(--ink) 0%, #2a2620 100%);
+      color: #fff;
+      border-radius: 20px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+    .cta h3 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+    .cta h3 span { color: var(--gold); }
+    .cta p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 20px;
+    }
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: var(--gold);
+      color: #1f1d18;
+      border-radius: 14px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+    .cta-btn:hover { background: #fff; transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <div class="page-head">
+      <div class="badge">📜 UX Specification · v1.0</div>
+      <h1>打印小票 UX 完整<span>规格说明</span></h1>
+      <p>把"记账完成"这个瞬间，变成一次有仪式感的、可分享的小票打印体验。本文档覆盖状态定义、动画时间线、视觉规范、异常处理与实施建议。</p>
+    </div>
+
+    <!-- ============ 1. 核心概念 ============ -->
+    <div class="section">
+      <h2><span class="num">1</span>核心概念 · Concept</h2>
+      <div class="sub">为什么做这件事，以及它在产品情绪层面的价值</div>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <div class="lab">仪式感</div>
+          <div class="desc">传统记账 App 在「完成」按钮按下后，表单消失，交易出现在列表。整个过程冷冰冰、缺乏反馈。小票打印则把"记录一笔"实体化，变成"我刚刚记下了一件事"的可触摸证据。</div>
+        </div>
+        <div class="concept-card">
+          <div class="lab">差异点</div>
+          <div class="desc">在国内外记账赛道（钱迹、随手记、Money Lover、YNAB、Spendee）中，目前没有一家把这步做成真正"打印"的体验。这是 FloGold 的标志性 feature。</div>
+        </div>
+        <div class="concept-card">
+          <div class="lab">情绪锚点</div>
+          <div class="desc">从「钱出去了」的负罪感，转化为「被记录下来了」的安全感。热敏纸的小票本身就带有"成交/收据"的语义，是金融交互中最经典的情绪载体。</div>
+        </div>
+        <div class="concept-card">
+          <div class="lab">社交货币</div>
+          <div class="desc">小票形态天然适合截图分享。用户可以把"我今天交通花了 128.50"分享到朋友圈/小红书，比单纯一行表格更有传播力。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 2. 状态流程 ============ -->
+    <div class="section">
+      <h2><span class="num">2</span>状态流程 · State Flow</h2>
+      <div class="sub">从打开弹窗到小票收起的四个核心状态</div>
+
+      <div class="flow">
+        <div class="flow-step idle">
+          <div class="ic">📝</div>
+          <div class="time">PHASE 1</div>
+          <div class="name">填写态 IDLE</div>
+          <div class="num">用户操作中</div>
+          <div class="desc">正常表单：金额、分类、商户、备注。底部「完成」按钮可点击。</div>
+        </div>
+        <div class="flow-step printing">
+          <div class="ic">🖨️</div>
+          <div class="time">PHASE 2</div>
+          <div class="name">打印态 PRINTING</div>
+          <div class="num">~3.4s</div>
+          <div class="desc">表单 fade-out，机器外壳淡入，纸张从顶部纸槽向下滚出，依次吐出内容。</div>
+        </div>
+        <div class="flow-step complete">
+          <div class="ic">✓</div>
+          <div class="time">PHASE 3</div>
+          <div class="name">完成态 COMPLETE</div>
+          <div class="num">停留或 tap</div>
+          <div class="desc">小票完整显示，LED 灯转绿，提示"点击任意处关闭"。</div>
+        </div>
+        <div class="flow-step exit">
+          <div class="ic">📄</div>
+          <div class="time">PHASE 4</div>
+          <div class="name">收起态 EXIT</div>
+          <div class="num">0.5s</div>
+          <div class="desc">小票向上卷起消失，交易卡片在列表中飞入定位。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 3. 小票解剖 ============ -->
+    <div class="section">
+      <h2><span class="num">3</span>小票解剖 · Receipt Anatomy</h2>
+      <div class="sub">从顶部纸槽到底部撕纸边，每一区块都有意义</div>
+
+      <div class="anatomy">
+        <div class="anatomy-canvas">
+          <div class="anatomy-receipt">
+            <div class="ar-head">
+              <div class="logo">FloGold<span class="gold"> · 记账小票</span></div>
+              <div class="sub">RECEIPT · FG202607090841</div>
+            </div>
+            <div class="ar-time">
+              <span>2026/07/09</span>
+              <span>17:42 周四</span>
+            </div>
+            <div class="ar-dot"></div>
+            <div class="ar-cat">
+              <div class="ic">🚗</div>
+              <div class="text">
+                <div class="lab">CATEGORY</div>
+                <div class="val">交通 · 地铁</div>
+              </div>
+            </div>
+            <div class="ar-amount">
+              <div><span class="cur">¥</span><span class="num">128.50</span></div>
+              <span class="badge">支 出</span>
+            </div>
+            <div class="ar-dot"></div>
+            <div class="ar-detail">
+              <div class="r"><span class="lab">商户</span><span class="val">滴滴出行</span></div>
+              <div class="r"><span class="lab">地点</span><span class="val">国贸 · 北京</span></div>
+              <div class="r"><span class="lab">备注</span><span class="val">加班回家</span></div>
+            </div>
+            <div class="ar-dot"></div>
+            <div class="ar-barcode-wrap">
+              <div class="ar-barcode" id="barA"></div>
+              <div class="code">*128.50·20260709*</div>
+            </div>
+            <div class="ar-footer">
+              <div class="t">— THANK YOU —</div>
+              <div class="s">感谢使用 FloGold</div>
+            </div>
+            <div class="ar-tear"></div>
+          </div>
+        </div>
+
+        <div class="anatomy-legend">
+          <div class="legend-item">
+            <div class="dot"></div>
+            <div class="text">
+              <div class="name">① Header · 品牌识别</div>
+              <div class="desc">FloGold Logo + 流水号（便于客服查询）</div>
+            </div>
+          </div>
+          <div class="legend-item">
+            <div class="dot"></div>
+            <div class="text">
+              <div class="name">② Date/Time · 时间戳</div>
+              <div class="desc">左右分布日期与时分，电商小票的经典版面</div>
+            </div>
+          </div>
+          <div class="legend-item">
+            <div class="dot"></div>
+            <div class="text">
+              <div class="name">③ Category Icon · 分类图标</div>
+              <div class="desc">把分类视觉化 + 字标强化记忆</div>
+            </div>
+          </div>
+          <div class="legend-item">
+            <div class="dot"></div>
+            <div class="text">
+              <div class="name">④ Amount · 核心数字</div>
+              <div class="desc">最大字号，支出红/收入绿，monospace 等宽数字</div>
+            </div>
+          </div>
+          <div class="legend-item">
+            <div class="dot"></div>
+            <div class="text">
+              <div class="name">⑤ Detail Rows · 详情行</div>
+              <div class="desc">商户/地点/备注，未填写则显示 <code>—</code></div>
+            </div>
+          </div>
+          <div class="legend-item">
+            <div class="dot"></div>
+            <div class="text">
+              <div class="name">⑥ Barcode · 伪条码</div>
+              <div class="desc">视觉装饰，强化"小票"语义（不携带真实数据）</div>
+            </div>
+          </div>
+          <div class="legend-item">
+            <div class="dot"></div>
+            <div class="text">
+              <div class="name">⑦ Thank-you · 情感收尾</div>
+              <div class="desc">品牌情感文案 + 撕纸边造型（mask 圆点实现）</div>
+            </div>
+          </div>
+          <div class="legend-item">
+            <div class="dot"></div>
+            <div class="text">
+              <div class="name">⑧ Tear Edge · 撕纸边</div>
+              <div class="desc">顶部与底部均带锯齿纹理，模拟真实热敏纸撕痕</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 4. 动画时间线 ============ -->
+    <div class="section">
+      <h2><span class="num">4</span>动画时间线 · Animation</h2>
+      <div class="sub">3.4 秒的精密编排。每个数字都可独立调整</div>
+
+      <div class="timeline-spec">
+        <div class="ts-row">
+          <div class="t">0</div>
+          <div class="desc"><b>用户点击「完成」</b>，表单开始 transformToReceipt <span class="meta">trigger</span></div>
+        </div>
+        <div class="ts-row">
+          <div class="t">100</div>
+          <div class="desc">表单 <b>scale(0.95) translateY(-30px)</b> 退出，opacity → 0 <span class="meta">transform 0.5s</span></div>
+        </div>
+        <div class="ts-row">
+          <div class="t">400</div>
+          <div class="desc">机器外壳 <b>淡入 + LED 闪红</b>，纸张开始 clip-path 印刷 <span class="meta">clip-path 3.2s linear</span></div>
+        </div>
+        <div class="ts-row">
+          <div class="t">600</div>
+          <div class="desc">纸张吐出 <b>Header (logo + 流水号)</b> <span class="meta">fadeIn 0.3s</span></div>
+        </div>
+        <div class="ts-row">
+          <div class="t">900</div>
+          <div class="desc">吐出 <b>时间戳</b> + 虚线分隔 <span class="meta">fadeIn 0.3s</span></div>
+        </div>
+        <div class="ts-row">
+          <div class="t">1200</div>
+          <div class="desc">吐出 <b>分类图标 + 名称</b> <span class="meta">fadeIn 0.3s</span></div>
+        </div>
+        <div class="ts-row">
+          <div class="t">1500</div>
+          <div class="desc"><b>金额 spring 弹出</b>，伴随墨点粒子向下飘落 <span class="meta">cubic-bezier(0.34,1.56,0.64,1)</span></div>
+        </div>
+        <div class="ts-row">
+          <div class="t">2100</div>
+          <div class="desc">吐出 <b>详情行（商户/地点/备注）</b> <span class="meta">fadeIn 0.3s</span></div>
+        </div>
+        <div class="ts-row">
+          <div class="t">2500</div>
+          <div class="desc"><b>条码 scaleY 从 0 → 1</b> 增长，每根线条 15ms 错开 <span class="meta">transform 0.4s</span></div>
+        </div>
+        <div class="ts-row">
+          <div class="t">3100</div>
+          <div class="desc"><b>Thank you + 撕纸边</b> 出现 <span class="meta">fadeIn 0.3s</span></div>
+        </div>
+        <div class="ts-row">
+          <div class="t">3400</div>
+          <div class="desc">印刷完成，<b>LED 转绿</b>，整个弹窗 settle 一下 <span class="meta">scale(1.05) → 1, opacity 0.5 → 1</span></div>
+        </div>
+        <div class="ts-row">
+          <div class="t">5000</div>
+          <div class="desc">底部出现 <b>「点击任意处关闭」</b> 提示（呼吸光标）</div>
+        </div>
+        <div class="ts-row">
+          <div class="t">tap</div>
+          <div class="desc">小票 <b>向上卷起消失</b>，列表新增交易卡片位置高亮 1.5s <span class="meta">translateY(-100%)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 5. 设计 Token ============ -->
+    <div class="section">
+      <h2><span class="num">5</span>设计 Token · Tokens</h2>
+      <div class="sub">视觉一致性所需的全部变量</div>
+
+      <div class="tokens">
+        <div class="token">
+          <div class="name">热敏纸 Paper</div>
+          <div class="value">#FBF7EE · #F8F3E8</div>
+          <div class="swatch">
+            <div style="background:#FBF7EE"></div>
+            <div style="background:#F8F3E8"></div>
+            <div style="background:rgba(31,29,24,0.06)"></div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="name">机器外壳</div>
+          <div class="value">#1A1815 · #2A2622</div>
+          <div class="swatch">
+            <div style="background:#1A1815"></div>
+            <div style="background:#2A2622"></div>
+            <div style="background:#0A0A0A"></div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="name">金额色彩</div>
+          <div class="value">支出 #C46B3F · 收入 #4D8A64</div>
+          <div class="swatch">
+            <div style="background:#C46B3F"></div>
+            <div style="background:#4D8A64"></div>
+            <div style="background:#1F1D18"></div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="name">字体 Family</div>
+          <div class="value">JetBrains Mono · Outfit · Noto Sans SC</div>
+        </div>
+        <div class="token">
+          <div class="name">字号 Scale</div>
+          <div class="value">金额 44px · 类目 13px · 详情 11px · 顶标 9px</div>
+        </div>
+        <div class="token">
+          <div class="name">运动曲线</div>
+          <div class="value">弹簧 cubic-bezier(0.34, 1.56, 0.64, 1) · 主线 ease-out</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 6. 边缘场景 ============ -->
+    <div class="section">
+      <h2><span class="num">6</span>边缘场景 · Edge Cases</h2>
+      <div class="sub">异常路径的兜底设计，避免用户卡死或体验断裂</div>
+
+      <div class="case-list">
+        <div class="case normal">
+          <span class="lab">正常</span>
+          <div class="name">✅ 标准流程</div>
+          <div class="desc">用户填好表单 → 完成 → 打印小票 → tap 关闭 → 列表新增</div>
+        </div>
+        <div class="case error">
+          <span class="lab">错误</span>
+          <div class="name">❌ 必填项缺失</div>
+          <div class="desc">「完成」保持 disabled，红边提示 + 抖动反馈。整个流程不会触发打印态。</div>
+        </div>
+        <div class="case error">
+          <span class="lab">异常</span>
+          <div class="name">⚠️ 保存失败（网络/本地）</div>
+          <div class="desc">Phase 2 → Phase 3 直接显示一个 ❌ 错误小票（顶部红色印章），提示「打印失败，请重试」。</div>
+        </div>
+        <div class="case offline">
+          <span class="lab">降级</span>
+          <div class="name">🌑 减弱动效</div>
+          <div class="desc">检测到 prefers-reduced-motion，跳过全部印刷动画，直接显示完整小票。</div>
+        </div>
+        <div class="case share">
+          <span class="lab">扩展</span>
+          <div class="name">🖼️ 长按截图分享</div>
+          <div class="desc">Phase 3 长按小票触发 0.3s 反馈动画后，弹出分享菜单（导出 PNG / 微信 / 小红书）。</div>
+        </div>
+        <div class="case share">
+          <span class="lab">扩展</span>
+          <div class="name">🔁 撤销操作</div>
+          <div class="desc">Phase 3 tap 后 5s 内显示 Snackbar「已记录 · 长按撤销」，避免误触。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 7. 实施建议 ============ -->
+    <div class="section">
+      <h2><span class="num">7</span>实施建议 · Implementation</h2>
+      <div class="sub">Vue 3 + Motion-V 落地要点</div>
+
+      <div class="tech-grid">
+        <div class="tech">
+          <div class="ic">⚡</div>
+          <div class="name">Vue 3 状态机</div>
+          <div class="desc">用 `ref` + watch 维护 phase 状态；composable <code>useReceipt()</code> 封装 open/close/print 方法</div>
+        </div>
+        <div class="tech">
+          <div class="ic">🎬</div>
+          <div class="name">Motion-V 编排</div>
+          <div class="desc">用 stagger 让 8 个区块按时间线依次出现；spring 配置 e: 'spring' + stiffness: 200 还原弹性</div>
+        </div>
+        <div class="tech">
+          <div class="ic">📐</div>
+          <div class="name">clip-path 印刷</div>
+          <div class="desc"><code>clip-path: inset(0 0 100% 0)</code> 从底部裁掉到 0%，模拟纸张"吐出"效果</div>
+        </div>
+        <div class="tech">
+          <div class="ic">🎨</div>
+          <div class="name">CSS mask 撕纸边</div>
+          <div class="desc">顶部 / 底部锯齿用 <code>radial-gradient mask</code> 平铺，无需图片资源</div>
+        </div>
+        <div class="tech">
+          <div class="ic">📱</div>
+          <div class="name">触觉反馈</div>
+          <div class="desc">点击完成时调用 <code>navigator.vibrate(8)</code>，打印过程中每 200ms 短振模拟电机</div>
+        </div>
+        <div class="tech">
+          <div class="ic">🔊</div>
+          <div class="name">可选音效</div>
+          <div class="desc">首次完成时播放 0.5s 打印音效（可静音），设置项可关闭</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta">
+      <h3>看完规格？<span>立即体验可交互演示</span></h3>
+      <p>完整动画 + 状态切换 + 时间线进度同步展示</p>
+      <a class="cta-btn" href="interactive-demo.html" target="_blank">
+        🎬 打开交互式演示
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    // Build the barcode randomly
+    const barA = document.getElementById('barA');
+    if (barA) {
+      for (let i = 0; i < 38; i++) {
+        const d = document.createElement('div');
+        const h = 40 + Math.abs(Math.sin(i * 1.7)) * 60;
+        d.style.height = h + '%';
+        d.style.flex = '0 0 2px';
+        barA.appendChild(d);
+      }
+    }
+  </script>
+</body>
+</html>

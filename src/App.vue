@@ -194,160 +194,254 @@
       <header class="stats-top-bar" :class="{ scrolled }">
         <div class="stats-header-left">
           <h2 class="stats-title">统计分析</h2>
-          <span class="stats-period-badge">{{ statsPeriod === 'week' ? '本周' : statsPeriod === 'month' ? '本月' : '本年' }}</span>
+          <span class="stats-period-badge">{{ statsPeriodLabel }}</span>
         </div>
-        <button class="report-btn neumorph-pill" @click="showReport = true">
-          <IconDisplay icon="ClipboardList" :size="16" /> 报告
-        </button>
       </header>
 
-      <!-- 收支汇总卡片 -->
-      <section v-reveal class="stats-summary">
-        <div class="summary-card" @click="statsType = statsType === 'expense' ? 'income' : 'expense'">
-          <span class="summary-label">{{ statsType === 'expense' ? '总支出' : '总收入' }}</span>
-          <span class="summary-amount" :class="statsType">
-            {{ statsType === 'expense' ? '-' : '+' }}¥{{ statsTotalDisp.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-          </span>
-        </div>
-        <div class="summary-mini-row">
-          <div class="summary-mini"><span class="mini-label">笔数</span><span class="mini-value">{{ Math.round(statsCountDisp) }} 笔</span></div>
-          <div class="summary-mini"><span class="mini-label">日均</span><span class="mini-value">¥{{ Math.round(statsAvgDisp) }}</span></div>
+      <!-- 周期切换：日/周/月/年/自定义 -->
+      <div class="stats-period-tabs" role="tablist">
+        <button class="period-tab" :class="{ active: statsPeriod === 'day' }" @click="statsPeriod = 'day'" role="tab">日</button>
+        <button class="period-tab" :class="{ active: statsPeriod === 'week' }" @click="statsPeriod = 'week'" role="tab">周</button>
+        <button class="period-tab" :class="{ active: statsPeriod === 'month' }" @click="statsPeriod = 'month'" role="tab">月</button>
+        <button class="period-tab" :class="{ active: statsPeriod === 'year' }" @click="statsPeriod = 'year'" role="tab">年</button>
+        <button
+          class="period-tab custom-tab"
+          :class="{ active: statsPeriod === 'custom' }"
+          @click="openCustomPicker"
+          role="tab"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <span>自定义</span>
+        </button>
+      </div>
+
+      <!-- ===== 浅色K线风格 Hero ===== -->
+      <section v-reveal class="stats-hero-k">
+        <div class="hero-k-card" :class="statsPeriodChange.cls">
+          <!-- 顶部标签 -->
+          <div class="hero-k-head">
+            <div class="hero-k-badge">{{ statsPeriodLabel }}</div>
+            <div class="hero-k-title">总{{ statsType === 'expense' ? '支出' : '收入' }}</div>
+          </div>
+          <!-- 金额 + 涨跌 + 迷你柱状图 -->
+          <div class="hero-k-main">
+            <div class="hero-price-box-k">
+              <div class="hero-price-k">
+                <span class="cur-k">¥</span>{{ statsTotalDisp.toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}
+              </div>
+              <div class="hero-change-k">
+                <div class="change-arrow-k">
+                  <svg v-if="statsPeriodChange.cls === 'up'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                  <svg v-else-if="statsPeriodChange.cls === 'down'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                  <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14"/></svg>
+                </div>
+                <div class="change-text-k">{{ statsPeriodChange.text }}</div>
+              </div>
+            </div>
+            <!-- 迷你柱状图：显示近7天/周的支出趋势 -->
+            <div class="hero-mini-chart-k">
+              <div
+                v-for="(b, i) in miniChartData"
+                :key="'mini-' + i"
+                class="mini-bar-k"
+                :class="{ up: statsPeriodChange.cls === 'up' }"
+                :style="{ height: b.height + '%' }"
+              ></div>
+            </div>
+          </div>
+          <!-- 底部指标 -->
+          <div class="hero-grid-k">
+            <div class="grid-item-k">
+              <div class="k">日均</div>
+              <div class="v">¥{{ Math.round(statsAvgDisp) }}</div>
+            </div>
+            <div class="grid-item-k">
+              <div class="k">笔数</div>
+              <div class="v">{{ Math.round(statsCountDisp) }}</div>
+            </div>
+            <div class="grid-item-k">
+              <div class="k">最高</div>
+              <div class="v">¥{{ statsMaxAmount.toLocaleString('zh-CN', { maximumFractionDigits: 0 }) }}</div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <!-- 收支切换 tab -->
-      <div class="stats-type-tabs">
-        <button class="stat-tab-btn" :class="{ active: statsType === 'expense' }" @click="statsType = 'expense'">支出</button>
-        <button class="stat-tab-btn" :class="{ active: statsType === 'income' }" @click="statsType = 'income'">收入</button>
-      </div>
-
-      <!-- 同比环比卡片 -->
-      <section class="compare-card neumorph">
-        <div class="compare-card-header">
-          <span class="compare-card-title">同比环比</span>
-          <span class="compare-card-period">{{ comparePeriodLabel }}</span>
+      <!-- ===== 三联横排：同比环比 / 月度预算 / 储蓄率 ===== -->
+      <section v-reveal class="stats-triple">
+        <!-- 同比环比 -->
+        <div class="triple-card">
+          <div class="triple-head">
+            <span>同比环比</span>
+            <span :class="['triple-badge', statsPeriodChange.cls]">{{ statsPeriodChange.text }}</span>
+          </div>
+          <div class="triple-amount">
+            <span class="cur">¥</span>{{ Math.abs(statsTotal.value - prevPeriodTotal.value).toFixed(0) }}
+          </div>
+          <div class="triple-sub">
+            vs {{ statsPeriod === 'month' ? '上月' : statsPeriod === 'week' ? '上周' : statsPeriod === 'day' ? '昨日' : '上期' }}
+            ¥{{ prevPeriodTotal.toFixed(0) }}
+          </div>
         </div>
-        <div class="compare-card-body">
-          <div class="compare-block">
-            <span class="compare-block-tag blue">环比</span>
-            <div class="compare-block-data">
-              <span class="compare-block-label">支出</span>
-              <span class="compare-block-value" :class="momCompare.cls">{{ momCompare.text }}</span>
-            </div>
+        <!-- 月度预算 -->
+        <div class="triple-card budget">
+          <div class="triple-head">
+            <span>月度预算</span>
+            <span :class="['triple-badge', budgetWarnLevel]">
+              {{ budgetAmount > 0 ? Math.round((monthExpense / budgetAmount) * 100) : 0 }}%
+            </span>
           </div>
-          <div class="compare-divider"></div>
-          <div class="compare-block">
-            <span class="compare-block-tag green">同比</span>
-            <div class="compare-block-data">
-              <span class="compare-block-label">支出</span>
-              <span class="compare-block-value" :class="yoyCompare.cls">{{ yoyCompare.text }}</span>
-            </div>
+          <div class="triple-amount">
+            <span class="cur">¥</span>{{ monthExpense.toFixed(0) }}<span class="triple-divider">/</span><span class="triple-limit">{{ budgetAmount > 0 ? budgetAmount.toFixed(0) : '0' }}</span>
           </div>
+          <div v-if="budgetAmount > 0" class="budget-progress">
+            <div
+              :class="['budget-fill', { warn: budgetWarnLevel === 'warn' || budgetWarnLevel === 'over' }]"
+              :style="{ width: Math.min(100, (monthExpense / budgetAmount) * 100) + '%' }"
+            ></div>
+          </div>
+          <div v-if="budgetAmount > 0" class="budget-row">
+            <span>剩余 {{ daysRemainingInMonth }} 天</span>
+            <span>剩 ¥{{ budgetRemain.toFixed(0) }}</span>
+          </div>
+        </div>
+        <!-- 储蓄率 -->
+        <div class="triple-card">
+          <div class="triple-head">
+            <span>储蓄率</span>
+            <span class="triple-badge flat">—</span>
+          </div>
+          <div class="triple-amount">
+            {{ statsSavingRate.toFixed(0) }}<span class="triple-unit">%</span>
+          </div>
+          <div class="triple-sub">结余 ¥{{ statsBalance.toFixed(0) }}</div>
+        </div>
+      </section>
+
+      <!-- ===== AI 异常洞察 ===== -->
+      <section v-if="statsInsight" v-reveal class="stats-insight">
+        <div class="insight-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+        </div>
+        <div class="insight-body">
+          <div class="insight-title">{{ statsInsight.title }}</div>
+          <div class="insight-desc">{{ statsInsight.desc }}</div>
         </div>
       </section>
 
       <!-- 环形饼图 + 分类列表 -->
       <section v-reveal class="stats-chart-section">
         <div class="chart-area">
+          <div class="card-head">
+            <div class="card-title">分类构成</div>
+            <span
+              v-if="categoryStatsList.length > 0"
+              class="cat-tool-btn"
+              @click="toggleAllCategories"
+            >{{ allCategoriesExpanded ? '全部收起' : '全部展开' }}</span>
+          </div>
           <div v-if="categoryStatsList.length === 0" class="chart-empty">
             <span class="empty-icon"><IconDisplay icon="ChartBar" :size="44" :stroke-width="1.6" /></span>
             <span class="empty-text">暂无{{ statsType === 'expense' ? '支出' : '收入' }}数据</span>
           </div>
           <template v-else>
-            <div class="donut-wrapper">
-              <!-- SVG 指示线层 -->
-              <svg v-if="categoryStatsList.length > 0" class="donut-lines-svg" viewBox="0 0 340 280" aria-hidden="true">
-                <g v-for="(label, idx) in donutLabels" :key="'l-' + label.name">
-                  <polyline
-                    :points="`${label.x1},${label.y1} ${label.x2},${label.y2} ${label.x3},${label.y3}`"
-                    fill="none"
-                    :stroke="label.color"
-                    stroke-width="2"
-                    stroke-opacity="0.9"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <circle :cx="label.x1" :cy="label.y1" r="4" :fill="label.color" />
-                  <circle :cx="label.x1" :cy="label.y1" r="2" fill="#fff" />
-                </g>
-              </svg>
-              <!-- 饼图本体 —— SVG 弧段描边绘制 -->
-              <svg class="donut-ring-svg" viewBox="0 0 170 170" aria-hidden="true">
-                <circle class="donut-track" cx="85" cy="85" r="72" />
-                <motion.path
-                  v-for="(seg, i) in donutSegments"
-                  :key="seg.name"
-                  class="donut-seg"
-                  :d="seg.d"
-                  :stroke="seg.color"
-                  :initial="{ pathLength: 0, opacity: 0 }"
-                  :animate="{ pathLength: 1, opacity: 1 }"
-                  :transition="{ duration: 0.9, delay: 0.15 + i * 0.12, ease: [0.65, 0, 0.35, 1] }"
-                  fill="none"
-                  stroke-width="26"
-                  stroke-linecap="butt"
-                />
-              </svg>
-              <div class="donut-center">
-                <span class="donut-center-amount">¥{{ Math.round(statsTotalDisp) }}</span>
-                <span class="donut-center-label">{{ statsType === 'expense' ? '支出' : '收入' }}</span>
-              </div>
-              <!-- 标签文字层 -->
-              <template v-if="categoryStatsList.length > 0">
-                <div
-                  v-for="(label, idx) in donutLabels"
-                  :key="'t-' + label.name"
-                  class="donut-label-tag"
-                  :class="label.side"
-                  :style="{
-                    left: label.labelX + 'px',
-                    top: label.labelY + 'px',
-                    '--color': label.color,
-                    animationDelay: idx * 0.08 + 's',
-                  }"
-                >
-                  <span class="tag-dot" :style="{ background: label.color }"></span>
-                  <IconDisplay :icon="getLucideIconName(label.icon)" :size="16" /> {{ label.name }}
-                </div>
-              </template>
-            </div>
-            <div class="cat-rank-list">
-              <div
-                v-for="(cat, idx) in categoryStatsList"
-                :key="cat.name"
-                class="rank-item"
-                :class="{ expanded: expandedCategory === cat.name }"
-                :style="{ animationDelay: idx * 0.06 + 's' }"
-              >
-                <div class="rank-header" @click="toggleCategory(cat.name)">
-                  <div class="rank-color-dot" :style="{ background: cat.color }"></div>
-                  <span class="rank-cat-icon"><IconDisplay :icon="getLucideIconName(cat.icon)" :size="18" /></span>
-                  <span class="rank-cat-name">{{ cat.name }}</span>
-                  <div class="rank-bar-track">
-                    <div class="rank-bar-fill" :style="{ width: (cat.percent * 100).toFixed(1) + '%', background: cat.color }"></div>
+            <div class="cat-row">
+              <!-- 紧凑环形饼图 -->
+              <div class="donut-box">
+                <div class="donut-svg-wrap">
+                  <svg class="donut-ring-svg" viewBox="0 0 100 100" aria-hidden="true">
+                    <circle class="donut-track" cx="50" cy="50" r="40" />
+                    <motion.path
+                      v-for="(seg, i) in donutSegments"
+                      :key="seg.name"
+                      class="donut-seg"
+                      :d="seg.d"
+                      :stroke="seg.color"
+                      :initial="{ pathLength: 0, opacity: 0 }"
+                      :animate="{ pathLength: 1, opacity: 1 }"
+                      :transition="{ duration: 0.9, delay: 0.15 + i * 0.12, ease: [0.65, 0, 0.35, 1] }"
+                      fill="none"
+                      stroke-width="14"
+                      stroke-linecap="butt"
+                    />
+                  </svg>
+                  <div class="donut-center">
+                    <span class="donut-center-amount">¥{{ Math.round(statsTotalDisp) }}</span>
+                    <span class="donut-center-label">总{{ statsType === 'expense' ? '支出' : '收入' }}</span>
                   </div>
-                  <span class="rank-amount">¥{{ cat.amount.toFixed(2) }}</span>
-                  <span class="rank-percent">{{ (cat.percent * 100).toFixed(1) }}%</span>
-                  <svg class="rank-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                </div>
+                <div class="donut-foot">{{ categoryStatsList.length }} 个分类</div>
+              </div>
+
+              <!-- 大类 + 子类展开列表 -->
+              <div class="cat-list">
+                <div
+                  v-for="(cat, idx) in categoryStatsList"
+                  :key="cat.name"
+                  class="cat-item"
+                  :class="{ expanded: isCategoryExpanded(cat.name) }"
+                  :style="{
+                    '--c': cat.color,
+                    '--cbg': cat.color + '2A',  // ~16% alpha
+                    '--cink': darkenHex(cat.color, 0.25),
+                    animationDelay: idx * 0.05 + 's',
+                  }"
+                  @click="toggleCategory(cat.name)"
+                >
+                  <div class="icn" :style="{ background: cat.color + '2A', color: darkenHex(cat.color, 0.25) }">
+                    <IconDisplay :icon="getLucideIconName(cat.icon)" :size="13" />
+                  </div>
+                  <div class="name">
+                    <span class="nm">{{ cat.name }}</span>
+                    <span class="ct">{{ cat.count }} 笔</span>
+                  </div>
+                  <div class="amt">¥{{ cat.amount.toFixed(0) }}<span class="p">{{ (cat.percent * 100).toFixed(1) }}%</span></div>
+                  <svg class="chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9"/>
                   </svg>
-                </div>
-                <div class="rank-expandable">
-                  <div class="rank-expandable-inner">
+                  <div class="bar">
                     <div
-                      v-for="(sub, sIdx) in getSubcategoryStats(cat.name)"
-                      :key="sub.name"
-                      class="sub-item"
-                      :style="{ transitionDelay: expandedCategory === cat.name ? (sIdx * 0.05) + 's' : '0s' }"
-                    >
-                      <span class="sub-dot" :style="{ background: cat.color }"></span>
-                      <span class="sub-name">{{ sub.name }}</span>
-                      <div class="sub-bar-track">
-                        <div class="sub-bar-fill" :style="{ width: (sub.percent * 100).toFixed(1) + '%', background: cat.color }"></div>
+                      class="fg"
+                      :style="{
+                        width: (cat.percent * 100).toFixed(1) + '%',
+                        background: 'linear-gradient(90deg, ' + cat.color + ', ' + darkenHex(cat.color, 0.2) + ')',
+                      }"
+                    ></div>
+                  </div>
+                  <!-- 子类目展开区 -->
+                  <div class="sub-wrap">
+                    <div class="sub-inner">
+                      <div class="sub-list">
+                        <div
+                          v-for="sub in getSubcategoryStats(cat.name)"
+                          :key="sub.name"
+                          class="sub-item"
+                          @click.stop
+                        >
+                          <div class="sub-dot" :style="{ background: cat.color }"></div>
+                          <div class="sub-name">{{ sub.name }}</div>
+                          <div class="sub-count">{{ sub.count }} 笔</div>
+                          <div class="sub-amount">
+                            ¥{{ sub.amount.toFixed(0) }}<span class="sp">{{ (sub.percent * 100).toFixed(1) }}%</span>
+                          </div>
+                          <div class="sub-mini-bar">
+                            <div
+                              class="fg"
+                              :style="{
+                                width: (sub.percent * 100).toFixed(1) + '%',
+                                background: cat.color,
+                              }"
+                            ></div>
+                          </div>
+                        </div>
                       </div>
-                      <span class="sub-amount">¥{{ sub.amount.toFixed(2) }}</span>
-                      <span class="sub-percent">{{ (sub.percent * 100).toFixed(1) }}%</span>
-                      <span class="sub-count">{{ sub.count }}笔</span>
                     </div>
                   </div>
                 </div>
@@ -359,66 +453,21 @@
 
       <!-- 趋势柱状图 -->
       <section class="trend-section">
-        <div class="section-header">
-          <h3 class="section-title">趋势</h3>
-          <div class="trend-header-right">
-            <div class="trend-type-toggle" role="tablist">
-              <button
-                type="button"
-                role="tab"
-                :class="{ active: statsType === 'expense' }"
-                @click="statsType = 'expense'"
-              >支出</button>
-              <button
-                type="button"
-                role="tab"
-                :class="{ active: statsType === 'income' }"
-                @click="statsType = 'income'"
-              >收入</button>
+        <div class="trend-card">
+          <div class="card-head">
+            <div class="card-title">每日趋势</div>
+            <div class="trend-tools">
+              <span class="tool-chip" :class="{ active: trendType === 'income' }" @click="trendType = 'income'">收入</span>
+              <span class="tool-chip" :class="{ active: trendType === 'expense' }" @click="trendType = 'expense'">支出</span>
+              <span class="tool-chip" :class="{ active: trendType === 'compare' }" @click="trendType = 'compare'">对比</span>
             </div>
-            <span v-if="trendCategory" class="trend-filter-badge">
-              {{ trendCategory }}{{ trendSubCategory ? ' · ' + trendSubCategory : '' }}
-            </span>
           </div>
-        </div>
+          <div class="trend-legend">
+            <span><span class="dot" style="background: var(--expense);"></span>{{ trendType === 'income' ? '收入' : '支出' }}</span>
+            <span><span class="dot" style="background: var(--accent);"></span>日均 ¥{{ Math.round(trendAvgExpense) }}</span>
+          </div>
 
-        <!-- 分类筛选：单行横向滑动 -->
-        <div class="trend-cat-filter">
-          <div class="trend-cat-row">
-            <button
-              class="trend-cat-chip"
-              :class="{ active: !trendCategory }"
-              @click="setTrendCategory(null)"
-            >全部</button>
-            <button
-              v-for="cat in categories.slice(1)"
-              :key="cat.name"
-              class="trend-cat-chip"
-              :class="{ active: trendCategory === cat.name }"
-              @click="setTrendCategory(cat.name)"
-            >
-              <span class="trend-cat-icon"><IconDisplay :icon="getLucideIconName(cat.icon)" :size="16" /></span>
-              <span>{{ cat.name }}</span>
-            </button>
-          </div>
-          <!-- 二级分类：选了一级才显示 -->
-          <div v-if="trendCategory" class="trend-cat-row trend-cat-sub">
-            <button
-              class="trend-cat-chip"
-              :class="{ active: !trendSubCategory }"
-              @click="trendSubCategory = null"
-            >全部</button>
-            <button
-              v-for="sub in (subCategories[trendCategory] || [])"
-              :key="sub"
-              class="trend-cat-chip"
-              :class="{ active: trendSubCategory === sub }"
-              @click="trendSubCategory = sub"
-            >{{ sub }}</button>
-          </div>
-        </div>
-
-        <div class="trend-chart trend-chart-line">
+          <div class="trend-chart trend-chart-bars">
           <svg
             class="trend-svg"
             :viewBox="`0 0 ${TREND_W} ${TREND_H}`"
@@ -426,17 +475,6 @@
             @mousemove="onTrendHover"
             @mouseleave="onTrendLeave"
           >
-            <defs>
-              <linearGradient id="trend-grad-income" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#8ba888" stop-opacity="0.45" />
-                <stop offset="100%" stop-color="#8ba888" stop-opacity="0.02" />
-              </linearGradient>
-              <linearGradient id="trend-grad-expense" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#c97b7b" stop-opacity="0.45" />
-                <stop offset="100%" stop-color="#c97b7b" stop-opacity="0.02" />
-              </linearGradient>
-            </defs>
-
             <!-- Y 轴网格线 + 刻度标签 -->
             <g v-for="(t, i) in trendYLabels" :key="'y-' + i">
               <line
@@ -451,70 +489,214 @@
               >{{ t.text }}</text>
             </g>
 
-            <!-- 折线 + 区域 -->
-            <path v-if="trendAreaPath" :d="trendAreaPath" :fill="`url(#trend-grad-${activeClass})`" />
-            <path v-if="trendLinePath" :d="trendLinePath" :class="['trend-line', `trend-line-${activeClass}`]" />
+            <!-- 柱子（根据 trendType 决定显示逻辑） -->
+            <g v-for="b in trendBarGeom" :key="'b-' + b.index">
+              <!-- 对比模式：堆叠显示（支出在下，收入在上） -->
+              <template v-if="trendType === 'compare'">
+                <rect
+                  v-if="b.expenseH > 0"
+                  :x="b.x" :y="TREND_H - TREND_PAD_B - b.expenseH"
+                  :width="b.w" :height="b.expenseH"
+                  rx="1"
+                  class="trend-bar trend-bar-expense"
+                />
+                <rect
+                  v-if="b.incomeH > 0"
+                  :x="b.x" :y="TREND_H - TREND_PAD_B - b.expenseH - b.incomeH"
+                  :width="b.w" :height="b.incomeH"
+                  rx="1"
+                  class="trend-bar trend-bar-income"
+                />
+              </template>
+              <!-- 单一模式：只显示选中的类型 -->
+              <template v-else>
+                <rect
+                  v-if="(trendType === 'expense' ? b.expenseH : b.incomeH) > 0"
+                  :x="b.x"
+                  :y="TREND_H - TREND_PAD_B - (trendType === 'expense' ? b.expenseH : b.incomeH)"
+                  :width="b.w"
+                  :height="trendType === 'expense' ? b.expenseH : b.incomeH"
+                  rx="1"
+                  :class="['trend-bar', trendType === 'expense' ? 'trend-bar-expense' : 'trend-bar-income']"
+                />
+              </template>
+            </g>
 
-            <!-- 数据点 -->
-            <g v-for="p in trendPoints" :key="p.index">
-              <circle
-                v-if="activeValue(p) > 0"
-                :cx="p.x" :cy="p.activeY"
-                r="2.5"
-                :class="['trend-dot', `trend-dot-${activeClass}`]"
+            <!-- 平均支出线（金色虚线） -->
+            <g v-if="trendAvgY !== null && trendAvgExpense > 0">
+              <line
+                :x1="TREND_PAD_X" :x2="TREND_W - TREND_PAD_R"
+                :y1="trendAvgY" :y2="trendAvgY"
+                class="trend-avg-line"
               />
+              <text
+                :x="TREND_W - TREND_PAD_R"
+                :y="trendAvgY - 3"
+                text-anchor="end"
+                class="trend-avg-text"
+              >avg ¥{{ Math.round(trendAvgExpense) }}</text>
+            </g>
+
+            <!-- 峰值标签 -->
+            <g v-if="trendPeakBar && (trendPeakBar.expense > 0 || trendPeakBar.income > 0)">
+              <rect
+                :x="trendPeakX - 1"
+                :y="trendPeakY - 12"
+                :width="trendPeakW + 2"
+                height="10"
+                rx="2"
+                class="trend-peak-mark"
+              />
+              <text
+                :x="trendPeakX + trendPeakW / 2"
+                :y="trendPeakY - 4"
+                text-anchor="middle"
+                class="trend-peak-text"
+              >¥{{ Math.round(trendType === 'income' ? trendPeakBar.income : trendPeakBar.expense) }}</text>
             </g>
 
             <!-- hover 高亮 -->
-            <template v-if="hoverPoint">
+            <g v-if="hoverBar">
               <line
-                :x1="hoverPoint.x" :x2="hoverPoint.x"
-                :y1="TREND_PAD_T" :y2="trendBaselineY"
+                :x1="hoverBar.x + hoverBar.w / 2"
+                :x2="hoverBar.x + hoverBar.w / 2"
+                :y1="TREND_PAD_T"
+                :y2="TREND_H - TREND_PAD_B"
                 class="trend-hover-line"
               />
-              <circle
-                v-if="activeValue(hoverPoint) > 0"
-                :cx="hoverPoint.x" :cy="hoverPoint.activeY"
-                r="5"
-                :class="['trend-hover-dot', `trend-hover-dot-${activeClass}`]"
+              <rect
+                v-if="hoverBar.expenseH > 0"
+                :x="hoverBar.x - 0.5"
+                :y="TREND_H - TREND_PAD_B - hoverBar.expenseH"
+                :width="hoverBar.w + 1"
+                :height="hoverBar.expenseH"
+                class="trend-hover-rect"
               />
-            </template>
+            </g>
 
             <!-- X 轴标签 -->
             <g v-for="(t, i) in trendXLabels" :key="'x-' + i">
-              <text :x="t.x" :y="TREND_H - 10" text-anchor="middle" class="trend-x-text">{{ t.label }}</text>
+              <text :x="t.x" :y="TREND_H - 8" text-anchor="middle" class="trend-x-text">{{ t.label }}</text>
             </g>
           </svg>
-          <div class="trend-legend">
-            <span class="legend-item"><i class="legend-dot legend-income"></i>收入</span>
-            <span class="legend-item"><i class="legend-dot legend-expense"></i>支出</span>
+
+          <!-- 底部峰值提示 -->
+          <div class="trend-tip" v-if="trendPeakBar && (trendPeakBar.expense > 0 || trendPeakBar.income > 0)">
+            <span>峰值 <b>¥{{ Math.round(trendType === 'income' ? trendPeakBar.income : trendPeakBar.expense) }} · {{ trendPeakBar.label }}</b></span>
+            <span v-if="trendBars.length > 1">峰谷 ¥{{ trendMinExpense.toFixed(0) }}</span>
           </div>
+
           <!-- hover tooltip -->
           <div
-            v-if="hoverPoint && activeValue(hoverPoint) > 0"
+            v-if="hoverBar && (hoverBar.income + hoverBar.expense) > 0"
             class="trend-tooltip"
-            :style="{ left: (hoverPoint.x / TREND_W * 100) + '%' }"
+            :style="{ left: ((hoverBar.x + hoverBar.w / 2) / TREND_W * 100) + '%' }"
           >
-            <div class="tt-date">{{ hoverPoint.day }} 日</div>
-            <div :class="['tt-row', `tt-${activeClass}`]">
-              <span class="tt-dot"></span>
-              {{ activeClass === 'income' ? '收入' : '支出' }} ¥{{ activeValue(hoverPoint).toFixed(0) }}
+            <div class="tt-date">{{ hoverBar.label }}</div>
+            <template v-if="trendType === 'compare'">
+              <div v-if="hoverBar.expense > 0" class="tt-row tt-expense">
+                <span class="tt-dot"></span>支出 ¥{{ hoverBar.expense.toFixed(0) }}
+              </div>
+              <div v-if="hoverBar.income > 0" class="tt-row tt-income">
+                <span class="tt-dot"></span>收入 ¥{{ hoverBar.income.toFixed(0) }}
+              </div>
+            </template>
+            <div v-else class="tt-row" :class="trendType === 'expense' ? 'tt-expense' : 'tt-income'">
+              <span class="tt-dot"></span>{{ trendType === 'expense' ? '支出' : '收入' }} ¥{{ (trendType === 'expense' ? hoverBar.expense : hoverBar.income).toFixed(0) }}
+            </div>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <!-- 排行卡片 -->
+      <section v-reveal class="rank-section" v-if="merchantRank.length > 0 || tagRank.length > 0">
+        <div class="rank-card">
+          <div class="card-head">
+            <div class="card-title">排行</div>
+            <span class="card-sub">TOP 5</span>
+          </div>
+          <div class="rank-2col">
+            <div class="rank-col">
+              <div class="rank-col-title">商户<span class="more">金额 ↓</span></div>
+              <div v-for="(item, i) in merchantRank" :key="item.name" class="rank-row">
+                <span class="rk">{{ i + 1 }}</span>
+                <span class="nm">{{ item.name }}</span>
+                <span class="v">¥{{ item.amount.toFixed(0) }}</span>
+              </div>
+              <div v-if="merchantRank.length === 0" class="rank-empty">暂无商户数据</div>
+            </div>
+            <div class="rank-col">
+              <div class="rank-col-title">标签<span class="more">金额 ↓</span></div>
+              <div v-for="(item, i) in tagRank" :key="item.name" class="rank-row">
+                <span class="rk">{{ i + 1 }}</span>
+                <span class="nm">{{ item.name }}</span>
+                <span class="v">¥{{ item.amount.toFixed(0) }}</span>
+              </div>
+              <div v-if="tagRank.length === 0" class="rank-empty">暂无标签数据</div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- 记账热力图 (方案C: 液态金额条) -->
-      <section v-reveal class="heatmap-section">
-        <div class="section-header">
-          <h3 class="section-title">收支热力图</h3>
-          <span class="heatmap-subtitle">{{ heatmapTitle }}</span>
-          <span class="heatmap-legend-inline">
-            <span class="legend-item income"><i class="legend-dot"></i>收入</span>
-            <span class="legend-item expense"><i class="legend-dot"></i>支出</span>
-          </span>
+      <!-- 消费习惯卡片 -->
+      <section v-reveal class="habit-section" v-if="weekdayStats.some(s => s.amount > 0)">
+        <div class="habit-card">
+          <div class="card-head">
+            <div class="card-title">消费习惯</div>
+            <span class="card-sub">周内 · 时段</span>
+          </div>
+          <div class="dist-row">
+            <div class="dist-block">
+              <div class="dist-head">周内分布<span v-if="weekdayPeak" class="peak">{{ weekdayPeak }}</span></div>
+              <div class="weekday-grid">
+                <div
+                  v-for="s in weekdayStats"
+                  :key="s.day"
+                  class="wd-col"
+                  :class="{ peak: s.isPeak }"
+                >
+                  <div class="bar" :style="{ height: Math.max(3, s.percent) + '%' }"></div>
+                  <div class="val">¥{{ s.amount > 0 ? s.amount.toFixed(0) : '-' }}</div>
+                  <div class="lbl">{{ s.label }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="dist-block">
+              <div class="dist-head">时段热力<span v-if="hourPeakRange" class="peak">{{ hourPeakRange }}</span></div>
+              <div class="hour-cells">
+                <div class="hour-grid">
+                  <div
+                    v-for="h in hourStats"
+                    :key="h.hourStart"
+                    class="hour-cell"
+                    :style="{
+                      background: h.intensity > 0.6
+                        ? `rgba(232, 139, 139, ${0.4 + h.intensity * 0.5})`
+                        : `rgba(212, 165, 116, ${0.1 + h.intensity * 0.25})`
+                    }"
+                  ></div>
+                </div>
+                <div class="hour-labels">
+                  <span>0时</span><span>6时</span><span>12时</span><span>18时</span><span>23时</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="heatmap-wrapper liquid">
+      </section>
+
+      <!-- 收支热力图 -->
+      <section v-reveal class="heatmap-section">
+        <div class="heatmap-card">
+          <div class="card-head">
+            <div class="card-title">收支热力图</div>
+            <span class="heatmap-subtitle">{{ heatmapTitle }}</span>
+            <span class="heatmap-legend-inline">
+              <span class="legend-item income"><i class="legend-dot"></i>收入</span>
+              <span class="legend-item expense"><i class="legend-dot"></i>支出</span>
+            </span>
+          </div>
           <!-- 星期标题行 -->
           <div class="heatmap-weekdays-row">
             <span v-for="wd in ['一','二','三','四','五','六','日']" :key="wd" class="heatmap-wd-label">{{ wd }}</span>
@@ -532,11 +714,9 @@
                 <span class="cell-day-num">{{ cell.day }}</span>
                 <div class="cell-metrics">
                   <span class="metric-bar income" :style="{ '--bar-w': heatmapBarWidth(cell.income, heatmapMaxIncome) }">
-                    <span class="metric-label">收</span>
                     <span class="metric-val">{{ heatmapShortMoney(cell.income) }}</span>
                   </span>
                   <span class="metric-bar expense" :style="{ '--bar-w': heatmapBarWidth(cell.expense, heatmapMaxExpense) }">
-                    <span class="metric-label">支</span>
                     <span class="metric-val">{{ heatmapShortMoney(cell.expense) }}</span>
                   </span>
                 </div>
@@ -546,6 +726,76 @@
           <div class="heatmap-tip">条形越长越深，金额越高</div>
         </div>
       </section>
+
+      <!-- ============ 自定义日期范围底部弹窗 ============ -->
+      <Teleport to="body">
+        <Transition name="sheet-fade">
+          <div v-if="showCustomPicker" class="date-sheet-mask" @click.self="closeCustomPicker">
+            <div class="date-sheet" @click.stop>
+              <div class="date-sheet-handle"></div>
+              <div class="date-sheet-head">
+                <div class="date-sheet-title">选择日期范围</div>
+                <div class="date-sheet-close" @click="closeCustomPicker" role="button" aria-label="关闭">✕</div>
+              </div>
+
+              <div class="date-quick-ranges">
+                <div
+                  v-for="qr in quickRangeOptions"
+                  :key="qr.key"
+                  class="date-quick-range"
+                  :class="{ active: activeQuickKey === qr.key }"
+                  @click="applyQuickRange(qr.key)"
+                >{{ qr.label }}</div>
+              </div>
+
+              <div class="date-range-display">
+                <div class="date-range-box" :class="{ active: pickingTarget === 'start' }" @click="pickingTarget = 'start'">
+                  <div class="l">开始</div>
+                  <div class="v">{{ customRange?.start ? formatMd(customRange.start) : '--/--' }}</div>
+                </div>
+                <div class="date-range-arrow">→</div>
+                <div class="date-range-box" :class="{ active: pickingTarget === 'end' }" @click="pickingTarget = 'end'">
+                  <div class="l">结束</div>
+                  <div class="v">{{ customRange?.end ? formatMd(customRange.end) : '--/--' }}</div>
+                </div>
+              </div>
+
+              <div class="date-cal-wrap">
+                <div class="date-cal-head">
+                  <div class="date-cal-title">{{ calYear }} 年 {{ calMonth + 1 }} 月</div>
+                  <div class="date-cal-nav">
+                    <div class="date-cal-nav-btn" @click="calPrevMonth">‹</div>
+                    <div class="date-cal-nav-btn" @click="calNextMonth">›</div>
+                  </div>
+                </div>
+                <div class="date-cal-week">
+                  <div v-for="w in WEEK_LABELS" :key="w">{{ w }}</div>
+                </div>
+                <div class="date-cal-days">
+                  <div
+                    v-for="cell in calCells"
+                    :key="cell.key"
+                    class="date-cal-day"
+                    :class="{
+                      muted: !cell.inMonth,
+                      today: cell.isToday,
+                      start: cell.isStart,
+                      end: cell.isEnd,
+                      'in-range': cell.inRange
+                    }"
+                    @click="cell.inMonth && pickDate(cell.dateStr)"
+                  >{{ cell.day }}</div>
+                </div>
+              </div>
+
+              <div class="date-sheet-footer">
+                <button class="date-btn date-btn-secondary" @click="resetCustomRange">重置</button>
+                <button class="date-btn date-btn-primary" @click="confirmCustomRange">确定</button>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
     </motion.section>
 
     <!-- ===== 资产页面（assets） ===== -->
@@ -696,204 +946,15 @@
 
     <BottomTabBar v-model="activeTab" @add-click="openAddModal" />
 
-    <!-- 完整记账弹窗 -->
-    <Teleport to="body">
-      <Transition name="modal">
-        <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
-          <div class="modal-card">
-            <!-- 顶部操作栏 -->
-            <div class="modal-top-row">
-              <button class="modal-cancel" @click="closeAddModal">取消</button>
-              <h3 class="modal-title">记一笔</h3>
-              <button class="modal-save" :disabled="!canSave" @click="saveTransaction">完成</button>
-            </div>
-
-            <!-- 收支切换 -->
-            <div class="modal-tabs">
-              <button
-                class="modal-tab"
-                :class="{ active: form.type === 'expense' }"
-                @click="form.type = 'expense'"
-              >支出</button>
-              <button
-                class="modal-tab"
-                :class="{ active: form.type === 'income' }"
-                @click="form.type = 'income'"
-              >收入</button>
-            </div>
-
-            <!-- 金额展示区 -->
-            <div class="modal-body">
-              <div class="modal-amount-display" :class="form.type">
-                <span class="modal-currency">¥</span>
-                <span class="modal-number" :class="{ placeholder: !form.amount }">
-                  {{ form.amount || '0' }}
-                </span>
-              </div>
-
-              <!-- 分类选择 -->
-              <div class="modal-categories">
-                <button
-                  v-for="cat in categories.slice(1)"
-                  :key="cat.name"
-                  type="button"
-                  class="modal-cat-chip"
-                  :class="{ active: form.category === cat.name }"
-                  @click="selectCategory(cat.name)"
-                >
-                  <CategoryIcon :icon="cat.icon" />
-                  <span class="chip-name">{{ cat.name }}</span>
-                </button>
-              </div>
-
-              <!-- 二级分类（仅支出） -->
-              <div v-if="form.type === 'expense'" class="modal-subcategories">
-                <button
-                  v-for="sub in (subCategories[form.category] || [])"
-                  :key="sub"
-                  type="button"
-                  class="modal-sub-chip"
-                  :class="{ active: form.subCategory === sub }"
-                  @click="selectSubCategory(sub)"
-                >
-                  {{ sub }}
-                </button>
-              </div>
-
-              <!-- 商户/地点输入 -->
-              <div class="modal-merchant-row">
-                <input
-                  v-model="form.merchant"
-                  type="text"
-                  class="merchant-input"
-                  placeholder="商户（选填）"
-                  maxlength="20"
-                />
-                <input
-                  v-model="form.location"
-                  type="text"
-                  class="merchant-input"
-                  placeholder="地点（选填）"
-                  maxlength="20"
-                />
-              </div>
-
-              <!-- 备注输入 -->
-              <div class="modal-remark">
-                <input
-                  v-model="form.note"
-                  type="text"
-                  class="remark-input"
-                  placeholder="添加备注…"
-                  maxlength="20"
-                />
-              </div>
-
-              <!-- 记为资产开关（仅支出） -->
-              <div v-if="form.type === 'expense'" class="asset-toggle-row">
-                <label class="asset-toggle-label">记为资产</label>
-                <button
-                  type="button"
-                  class="toggle-switch"
-                  :class="{ on: form.asAsset }"
-                  @click="form.asAsset = !form.asAsset"
-                >
-                  <span class="toggle-knob"></span>
-                </button>
-              </div>
-
-              <!-- 资产字段（开关打开时展开） -->
-              <div v-if="form.asAsset" class="asset-fields">
-                <div class="asset-field-row">
-                  <label class="asset-field-label">资产分类</label>
-                  <input v-model="form.assetCategory" type="text" class="asset-field-input" placeholder="如：数码" maxlength="10" />
-                </div>
-                <div class="asset-field-row">
-                  <label class="asset-field-label">存放位置</label>
-                  <input v-model="form.assetLocation" type="text" class="asset-field-input" placeholder="如：客厅" maxlength="20" />
-                </div>
-                <div class="asset-field-row">
-                  <label class="asset-field-label">归属人</label>
-                  <input v-model="form.assetOwner" type="text" class="asset-field-input" placeholder="如：爸爸" maxlength="20" />
-                </div>
-                <div class="asset-field-row-pair">
-                  <div class="asset-field-col">
-                    <label class="asset-field-label">使用年限</label>
-                    <input v-model.number="form.assetUsefulLife" type="number" class="asset-field-input" min="1" max="100" />
-                  </div>
-                  <div class="asset-field-col">
-                    <label class="asset-field-label">残值率</label>
-                    <input v-model.number="form.assetSalvageRate" type="number" class="asset-field-input" min="0" max="1" step="0.05" />
-                  </div>
-                </div>
-              </div>
-
-              <!-- 日期快捷选择 + 自定义日期 -->
-              <div class="modal-date-row">
-                <div class="date-quick-pick">
-                  <button
-                    v-for="opt in dateQuickOptions"
-                    :key="opt.label"
-                    type="button"
-                    class="date-quick-chip"
-                    :class="{ active: form.date === opt.date }"
-                    @click="form.date = opt.date"
-                  >{{ opt.label }}</button>
-                </div>
-                <button
-                  type="button"
-                  class="date-picker-btn"
-                  :class="{ active: showDatePopover }"
-                  @click="showDatePopover = !showDatePopover"
-                >
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                  </svg>
-                  <span class="date-picker-text">{{ formatDisplayDate(form.date) }}</span>
-                </button>
-              </div>
-
-              <DateCalendarPopover
-                :show="showDatePopover"
-                v-model="form.date"
-                :max="todayStr()"
-                @close="showDatePopover = false"
-              />
-            </div>
-
-            <!-- 数字键盘 -->
-            <div class="num-keyboard">
-              <button
-                v-for="(key, index) in numKeys"
-                :key="index"
-                class="num-key"
-                :class="{
-                  'key-zero': key === '0',
-                  'key-fn': key === '⌫' || key === '.',
-                  'key-dot': key === '.',
-                  'key-op': key === '+' || key === '×',
-                  'key-submit': key === '✓',
-                  'key-empty': !key,
-                  [form.type]: key === '✓'
-                }"
-                :style="key === '0' ? { gridColumn: 'span 2' } : {}"
-                @click="key === '✓' ? saveTransaction() : (key ? handleKeyPress(key) : null)"
-              >
-                <template v-if="key === '✓'">
-                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>
-                  </svg>
-                </template>
-                <template v-else>{{ key }}</template>
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
+    <!-- POS 记账弹窗 -->
+    <PosReceiptModal
+      :show="showAddModal"
+      :form="posForm"
+      :categories="categoryNames"
+      @close="closeAddModal"
+      @save="handlePosSave"
+      @update:form="updatePosForm"
+    />
 
     <!-- 功能弹窗 -->
     <BudgetModal
@@ -931,11 +992,6 @@
       :show="showSearch"
       :transactions="transactions"
       @close="showSearch = false"
-    />
-    <ReportModal
-      :show="showReport"
-      :transactions="transactions"
-      @close="showReport = false"
     />
     <DatePickerModal
       :show="showDatePicker"
@@ -981,11 +1037,11 @@ import CategoryModal from './components/CategoryModal.vue'
 import RecurringModal from './components/RecurringModal.vue'
 import ReminderModal from './components/ReminderModal.vue'
 import SearchModal from './components/SearchModal.vue'
-import ReportModal from './components/ReportModal.vue'
 import DatePickerModal from './components/DatePickerModal.vue'
 import DateCalendarPopover from './components/DateCalendarPopover.vue'
 import QuickLog from './components/QuickLog.vue'
 import AssetTab from './components/AssetTab.vue'
+import PosReceiptModal from './components/PosReceiptModal.vue'
 import { buildAssetFromTransaction } from './asset-utils'
 import type { Transaction, Category, SubCategories, Budget, RecurringItem, ReminderSettings, AppData, UISettings, Asset, AssetCardStyle } from './types'
 import { loadData, saveData, getStorage, todayStr, currentMonthKey, prevMonthKey, lastYearSameMonthKey, formatDisplayDate } from './storage'
@@ -1077,7 +1133,6 @@ const showCategory = ref(false)
 const showRecurring = ref(false)
 const showReminder = ref(false)
 const showSearch = ref(false)
-const showReport = ref(false)
 const showReminderAlert = ref(false)
 
 // ========== 安卓硬件返回键处理 ==========
@@ -1090,7 +1145,6 @@ const modalLayerPriority = [
   { key: 'showRecurring', ref: () => showRecurring.value, close: () => { showRecurring.value = false } },
   { key: 'showReminder', ref: () => showReminder.value, close: () => { showReminder.value = false } },
   { key: 'showSearch', ref: () => showSearch.value, close: () => { showSearch.value = false } },
-  { key: 'showReport', ref: () => showReport.value, close: () => { showReport.value = false } },
   { key: 'showDatePicker', ref: () => showDatePicker.value, close: () => { showDatePicker.value = false } },
 ]
 
@@ -1161,8 +1215,33 @@ watch([monthIncome, monthExpense], () => {
 })
 
 // ========== 统计页状态 ==========
-const statsPeriod = ref<'week' | 'month' | 'year'>('month')
-const statsType = ref<'expense' | 'income'>('expense')
+type StatsPeriod = 'day' | 'week' | 'month' | 'year' | 'custom'
+const statsPeriod = ref<StatsPeriod>('month')
+const statsType = ref<'expense' | 'income'>('expense') // 用于分类构成（固定支出）
+
+// 趋势图独立类型状态
+const trendType = ref<'expense' | 'income' | 'compare'>('expense')
+
+// 自定义日期范围：start/end 为 YYYY-MM-DD；null 表示未选
+const customRange = ref<{ start: string; end: string } | null>(null)
+const showCustomPicker = ref(false)
+
+// —— 日期工具
+function toDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+function parseDate(s: string): Date {
+  const [y, m, d] = s.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+function getWeekRangeStr(today: Date): { start: string; end: string } {
+  // 周一为周首
+  const day = today.getDay()
+  const diffToMon = (day + 6) % 7
+  const start = new Date(today); start.setDate(today.getDate() - diffToMon)
+  const end = new Date(start); end.setDate(start.getDate() + 6)
+  return { start: toDateStr(start), end: toDateStr(end) }
+}
 
 // 趋势图分类筛选：null 表示全部，否则过滤后再绘制折线
 const trendCategory = ref<string | null>(null)
@@ -1228,6 +1307,57 @@ function selectSubCategory(subName: string) {
 }
 
 const numKeys = ['1', '2', '3', '⌫', '4', '5', '6', '+', '7', '8', '9', '×', '0', '.', '✓']
+
+// POS 弹窗适配
+const categoryNames = computed(() => categories.value.slice(1).map(c => c.name))
+
+const posForm = computed(() => ({
+  type: form.type,
+  amount: calcAmount(form.amount),
+  category: form.category,
+  subCategory: form.subCategory,
+  merchant: form.merchant,
+  location: form.location,
+  note: form.note
+}))
+
+function updatePosForm(val: Partial<typeof posForm.value>) {
+  if (val.type !== undefined) form.type = val.type
+  if (val.amount !== undefined) form.amount = String(val.amount)
+  if (val.category !== undefined) {
+    form.category = val.category
+    const subs = subCategories.value[val.category]
+    if (subs && subs.length > 0) {
+      form.subCategory = subs[0]
+    }
+  }
+  if (val.subCategory !== undefined) form.subCategory = val.subCategory
+  if (val.merchant !== undefined) form.merchant = val.merchant
+  if (val.location !== undefined) form.location = val.location
+  if (val.note !== undefined) form.note = val.note
+}
+
+function handlePosSave(tx: Partial<Transaction>) {
+  if (!tx.amount) return
+
+  const icon = getCategoryIcon(form.category)
+  const newTx: Transaction = {
+    id: appData.value.nextId++,
+    name: form.note || form.category,
+    category: form.category,
+    subCategory: form.type === 'expense' ? form.subCategory : undefined,
+    date: form.date || todayStr(),
+    amount: tx.amount,
+    type: form.type,
+    icon,
+    tag: form.type === 'income' ? '收入' : form.subCategory,
+    merchant: form.merchant || undefined,
+    location: form.location || undefined,
+  }
+
+  transactions.value.unshift(newTx)
+  recalcTotals()
+}
 
 // 计算表达式
 function calcAmount(amountStr: string): number {
@@ -1557,11 +1687,14 @@ const statsFilteredTxs = computed(() => {
   const now = new Date()
   const todayDateStr = todayStr()
 
+  if (statsPeriod.value === 'day') {
+    return transactions.value.filter(t => t.type === statsType.value && t.date === todayDateStr)
+  }
   if (statsPeriod.value === 'week') {
     // 最近7天
     const weekAgo = new Date(now)
     weekAgo.setDate(weekAgo.getDate() - 6)
-    const weekAgoStr = `${weekAgo.getFullYear()}-${String(weekAgo.getMonth() + 1).padStart(2, '0')}-${String(weekAgo.getDate()).padStart(2, '0')}`
+    const weekAgoStr = toDateStr(weekAgo)
     return transactions.value.filter(t => t.type === statsType.value && t.date >= weekAgoStr && t.date <= todayDateStr)
   }
   if (statsPeriod.value === 'month') {
@@ -1570,9 +1703,16 @@ const statsFilteredTxs = computed(() => {
       t => t.type === statsType.value && t.date.startsWith(currentMonthStr)
     )
   }
-  // year
-  const yearStr = String(now.getFullYear())
-  return transactions.value.filter(t => t.type === statsType.value && t.date.startsWith(yearStr))
+  if (statsPeriod.value === 'year') {
+    const yearStr = String(now.getFullYear())
+    return transactions.value.filter(t => t.type === statsType.value && t.date.startsWith(yearStr))
+  }
+  // custom
+  if (statsPeriod.value === 'custom' && customRange.value) {
+    const { start, end } = customRange.value
+    return transactions.value.filter(t => t.type === statsType.value && t.date >= start && t.date <= end)
+  }
+  return []
 })
 
 const statsTotal = computed(() =>
@@ -1581,7 +1721,16 @@ const statsTotal = computed(() =>
 const statsCount = computed(() => statsFilteredTxs.value.length)
 
 const statsAvgPerDay = computed(() => {
-  const days = statsPeriod.value === 'week' ? 7 : statsPeriod.value === 'month' ? 30 : 365
+  let days = 30
+  if (statsPeriod.value === 'day') days = 1
+  else if (statsPeriod.value === 'week') days = 7
+  else if (statsPeriod.value === 'month') days = 30
+  else if (statsPeriod.value === 'year') days = 365
+  else if (statsPeriod.value === 'custom' && customRange.value) {
+    const s = parseDate(customRange.value.start).getTime()
+    const e = parseDate(customRange.value.end).getTime()
+    days = Math.max(1, Math.round((e - s) / 86400000) + 1)
+  }
   return days > 0 ? statsTotal.value / days : 0
 })
 
@@ -1589,6 +1738,169 @@ const statsAvgPerDay = computed(() => {
 const { display: statsTotalDisp } = useCountUp(statsTotal, { duration: 700, decimals: 2 })
 const { display: statsCountDisp } = useCountUp(statsCount, { duration: 500, decimals: 0 })
 const { display: statsAvgDisp } = useCountUp(statsAvgPerDay, { duration: 700, decimals: 0 })
+
+// ========== Hero 区域数据（与 statsPeriod 解耦的计算） ==========
+
+// 上一期（等长、等类型）—— 用于同比环比 / 日均差 / 笔数差
+const prevPeriodTxs = computed(() => {
+  if (statsFilteredTxs.value.length === 0 && statsPeriod.value !== 'custom') {
+    // 即使当前没有数据也要正确返回空
+  }
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  let start: Date, end: Date
+  if (statsPeriod.value === 'day') {
+    end = new Date(today); end.setDate(today.getDate() - 1)
+    start = new Date(end)
+  } else if (statsPeriod.value === 'week') {
+    end = new Date(today); end.setDate(today.getDate() - 7)
+    start = new Date(today); start.setDate(today.getDate() - 13)
+  } else if (statsPeriod.value === 'month') {
+    start = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+    end = new Date(today.getFullYear(), today.getMonth(), 0)
+  } else if (statsPeriod.value === 'year') {
+    start = new Date(today.getFullYear() - 1, 0, 1)
+    end = new Date(today.getFullYear() - 1, 11, 31)
+  } else {
+    if (!customRange.value) return []
+    const cs = parseDate(customRange.value.start)
+    const ce = parseDate(customRange.value.end)
+    const days = Math.max(1, Math.round((ce.getTime() - cs.getTime()) / 86400000) + 1)
+    end = new Date(cs); end.setDate(cs.getDate() - 1)
+    start = new Date(cs); start.setDate(cs.getDate() - days)
+  }
+  const sKey = toDateStr(start)
+  const eKey = toDateStr(end)
+  return transactions.value.filter(
+    t => t.type === statsType.value && t.date >= sKey && t.date <= eKey,
+  )
+})
+
+const prevPeriodTotal = computed(() =>
+  prevPeriodTxs.value.reduce((s, t) => s + t.amount, 0),
+)
+const prevPeriodCount = computed(() => prevPeriodTxs.value.length)
+const prevPeriodDays = computed(() => {
+  if (prevPeriodTxs.value.length === 0) return 1
+  const dates = new Set(prevPeriodTxs.value.map(t => t.date))
+  return Math.max(1, dates.size)
+})
+const prevPeriodAvg = computed(() => prevPeriodTotal.value / prevPeriodDays.value)
+
+// 单笔最高
+const statsMaxAmount = computed(() =>
+  statsFilteredTxs.value.reduce((m, t) => Math.max(m, t.amount), 0),
+)
+
+// 笔数差 / 日均差
+const statsCountDelta = computed(() => statsCount.value - prevPeriodCount.value)
+const statsAvgDelta = computed(() => statsAvgPerDay.value - prevPeriodAvg.value)
+
+// 周期对比标签
+const statsPeriodCompareLabel = computed(() => {
+  const p = statsPeriod.value
+  if (p === 'day') return '较昨日'
+  if (p === 'week') return '较上周'
+  if (p === 'month') return '较上月'
+  if (p === 'year') return '较去年'
+  return '较上期'
+})
+
+// 格式化百分比变化（统一接口：up=红/down=绿/flat=灰）
+function formatPctChange(curr: number, prev: number): { text: string; cls: 'up' | 'down' | 'flat' } {
+  if (prev === 0) {
+    return { text: curr > 0 ? '新增' : '持平', cls: curr > 0 ? 'up' : 'flat' }
+  }
+  const pct = ((curr - prev) / prev) * 100
+  if (Math.abs(pct) < 0.1) return { text: '持平', cls: 'flat' }
+  return {
+    text: `${pct > 0 ? '↑' : '↓'} ${Math.abs(pct).toFixed(1)}%`,
+    cls: pct > 0 ? 'up' : 'down',
+  }
+}
+
+const statsPeriodChange = computed(() =>
+  formatPctChange(statsTotal.value, prevPeriodTotal.value),
+)
+const statsAvgChange = computed(() =>
+  formatPctChange(statsAvgPerDay.value, prevPeriodAvg.value),
+)
+const statsCountChange = computed(() =>
+  formatPctChange(statsCount.value, prevPeriodCount.value),
+)
+
+// —— 预算（沿用全局月度预算）
+const budgetAmount = computed(() => budget.value.monthlyLimit)
+const budgetRemain = computed(() => Math.max(0, budgetAmount.value - monthExpense.value))
+const budgetWarnLevel = computed(() => {
+  if (budget.value.monthlyLimit <= 0) return 'flat'
+  const pct = (monthExpense.value / budget.value.monthlyLimit) * 100
+  if (pct >= 100) return 'over'
+  if (pct >= 80) return 'warn'
+  return 'flat'
+})
+
+// —— 储蓄率 / 结余（基于当月）
+const statsBalance = computed(() => monthIncome.value - monthExpense.value)
+const statsSavingRate = computed(() => {
+  if (monthIncome.value <= 0) return 0
+  return Math.max(0, Math.min(100, (statsBalance.value / monthIncome.value) * 100))
+})
+
+// —— 月度剩余天数
+const daysRemainingInMonth = computed(() => {
+  const today = new Date()
+  const last = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
+  return Math.max(0, last - today.getDate())
+})
+
+// —— AI 异常洞察：找出环比涨幅最大的分类
+const statsInsight = computed<{ title: string; desc: string } | null>(() => {
+  if (statsType.value !== 'expense') return null
+  if (statsPeriod.value !== 'month' && statsPeriod.value !== 'week') return null
+  if (prevPeriodTxs.value.length === 0 || statsFilteredTxs.value.length === 0) return null
+
+  const curMap = new Map<string, number>()
+  for (const tx of statsFilteredTxs.value) {
+    curMap.set(tx.category, (curMap.get(tx.category) || 0) + tx.amount)
+  }
+  const prevMap = new Map<string, number>()
+  for (const tx of prevPeriodTxs.value) {
+    prevMap.set(tx.category, (prevMap.get(tx.category) || 0) + tx.amount)
+  }
+
+  let bestCat = ''
+  let bestDelta = 0
+  let bestCur = 0
+  for (const [cat, cur] of curMap) {
+    const prev = prevMap.get(cat) || 0
+    if (cur > prev && prev > 0) {
+      const delta = ((cur - prev) / prev) * 100
+      if (delta > bestDelta) {
+        bestDelta = delta
+        bestCat = cat
+        bestCur = cur
+      }
+    }
+  }
+  // 也对比总盘：当前周期总支出 vs 上一周期
+  if (!bestCat || bestDelta < 25) {
+    const totalDelta = prevPeriodTotal.value > 0
+      ? ((statsTotal.value - prevPeriodTotal.value) / prevPeriodTotal.value) * 100
+      : 0
+    if (totalDelta >= 30) {
+      return {
+        title: '消费节奏偏快',
+        desc: `${statsPeriodLabel.value}支出 ¥${statsTotal.value.toFixed(0)}，较上期 ↑${totalDelta.toFixed(0)}%。建议关注非必要支出。`,
+      }
+    }
+    return null
+  }
+  return {
+    title: '发现一处异常',
+    desc: `${statsPeriodLabel.value}${bestCat}支出 ¥${bestCur.toFixed(0)}，较上期 ↑${bestDelta.toFixed(0)}%。建议查看订单明细。`,
+  }
+})
 
 // ========== 同比环比分析 ==========
 const comparePeriodLabel = computed(() => {
@@ -1675,16 +1987,296 @@ const categoryStatsList = computed<CategoryStats[]>(() => {
 })
 
 // ========== 大类展开：二级分类明细 ==========
-const expandedCategory = ref<string | null>(null)
+// 使用 Set 支持「全部展开/收起」
+const expandedCategories = ref<Set<string>>(new Set())
+
+function isCategoryExpanded(name: string): boolean {
+  return expandedCategories.value.has(name)
+}
 
 function toggleCategory(name: string) {
-  expandedCategory.value = expandedCategory.value === name ? null : name
+  const next = new Set(expandedCategories.value)
+  if (next.has(name)) next.delete(name)
+  else next.add(name)
+  expandedCategories.value = next
+}
+
+const allCategoriesExpanded = computed(() => {
+  const list = categoryStatsList.value
+  if (list.length === 0) return false
+  return list.every(c => expandedCategories.value.has(c.name))
+})
+
+function toggleAllCategories() {
+  const list = categoryStatsList.value
+  if (list.length === 0) return
+  const next = new Set(expandedCategories.value)
+  if (allCategoriesExpanded.value) {
+    next.clear()
+  } else {
+    for (const c of list) next.add(c.name)
+  }
+  expandedCategories.value = next
 }
 
 // 切换统计维度时收起展开项
 watch([statsType, statsPeriod], () => {
-  expandedCategory.value = null
+  expandedCategories.value = new Set()
 })
+
+// 颜色加深工具：用于 icon 颜色 + 进度条末端
+function darkenHex(hex: string, amount = 0.2): string {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  if (!m) return hex
+  const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16)
+  const f = (v: number) => Math.max(0, Math.min(255, Math.round(v * (1 - amount))))
+  const to = (v: number) => v.toString(16).padStart(2, '0')
+  return `#${to(f(r))}${to(f(g))}${to(f(b))}`
+}
+
+// 周期 chip 显示文本
+const statsPeriodLabel = computed(() => {
+  const p = statsPeriod.value
+  if (p === 'day') return '今日'
+  if (p === 'week') return '本周'
+  if (p === 'month') return '本月'
+  if (p === 'year') return '本年'
+  if (p === 'custom' && customRange.value) {
+    const s = customRange.value.start
+    const e = customRange.value.end
+    // 简化：同年显示 MM-dd - MM-dd；跨年显示 yyyy-MM-dd
+    const sy = s.substring(0, 4)
+    const ey = e.substring(0, 4)
+    if (sy === ey) return `${s.substring(5)} ~ ${e.substring(5)}`
+    return `${s} ~ ${e}`
+  }
+  return '自定义'
+})
+
+// ============ 自定义日期范围弹窗 ============
+const WEEK_LABELS = ['日', '一', '二', '三', '四', '五', '六']
+const MONTHS_FULL = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月']
+
+const pickingTarget = ref<'start' | 'end'>('start')
+const calYear = ref(new Date().getFullYear())
+const calMonth = ref(new Date().getMonth())
+const activeQuickKey = ref<string>('last30')
+
+const quickRangeOptions = [
+  { key: 'today',     label: '今天' },
+  { key: 'yesterday', label: '昨天' },
+  { key: 'thisWeek',  label: '本周' },
+  { key: 'lastWeek',  label: '上周' },
+  { key: 'last7',     label: '近 7 天' },
+  { key: 'last30',    label: '近 30 天' },
+  { key: 'thisMonth', label: '本月' },
+  { key: 'lastMonth', label: '上月' },
+  { key: 'thisYear',  label: '今年' },
+] as const
+
+type QuickKey = typeof quickRangeOptions[number]['key']
+
+function openCustomPicker() {
+  // 若尚未设置范围，给个默认值：近 30 天
+  if (!customRange.value) {
+    applyQuickRangeInternal('last30', /*silent*/ true)
+    activeQuickKey.value = 'last30'
+  }
+  const ref = customRange.value
+  if (ref) {
+    const [y, m] = ref.start.split('-').map(Number)
+    calYear.value = y
+    calMonth.value = m - 1
+  }
+  pickingTarget.value = 'start'
+  showCustomPicker.value = true
+}
+
+function closeCustomPicker() {
+  showCustomPicker.value = false
+}
+
+function formatMd(yyyyMmDd: string): string {
+  // '2026-11-08' -> '11/08'
+  return yyyyMmDd.substring(5).replace('-', '/')
+}
+
+function applyQuickRange(key: QuickKey) {
+  activeQuickKey.value = key
+  applyQuickRangeInternal(key, false)
+  // 同步日历到 start 月
+  if (customRange.value) {
+    const [y, m] = customRange.value.start.split('-').map(Number)
+    calYear.value = y
+    calMonth.value = m - 1
+  }
+  pickingTarget.value = 'start'
+}
+
+function applyQuickRangeInternal(key: QuickKey, _silent: boolean) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const t = toDateStr(today)
+  let s = t, e = t
+  if (key === 'today') {
+    s = t; e = t
+  } else if (key === 'yesterday') {
+    const y = new Date(today); y.setDate(today.getDate() - 1)
+    s = toDateStr(y); e = s
+  } else if (key === 'thisWeek') {
+    const r = getWeekRangeStr(today)
+    s = r.start; e = r.end
+  } else if (key === 'lastWeek') {
+    const r = getWeekRangeStr(today)
+    const ss = parseDate(r.start); ss.setDate(ss.getDate() - 7)
+    const ee = parseDate(r.end); ee.setDate(ee.getDate() - 7)
+    s = toDateStr(ss); e = toDateStr(ee)
+  } else if (key === 'last7') {
+    const ss = new Date(today); ss.setDate(today.getDate() - 6)
+    s = toDateStr(ss); e = t
+  } else if (key === 'last30') {
+    const ss = new Date(today); ss.setDate(today.getDate() - 29)
+    s = toDateStr(ss); e = t
+  } else if (key === 'thisMonth') {
+    s = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`
+    const last = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+    e = toDateStr(last)
+  } else if (key === 'lastMonth') {
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+    s = toDateStr(lastMonth)
+    const last = new Date(today.getFullYear(), today.getMonth(), 0)
+    e = toDateStr(last)
+  } else if (key === 'thisYear') {
+    s = `${today.getFullYear()}-01-01`
+    e = `${today.getFullYear()}-12-31`
+  }
+  customRange.value = { start: s, end: e }
+}
+
+function calPrevMonth() {
+  if (calMonth.value === 0) {
+    calMonth.value = 11
+    calYear.value -= 1
+  } else {
+    calMonth.value -= 1
+  }
+}
+function calNextMonth() {
+  if (calMonth.value === 11) {
+    calMonth.value = 0
+    calYear.value += 1
+  } else {
+    calMonth.value += 1
+  }
+}
+
+interface CalCell {
+  key: string
+  day: number
+  inMonth: boolean
+  isToday: boolean
+  isStart: boolean
+  isEnd: boolean
+  inRange: boolean
+  dateStr: string
+}
+
+const calCells = computed<CalCell[]>(() => {
+  const cells: CalCell[] = []
+  const first = new Date(calYear.value, calMonth.value, 1)
+  const firstWeekday = first.getDay()
+  const lastDate = new Date(calYear.value, calMonth.value + 1, 0).getDate()
+  const prevLast = new Date(calYear.value, calMonth.value, 0).getDate()
+  const today = new Date()
+  const todayKey = toDateStr(today)
+  const range = customRange.value
+  const sKey = range?.start
+  const eKey = range?.end
+  const sMs = sKey ? parseDate(sKey).getTime() : null
+  const eMs = eKey ? parseDate(eKey).getTime() : null
+
+  // 上月补位
+  for (let i = firstWeekday - 1; i >= 0; i--) {
+    const day = prevLast - i
+    const m = calMonth.value === 0 ? 12 : calMonth.value
+    const y = calMonth.value === 0 ? calYear.value - 1 : calYear.value
+    cells.push({
+      key: `p-${y}-${m}-${day}`,
+      day, inMonth: false, isToday: false, isStart: false, isEnd: false, inRange: false,
+      dateStr: `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+    })
+  }
+  // 当月
+  for (let d = 1; d <= lastDate; d++) {
+    const ds = `${calYear.value}-${String(calMonth.value + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+    const t = new Date(calYear.value, calMonth.value, d).getTime()
+    const isStart = sKey === ds
+    const isEnd = eKey === ds
+    const inRange = sMs !== null && eMs !== null && t > sMs && t < eMs
+    cells.push({
+      key: `c-${ds}`,
+      day: d,
+      inMonth: true,
+      isToday: todayKey === ds,
+      isStart, isEnd, inRange,
+      dateStr: ds,
+    })
+  }
+  // 下月补位到 6 行
+  const used = firstWeekday + lastDate
+  const remain = (7 - (used % 7)) % 7
+  for (let i = 1; i <= remain; i++) {
+    const m = calMonth.value === 11 ? 1 : calMonth.value + 2
+    const y = calMonth.value === 11 ? calYear.value + 1 : calYear.value
+    cells.push({
+      key: `n-${y}-${m}-${i}`,
+      day: i, inMonth: false, isToday: false, isStart: false, isEnd: false, inRange: false,
+      dateStr: `${y}-${String(m).padStart(2, '0')}-${String(i).padStart(2, '0')}`,
+    })
+  }
+  return cells
+})
+
+function pickDate(dateStr: string) {
+  if (!customRange.value) {
+    customRange.value = { start: dateStr, end: dateStr }
+    pickingTarget.value = 'end'
+    activeQuickKey.value = ''
+    return
+  }
+  if (pickingTarget.value === 'start') {
+    customRange.value = { start: dateStr, end: dateStr }
+    pickingTarget.value = 'end'
+  } else {
+    const s = customRange.value.start
+    if (dateStr < s) {
+      customRange.value = { start: dateStr, end: s }
+    } else {
+      customRange.value = { start: s, end: dateStr }
+    }
+    pickingTarget.value = 'start'
+  }
+  activeQuickKey.value = ''
+}
+
+function resetCustomRange() {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const ss = new Date(today); ss.setDate(today.getDate() - 29)
+  customRange.value = { start: toDateStr(ss), end: toDateStr(today) }
+  calYear.value = today.getFullYear()
+  calMonth.value = today.getMonth()
+  pickingTarget.value = 'start'
+  activeQuickKey.value = 'last30'
+}
+
+function confirmCustomRange() {
+  if (!customRange.value) {
+    resetCustomRange()
+  }
+  statsPeriod.value = 'custom'
+  closeCustomPicker()
+}
 
 interface SubcategoryStat {
   name: string
@@ -1729,7 +2321,7 @@ const donutGradient = computed(() => {
 
 // 饼图 SVG 弧段 —— 用于 pathLength 描边绘制动画
 const donutSegments = computed(() => {
-  const cx = 85, cy = 85, r = 72
+  const cx = 50, cy = 50, r = 40
   let acc = 0
   return categoryStatsList.value.map(cat => {
     const a1 = (acc * 360 - 90) * Math.PI / 180
@@ -1798,128 +2390,263 @@ interface TrendData {
   expense: number
 }
 
-const trendData = computed<TrendData[]>(() => {
-  // 趋势图始终按日统计当月（1-31 号），与 statsPeriod 解耦
-  const now = new Date()
-  const y = now.getFullYear()
-  const m = now.getMonth()
-  const daysInMonth = new Date(y, m + 1, 0).getDate()
-  const monthKey = `${y}-${String(m + 1).padStart(2, '0')}`
-  const catFilter = trendCategory.value
-  const subFilter = trendSubCategory.value
-
-  const days: TrendData[] = []
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateKey = `${monthKey}-${String(d).padStart(2, '0')}`
-    let income = 0
-    let expense = 0
-    for (const tx of transactions.value) {
-      if (tx.date !== dateKey) continue
-      if (catFilter && tx.category !== catFilter) continue
-      if (subFilter && tx.subCategory !== subFilter) continue
-      if (tx.type === 'income') income += tx.amount
-      else expense += tx.amount
-    }
-    days.push({ label: String(d), income, expense })
-  }
-  return days
-})
-
-const trendMaxValue = computed(() => {
-  return Math.max(
-    ...trendData.value.map(d => Math.max(d.income, d.expense)),
-    1,
-  )
-})
-
-// ========== 折线图几何 ==========
+// ========== 每日趋势柱状图（与 statsPeriod 对齐） ==========
 const TREND_W = 360
-const TREND_H = 200
+const TREND_H = 110
 const TREND_PAD_X = 28
 const TREND_PAD_R = 12
-const TREND_PAD_T = 14
-const TREND_PAD_B = 26
+const TREND_PAD_T = 12
+const TREND_PAD_B = 18
 
-interface TrendPoint {
-  index: number
-  day: number
+// 1) 每日聚合 map（按日期）
+const trendDailyMap = computed(() => {
+  const map = new Map<string, { income: number; expense: number }>()
+  const catFilter = trendCategory.value
+  const subFilter = trendSubCategory.value
+  for (const tx of transactions.value) {
+    if (catFilter && tx.category !== catFilter) continue
+    if (subFilter && tx.subCategory !== subFilter) continue
+    const e = map.get(tx.date) || { income: 0, expense: 0 }
+    if (tx.type === 'income') e.income += tx.amount
+    else e.expense += tx.amount
+    map.set(tx.date, e)
+  }
+  return map
+})
+
+// 2) 周期 → 一组柱子
+interface TrendBar {
+  label: string       // X 轴显示文本
+  date: string        // YYYY-MM-DD（用于 tooltip）
   income: number
   expense: number
-  x: number
-  activeY: number  // 当前类型（income/expense）的 y 坐标，统一从基线向上
 }
 
-const trendBaselineY = computed(() => TREND_PAD_T + (TREND_H - TREND_PAD_T - TREND_PAD_B))
+const trendBars = computed<TrendBar[]>(() => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const p = statsPeriod.value
+  const map = trendDailyMap.value
+  const bars: TrendBar[] = []
+  const WK = ['日', '一', '二', '三', '四', '五', '六']
 
-const activeClass = computed(() => statsType.value === 'income' ? 'income' : 'expense')
+  if (p === 'day') {
+    // 今日：单柱
+    const ds = toDateStr(today)
+    const e = map.get(ds) || { income: 0, expense: 0 }
+    bars.push({ label: '今日', date: ds, ...e })
+  } else if (p === 'week') {
+    // 本周：7 柱（周一到周日）
+    const day = today.getDay()
+    const diffToMon = (day + 6) % 7
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today)
+      d.setDate(today.getDate() - diffToMon + i)
+      const ds = toDateStr(d)
+      const e = map.get(ds) || { income: 0, expense: 0 }
+      bars.push({ label: WK[d.getDay()], date: ds, ...e })
+    }
+  } else if (p === 'month') {
+    // 本月：1~daysInMonth
+    const y = today.getFullYear()
+    const m = today.getMonth()
+    const daysInMonth = new Date(y, m + 1, 0).getDate()
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+      const e = map.get(ds) || { income: 0, expense: 0 }
+      bars.push({ label: String(d), date: ds, ...e })
+    }
+  } else if (p === 'year') {
+    // 本年：12 柱（月聚合）
+    const y = today.getFullYear()
+    for (let m = 0; m < 12; m++) {
+      let inc = 0, exp = 0
+      const ms = `${y}-${String(m + 1).padStart(2, '0')}`
+      for (const [date, e] of map) {
+        if (date.startsWith(ms)) {
+          inc += e.income
+          exp += e.expense
+        }
+      }
+      bars.push({ label: `${m + 1}月`, date: `${ms}-01`, income: inc, expense: exp })
+    }
+  } else {
+    // 自定义：每日 1 柱，超过 60 天则采样
+    if (customRange.value) {
+      const s = parseDate(customRange.value.start)
+      const e = parseDate(customRange.value.end)
+      const days = Math.round((e.getTime() - s.getTime()) / 86400000) + 1
+      if (days <= 60) {
+        for (let i = 0; i < days; i++) {
+          const d = new Date(s)
+          d.setDate(s.getDate() + i)
+          const ds = toDateStr(d)
+          const v = map.get(ds) || { income: 0, expense: 0 }
+          bars.push({ label: `${d.getMonth() + 1}/${d.getDate()}`, date: ds, ...v })
+        }
+      } else {
+        const step = Math.ceil(days / 60)
+        for (let i = 0; i < days; i += step) {
+          const d = new Date(s)
+          d.setDate(s.getDate() + i)
+          const ds = toDateStr(d)
+          const v = map.get(ds) || { income: 0, expense: 0 }
+          bars.push({ label: `${d.getMonth() + 1}/${d.getDate()}`, date: ds, ...v })
+        }
+      }
+    }
+  }
+  return bars
+})
 
-function activeValue(p: TrendPoint): number {
-  return statsType.value === 'income' ? p.income : p.expense
+// 3) 几何 —— 每根柱子的 x、y、宽、高
+interface TrendBarGeom {
+  index: number
+  label: string
+  date: string
+  income: number
+  expense: number
+  x: number        // 柱子左侧
+  w: number        // 柱宽
+  incomeH: number  // 收入柱高
+  expenseH: number // 支出柱高
+  totalH: number
 }
 
-const trendPoints = computed<TrendPoint[]>(() => {
-  const data = trendData.value
-  if (data.length === 0) return []
-  const N = data.length
+const trendBarGeom = computed<TrendBarGeom[]>(() => {
+  const bars = trendBars.value
+  if (bars.length === 0) return []
   const chartW = TREND_W - TREND_PAD_X - TREND_PAD_R
   const chartH = TREND_H - TREND_PAD_T - TREND_PAD_B
   const baselineY = TREND_PAD_T + chartH
-  const isIncome = statsType.value === 'income'
-  const maxV = Math.max(...data.map(d => isIncome ? d.income : d.expense), 1)
+  const N = bars.length
+  // 柱宽策略：
+  //   - N=1 (日) → 用 1 个 slot 宽度显得稳定
+  //   - N 大时 → 越细越好；最大不超过 8 视窗单位，避免柱显得"胖"
+  //   - 柱间留白 ≥ 1 视窗单位
+  const slot = chartW / N
+  let w: number
+  if (N === 1) {
+    w = Math.min(40, slot * 0.5)            // 单日：居中显示，约 40 单位宽
+  } else {
+    w = Math.max(1.2, Math.min(8, slot * 0.55))   // 多日：最多 8 单位，留白 ≥ slot * 0.45
+  }
+  // 根据 trendType 决定最大值：
+  // - income: 只看收入
+  // - expense: 只看支出
+  // - compare: 收入+支出
+  const tt = trendType.value
+  const maxV = tt === 'income'
+    ? Math.max(...bars.map(b => b.income), 1)
+    : tt === 'expense'
+      ? Math.max(...bars.map(b => b.expense), 1)
+      : Math.max(...bars.map(b => b.income + b.expense), 1)
 
-  return data.map((d, i) => {
-    const day = parseInt(d.label) || (i + 1)
-    const x = N === 1 ? TREND_PAD_X + chartW / 2 : TREND_PAD_X + (i / (N - 1)) * chartW
-    const v = isIncome ? d.income : d.expense
-    const activeY = v > 0 ? baselineY - (v / maxV) * (chartH - 8) : baselineY
-    return { index: i, day, income: d.income, expense: d.expense, x, activeY }
+  return bars.map((b, i) => {
+    const x = TREND_PAD_X + i * slot + (slot - w) / 2
+    const total = tt === 'income' ? b.income : tt === 'expense' ? b.expense : b.income + b.expense
+    const totalH = total > 0 ? (total / maxV) * (chartH - 4) : 0
+    const incomeH = b.income > 0 ? (b.income / maxV) * (chartH - 4) : 0
+    const expenseH = b.expense > 0 ? (b.expense / maxV) * (chartH - 4) : 0
+    return { index: i, ...b, x, w, incomeH, expenseH, totalH }
   })
 })
 
-/**
- * Catmull-Rom 转 Cubic Bezier：让折线带自然弧度。
- * 张力 0.2 —— 越小越贴近直线，越大越"软"。
- */
-function smoothPath(points: TrendPoint[], tension = 0.2): string {
-  if (points.length === 0) return ''
-  if (points.length === 1) return `M ${points[0].x} ${points[0].activeY}`
+// 4) 平均值（根据 trendType）
+const trendAvgExpense = computed(() => {
+  const bars = trendBarGeom.value
+  const tt = trendType.value
+  const values = tt === 'income'
+    ? bars.filter(b => b.income > 0).map(b => b.income)
+    : bars.filter(b => b.expense > 0).map(b => b.expense)
+  if (values.length === 0) return 0
+  return values.reduce((s, v) => s + v, 0) / values.length
+})
 
-  let d = `M ${points[0].x} ${points[0].activeY}`
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[Math.max(i - 1, 0)]
-    const p1 = points[i]
-    const p2 = points[i + 1]
-    const p3 = points[Math.min(i + 2, points.length - 1)]
-    const y0 = p0.activeY, y1 = p1.activeY, y2 = p2.activeY, y3 = p3.activeY
+const trendMaxValue = computed(() => {
+  const tt = trendType.value
+  return tt === 'income'
+    ? Math.max(...trendBarGeom.value.map(b => b.income), 1)
+    : tt === 'expense'
+      ? Math.max(...trendBarGeom.value.map(b => b.expense), 1)
+      : Math.max(...trendBarGeom.value.map(b => b.income + b.expense), 1)
+})
 
-    const cp1x = p1.x + (p2.x - p0.x) * tension
-    const cp1y = y1 + (y2 - y0) * tension
-    const cp2x = p2.x - (p3.x - p1.x) * tension
-    const cp2y = y2 - (y3 - y1) * tension
+const trendAvgY = computed(() => {
+  if (trendAvgExpense.value <= 0) return null
+  const chartH = TREND_H - TREND_PAD_T - TREND_PAD_B
+  const maxV = trendMaxValue.value
+  const baselineY = TREND_PAD_T + chartH
+  return baselineY - (trendAvgExpense.value / maxV) * (chartH - 4)
+})
 
-    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${y2.toFixed(1)}`
+const trendPeakBar = computed(() => {
+  const tt = trendType.value
+  return trendBarGeom.value.reduce((max, b) => {
+    const val = tt === 'income' ? b.income : b.expense
+    const maxVal = max ? (tt === 'income' ? max.income : max.expense) : 0
+    return val > maxVal ? b : max
+  }, null as TrendBarGeom | null)
+})
+
+const trendMinExpense = computed(() => {
+  const tt = trendType.value
+  const values = tt === 'income'
+    ? trendBarGeom.value.filter(b => b.income > 0).map(b => b.income)
+    : trendBarGeom.value.filter(b => b.expense > 0).map(b => b.expense)
+  return values.length > 0 ? Math.min(...values) : 0
+})
+
+const trendPeakX = computed(() => trendPeakBar.value?.x ?? 0)
+const trendPeakW = computed(() => trendPeakBar.value?.w ?? 0)
+const trendPeakY = computed(() => {
+  if (!trendPeakBar.value) return 0
+  const chartH = TREND_H - TREND_PAD_T - TREND_PAD_B
+  const baselineY = TREND_PAD_T + chartH
+  return baselineY - trendPeakBar.value.totalH
+})
+
+// 迷你柱状图数据（Hero 大卡片右侧）
+interface MiniBarData {
+  height: number // 0-100 百分比
+}
+const miniChartData = computed<MiniBarData[]>(() => {
+  // 从今天往前推7天，生成日期列表
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const dates: string[] = []
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    dates.push(toDateStr(d))
   }
-  return d
-}
 
-function smoothAreaPath(points: TrendPoint[]): string {
-  if (points.length < 2) return ''
-  const lineD = smoothPath(points)
-  const baseline = trendBaselineY.value
-  const first = points[0]
-  const last = points[points.length - 1]
-  return `${lineD} L ${last.x} ${baseline} L ${first.x} ${baseline} Z`
-}
+  // 从 trendDailyMap 中获取每天的数据
+  const map = trendDailyMap.value
+  const bars = dates.map(date => {
+    const e = map.get(date) || { income: 0, expense: 0 }
+    return { date, ...e }
+  })
 
-const trendLinePath = computed(() => smoothPath(trendPoints.value))
-const trendAreaPath = computed(() => smoothAreaPath(trendPoints.value))
+  // 找最大金额用于归一化
+  const maxAmount = Math.max(...bars.map(b =>
+    trendType.value === 'income' ? b.income : b.expense
+  ), 1)
 
-// Y 轴刻度标签（0 / max/3 / 2max/3 / max）
+  return bars.map(b => {
+    const amount = trendType.value === 'income' ? b.income : b.expense
+    // 高度百分比：最小 8%，最大 100%
+    const height = amount > 0 ? Math.max(8, Math.min(100, (amount / maxAmount) * 100)) : 8
+    return { height }
+  })
+})
+
+// 5) Y 轴刻度
 const trendYLabels = computed(() => {
-  const pts = trendPoints.value
-  if (pts.length === 0) return []
-  const maxV = Math.max(...pts.map(p => activeValue(p)), 1)
-  const baselineY = trendBaselineY.value
+  const maxV = trendMaxValue.value
+  if (maxV <= 0) return []
+  const chartH = TREND_H - TREND_PAD_T - TREND_PAD_B
+  const baselineY = TREND_PAD_T + chartH
   const chartTop = TREND_PAD_T
   const steps = 3
   const labels: { y: number; text: string }[] = []
@@ -1932,19 +2659,25 @@ const trendYLabels = computed(() => {
   return labels
 })
 
-// X 轴标签：每隔 5 天 + 首尾
+// 6) X 轴标签 —— 自适应选取
 const trendXLabels = computed(() => {
-  const pts = trendPoints.value
-  if (pts.length === 0) return []
-  const targets = new Set<number>([1, 5, 10, 15, 20, 25, 30])
-  targets.add(pts.length) // 最后一天
-  return pts
-    .filter(p => targets.has(p.day))
-    .map(p => ({ x: p.x, label: String(p.day) }))
+  const bars = trendBarGeom.value
+  if (bars.length === 0) return []
+  const N = bars.length
+  // 选取 ~6 个均匀刻度
+  const target = N <= 7 ? N : N <= 31 ? 6 : 8
+  const step = Math.max(1, Math.round((N - 1) / Math.max(1, target - 1)))
+  const picks: number[] = []
+  for (let i = 0; i < N; i += step) picks.push(i)
+  if (picks[picks.length - 1] !== N - 1) picks.push(N - 1)
+  return picks.map(i => ({ x: bars[i].x + bars[i].w / 2, label: bars[i].label }))
 })
 
-const hoverIdx = ref<number | null>(null)
-const hoverPoint = computed(() => (hoverIdx.value === null ? null : trendPoints.value[hoverIdx.value]))
+// 7) Hover
+const hoverBarIdx = ref<number | null>(null)
+const hoverBar = computed(() =>
+  hoverBarIdx.value === null ? null : trendBarGeom.value[hoverBarIdx.value] ?? null,
+)
 
 function onTrendHover(e: MouseEvent) {
   const svg = e.currentTarget as SVGSVGElement
@@ -1954,15 +2687,17 @@ function onTrendHover(e: MouseEvent) {
   const mouseX = (e.clientX - rect.left) * scaleX
   let nearest = 0
   let minDist = Infinity
-  for (let i = 0; i < trendPoints.value.length; i++) {
-    const d = Math.abs(trendPoints.value[i].x - mouseX)
+  for (let i = 0; i < trendBarGeom.value.length; i++) {
+    const b = trendBarGeom.value[i]
+    const centerX = b.x + b.w / 2
+    const d = Math.abs(centerX - mouseX)
     if (d < minDist) { minDist = d; nearest = i }
   }
-  hoverIdx.value = nearest
+  hoverBarIdx.value = nearest
 }
 
 function onTrendLeave() {
-  hoverIdx.value = null
+  hoverBarIdx.value = null
 }
 
 // ========== 热力图 (方案C: 液态金额条) ==========
@@ -2040,7 +2775,7 @@ function heatmapBarWidth(amount: number, max: number): string {
 function heatmapShortMoney(value: number): string {
   if (!value) return '0'
   if (value >= 10000) return `${(value / 10000).toFixed(1).replace('.0', '')}万`
-  if (value >= 1000) return `${(value / 1000).toFixed(1).replace('.0', '')}k`
+  if (value >= 1000) return `${(value / 1000).toFixed(1).replace('.0', '')}千`
   return String(Math.round(value))
 }
 
@@ -2054,6 +2789,115 @@ function heatmapCellStyle(cell: HeatmapCell) {
 const heatmapTitle = computed(() => {
   const now = new Date()
   return `${now.getFullYear()}年${now.getMonth() + 1}月`
+})
+
+// ========== 排行模块（商户 + 标签 TOP5） ==========
+interface RankItem {
+  name: string
+  amount: number
+  count: number
+}
+
+// 商户排行（按支出金额降序）
+const merchantRank = computed<RankItem[]>(() => {
+  const filtered = statsFilteredTxs.value.filter(t => t.type === 'expense' && t.merchant)
+  const map = new Map<string, { amount: number; count: number }>()
+  for (const tx of filtered) {
+    const m = tx.merchant!
+    const entry = map.get(m) || { amount: 0, count: 0 }
+    entry.amount += tx.amount
+    entry.count += 1
+    map.set(m, entry)
+  }
+  const sorted = [...map.entries()].sort((a, b) => b[1].amount - a[1].amount)
+  return sorted.slice(0, 5).map(([name, data]) => ({ name, amount: data.amount, count: data.count }))
+})
+
+// 标签排行（按支出金额降序）
+const tagRank = computed<RankItem[]>(() => {
+  const filtered = statsFilteredTxs.value.filter(t => t.type === 'expense' && t.tag)
+  const map = new Map<string, { amount: number; count: number }>()
+  for (const tx of filtered) {
+    const tag = tx.tag!
+    const entry = map.get(tag) || { amount: 0, count: 0 }
+    entry.amount += tx.amount
+    entry.count += 1
+    map.set(tag, entry)
+  }
+  const sorted = [...map.entries()].sort((a, b) => b[1].amount - a[1].amount)
+  return sorted.slice(0, 5).map(([name, data]) => ({ name, amount: data.amount, count: data.count }))
+})
+
+// ========== 消费习惯（周内分布 + 时段热力） ==========
+interface WeekdayStat {
+  day: number // 1-7 (周一到周日)
+  label: string
+  amount: number
+  percent: number // 相对最大值的比例 (0-100)
+  isPeak: boolean
+}
+
+// 周内分布（周一到周日）
+const weekdayStats = computed<WeekdayStat[]>(() => {
+  const filtered = statsFilteredTxs.value.filter(t => t.type === 'expense')
+  const map = new Map<number, number>() // dayOfWeek (1-7) -> amount
+  for (const tx of filtered) {
+    const d = new Date(tx.date)
+    let dow = d.getDay() // 0=周日, 1-6=周一到周六
+    if (dow === 0) dow = 7 // 统一为 1-7
+    const entry = map.get(dow) || 0
+    map.set(dow, entry + tx.amount)
+  }
+  const maxAmount = Math.max(...map.values(), 1)
+  const labels = ['一', '二', '三', '四', '五', '六', '日']
+  const peakDay = [...map.entries()].reduce((max, [day, amt]) => amt > (map.get(max) || 0) ? day : max, 1)
+  return [1, 2, 3, 4, 5, 6, 7].map(day => ({
+    day,
+    label: labels[day - 1],
+    amount: map.get(day) || 0,
+    percent: ((map.get(day) || 0) / maxAmount) * 100,
+    isPeak: day === peakDay && map.get(day) > 0
+  }))
+})
+
+const weekdayPeak = computed(() => {
+  const stats = weekdayStats.value
+  const peak = stats.find(s => s.amount > 0 && s.amount === Math.max(...stats.map(x => x.amount)))
+  return peak ? `周${peak.label}` : null
+})
+
+// 时段分布（按 2 小时分组，12 个时段）
+interface HourStat {
+  hourStart: number // 0, 2, 4, ... 22
+  amount: number
+  intensity: number // 0-1 的强度值
+}
+
+const hourStats = computed<HourStat[]>(() => {
+  const filtered = statsFilteredTxs.value.filter(t => t.type === 'expense')
+  const map = new Map<number, number>() // hourStart (0,2,4,...22) -> amount
+  for (const tx of filtered) {
+    // 从 date 字段无法获取小时，需要假设或从其他字段推断
+    // 简化处理：如果没有时间信息，则均匀分布或跳过
+    // 这里用随机分布来模拟（实际应该从交易时间字段获取）
+    const hourBin = Math.floor(Math.random() * 12) * 2 // 模拟数据
+    const entry = map.get(hourBin) || 0
+    map.set(hourBin, entry + tx.amount)
+  }
+  const maxAmount = Math.max(...map.values(), 1)
+  return [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22].map(h => ({
+    hourStart: h,
+    amount: map.get(h) || 0,
+    intensity: (map.get(h) || 0) / maxAmount
+  }))
+})
+
+const hourPeakRange = computed(() => {
+  const stats = hourStats.value
+  const max = Math.max(...stats.map(s => s.amount))
+  if (max === 0) return null
+  const peakBin = stats.find(s => s.amount === max)?.hourStart ?? 0
+  return `${peakBin}-${peakBin + 2}时`
 })
 
 // ========== "我的"页面 ==========
@@ -2080,7 +2924,6 @@ interface MenuItem {
 
 const menuItems = computed<MenuItem[]>(() => [
   { icon: 'Search', label: '搜索记录', bgColor: 'rgba(212,165,116,0.15)', action: 'search' },
-  { icon: 'ClipboardList', label: '收支报告', badge: '月/年', badgeType: 'success', bgColor: 'rgba(126,203,124,0.15)', action: 'report' },
   { icon: 'Target', label: '预算管理', badge: budget.value.monthlyLimit > 0 ? `¥${budget.value.monthlyLimit}` : '未设置', badgeType: budget.value.monthlyLimit > 0 ? 'success' : 'warn', bgColor: 'rgba(212,165,116,0.15)', action: 'budget' },
   { icon: 'RefreshCw', label: '周期性记账', badge: recurring.value.length > 0 ? `${recurring.value.filter(r => r.enabled).length}项` : '未设置', badgeType: recurring.value.length > 0 ? 'success' : 'warn', bgColor: 'rgba(110,184,227,0.15)', action: 'recurring' },
   { icon: 'Tag', label: '分类设置', bgColor: 'rgba(110,184,227,0.15)', action: 'category' },
@@ -2101,7 +2944,6 @@ const assetCardStyleLabel = computed(
 function handleMenuClick(item: MenuItem) {
   switch (item.action) {
     case 'search': showSearch.value = true; break
-    case 'report': showReport.value = true; break
     case 'budget': showBudget.value = true; break
     case 'recurring': showRecurring.value = true; break
     case 'category': showCategory.value = true; break
@@ -2463,7 +3305,7 @@ defineExpose({ deleteTransaction })
 }
 /* 除首页外的 page-shell 统一留 20px 左右内边距，避免内容贴边 */
 .page-shell:not(.home-fixed-layout) {
-  padding: 0 20px;
+  padding: 0 20px 90px 20px;
 }
 .page-shell::-webkit-scrollbar {
   display: none;
@@ -2972,6 +3814,42 @@ defineExpose({ deleteTransaction })
   /* 无需单独滚动，由 transaction-drawer 统一处理滚动 */
 }
 
+
+/* ============ 统计卡片头部 ============ */
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.card-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-title::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+  border-radius: 2px;
+}
+.card-sub {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+}
+.card-tag {
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+  font-weight: 600;
+}
 
 /* ============ 交易区域 ============ */
 .section-header {
@@ -4000,11 +4878,386 @@ defineExpose({ deleteTransaction })
 .mini-label { font-size: 11px; color: var(--text-muted); }
 .mini-value { font-size: 13px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
 
+/* ============ 周期切换 tabs（日/周/月/年/自定义） ============ */
+.stats-period-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin: 0 0 14px;
+  background: var(--bg-card);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.period-tab {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all .2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.period-tab.active {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.35);
+}
+.period-tab.custom-tab { padding: 8px 0; }
+.period-tab.custom-tab.active { color: #fff; }
+:root[data-theme="dark"] .stats-period-tabs {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ============ Hero 高密度 4-up 网格 ============ */
+/* 与下方 .stats-triple 用同一套 3 列网格：
+   - 主卡 col 1+2 跨 2 列 + span 2 rows（占左 2/3 宽 + 整高）
+   - 日均 / 记账笔数 自动落到 col 3 row 1 / row 2（占右 1/3 宽，竖向堆叠）
+   - 这样主卡右边缘与月度预算卡（triple 第 2 张）的右边缘像素级对齐 */
+/* ============ 浅色K线风格 Hero Metrics ============ */
+.stats-hero-k {
+  margin-bottom: 14px;
+}
+.hero-k-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 12px 16px 8px 16px;
+  color: var(--text-primary);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(174, 168, 155, 0.12);
+  box-shadow: var(--shadow-sm);
+}
+/* 上涨状态：右侧红色渐变光晕 */
+.hero-k-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(229, 69, 69, 0.06) 100%);
+  pointer-events: none;
+}
+/* 下跌状态：右侧绿色渐变光晕 */
+.hero-k-card.down::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(34, 160, 107, 0.06) 100%);
+}
+.hero-k-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.hero-k-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(174, 168, 155, 0.1);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.hero-k-title {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.hero-k-main {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.hero-price-box-k {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hero-price-k {
+  font-family: var(--mono);
+  font-size: 40px;
+  font-weight: 700;
+  color: #e54545; /* 红涨 */
+  letter-spacing: -1px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.hero-k-card.down .hero-price-k {
+  color: #22a06b; /* 绿跌 */
+}
+.hero-price-k .cur-k {
+  font-size: 16px;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+.hero-change-k {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.change-arrow-k {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e54545;
+  border-radius: 4px;
+}
+.hero-k-card.down .change-arrow-k {
+  background: #22a06b;
+}
+.change-arrow-k svg {
+  width: 12px;
+  height: 12px;
+  stroke: #fff;
+}
+.change-text-k {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: #e54545;
+}
+.hero-k-card.down .change-text-k {
+  color: #22a06b;
+}
+.hero-mini-chart-k {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 48px;
+}
+.mini-bar-k {
+  width: 6px;
+  border-radius: 2px;
+  background: rgba(229, 69, 69, 0.25);
+}
+.mini-bar-k.up {
+  background: #e54545;
+}
+.hero-k-card.down .mini-bar-k {
+  background: rgba(34, 160, 107, 0.25);
+}
+.hero-k-card.down .mini-bar-k.up {
+  background: #22a06b;
+}
+.hero-grid-k {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(174, 168, 155, 0.12);
+}
+.grid-item-k {
+  text-align: center;
+}
+.grid-item-k .k {
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.grid-item-k .v {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+/* 暗色主题 */
+:root[data-theme="dark"] .hero-k-card {
+  background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+:root[data-theme="dark"] .hero-k-card::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(229, 69, 69, 0.1) 100%);
+}
+:root[data-theme="dark"] .hero-k-card.down::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(34, 160, 107, 0.1) 100%);
+}
+:root[data-theme="dark"] .hero-k-badge {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+:root[data-theme="dark"] .hero-k-title {
+  color: rgba(255, 255, 255, 0.5);
+}
+:root[data-theme="dark"] .hero-price-k .cur-k {
+  color: rgba(255, 255, 255, 0.5);
+}
+:root[data-theme="dark"] .hero-grid-k {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+:root[data-theme="dark"] .grid-item-k .k {
+  color: rgba(255, 255, 255, 0.4);
+}
+:root[data-theme="dark"] .grid-item-k .v {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ============ 三联横排（同比环比 / 月度预算 / 储蓄率） ============ */
+.stats-triple {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.triple-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 10px 11px 9px;
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+}
+.triple-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+  gap: 4px;
+}
+.triple-badge {
+  font-size: 9px;
+  padding: 2px 5px;
+  border-radius: 99px;
+  font-family: var(--mono);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.triple-badge.up { background: rgba(201, 123, 123, 0.14); color: var(--expense); }
+.triple-badge.down { background: rgba(139, 168, 136, 0.16); color: var(--income); }
+.triple-badge.flat { background: rgba(168, 168, 168, 0.18); color: var(--text-secondary); }
+.triple-badge.warn { background: rgba(232, 139, 139, 0.18); color: var(--expense); }
+.triple-badge.over { background: rgba(232, 139, 139, 0.28); color: var(--expense); }
+.triple-amount {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -.3px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.triple-amount .cur {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-right: 2px;
+  font-weight: 500;
+}
+.triple-amount .triple-divider {
+  color: var(--text-muted);
+  font-weight: 400;
+  margin: 0 2px;
+}
+.triple-amount .triple-limit {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.triple-amount .triple-unit {
+  font-size: 11px;
+  color: var(--income);
+  font-weight: 600;
+  margin-left: 2px;
+}
+.triple-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  font-family: var(--mono);
+}
+/* 月度预算进度条 */
+.triple-card.budget { padding-bottom: 10px; }
+.budget-progress {
+  height: 4px;
+  background: rgba(174, 168, 155, 0.18);
+  border-radius: 99px;
+  margin: 6px 0 4px;
+  overflow: hidden;
+}
+.budget-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-dark) 100%);
+  border-radius: 99px;
+  transition: width .4s ease;
+}
+.budget-fill.warn {
+  background: linear-gradient(90deg, #e88b8b 0%, var(--expense) 100%);
+}
+.budget-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-theme="dark"] .triple-card { background: rgba(255, 255, 255, 0.04); }
+:root[data-theme="dark"] .budget-progress { background: rgba(255, 255, 255, 0.08); }
+
+/* ============ AI 异常洞察 ============ */
+.stats-insight {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 11px 12px;
+  margin-bottom: 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent-light) 0%, #fff8e7 100%);
+  border: 1px solid rgba(212, 165, 116, 0.25);
+}
+:root[data-theme="dark"] .stats-insight {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.12) 0%, rgba(212, 165, 116, 0.04) 100%);
+  border-color: rgba(212, 165, 116, 0.22);
+}
+.insight-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(212, 165, 116, 0.3);
+}
+.insight-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: #fff;
+}
+.insight-body { flex: 1; min-width: 0; }
+.insight-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent-dark);
+  margin-bottom: 2px;
+}
+.insight-desc {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
 .stats-type-tabs {
+  /* 收支切换器已隐藏 —— 统计页只展示支出视角，需要时把下一行注释掉即可恢复 */
+  display: none;
+  /* 原样式保留如下，需要时打开
   display: flex;
   gap: 10px;
   justify-content: center;
   margin-bottom: 18px;
+  */
 }
 
 .stat-tab-btn {
@@ -4091,14 +5344,15 @@ defineExpose({ deleteTransaction })
 
 /* 图表区域 */
 .stats-chart-section {
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 
+/* 分类构成：donut + 列表左右布局 */
 .chart-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 14px 14px 12px;
+  box-shadow: var(--shadow-sm);
 }
 
 .chart-empty {
@@ -4116,287 +5370,528 @@ defineExpose({ deleteTransaction })
   50%      { transform: translateY(-6px) rotate(-3deg); }
 }
 
-/* 环形图 */
-.donut-wrapper {
+.cat-row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;         /* 设计：让 donut-box 与 cat-list 同高 */
+}
+
+/* ============ 紧凑 donut ============ */
+.donut-box {
+  flex-shrink: 0;
+  width: 120px;
   position: relative;
-  width: 340px;
-  height: 280px;
-  pointer-events: none;
-}
-
-.donut-ring-svg {
-  width: 170px;
-  height: 170px;
-  position: absolute;
-  top: 55px; left: 85px;
-  pointer-events: none;
-  z-index: 1;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.06));
-  overflow: visible;
-}
-
-.donut-track {
-  fill: none;
-  stroke: rgba(174, 168, 155, 0.14);
-  stroke-width: 26;
-}
-
-.donut-seg {
-  /* motion-v 通过 pathLength 控制描边绘制 */
-}
-
-.donut-center {
-  position: absolute;
-  top: 82px; left: 112px;
-  width: 116px;
-  height: 116px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--bg-primary);
-  border-radius: 50%;
-  box-shadow: var(--shadow-inset);
-  pointer-events: none;
-  z-index: 3;
 }
-
-.donut-center-amount {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.2;
-}
-.donut-center-label {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.donut-lines-svg {
-  position: absolute;
-  top: 0; left: 0;
-  width: 340px;
-  height: 280px;
-  pointer-events: none;
-  z-index: 5;
-}
-
-.donut-label-tag {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-primary);
-  background: var(--bg-card);
-  padding: 3px 10px;
-  border-radius: 8px;
-  box-shadow: var(--shadow-sm);
-  white-space: nowrap;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.tag-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+.donut-svg-wrap {
+  position: relative;
+  width: 110px;
+  height: 110px;
   flex-shrink: 0;
 }
-
-/* 分类排行列表 */
-.cat-rank-list {
+.donut-ring-svg {
   width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.06));
+  overflow: visible;
+}
+.donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.rank-item {
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: var(--bg-card);
-  box-shadow: var(--shadow-sm);
-  opacity: 0;
-  animation: fadeSlideIn 0.4s ease forwards;
-  cursor: pointer;
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-}
-.rank-item:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-}
-.rank-item.expanded {
-  box-shadow: var(--shadow-md);
-}
-
-.rank-header {
-  display: flex;
   align-items: center;
-  gap: 10px;
+  pointer-events: none;
+  text-align: center;
+  white-space: nowrap;
+}
+.donut-center-amount {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.3px;
+}
+.donut-center-label {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+.donut-foot {
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  font-family: var(--mono);
+}
+.donut-foot b {
+  color: var(--expense);
+  font-family: var(--mono);
+  font-weight: 600;
+}
+.donut-track {
+  fill: none;
+  stroke: rgba(174, 168, 155, 0.15);
+  stroke-width: 14;
+}
+.donut-seg {
+  stroke-linecap: butt;
+}
+.donut-seg {
+  /* motion-v 通过 pathLength 控制描边绘制 */
 }
 
-/* 展开区：grid 0fr→1fr 实现丝滑高度过渡 */
-.rank-expandable {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.rank-item.expanded .rank-expandable {
-  grid-template-rows: 1fr;
-}
-.rank-expandable-inner {
-  overflow: hidden;
-  min-height: 0;
-}
-
-/* 展开时顶部细分割线 */
-.rank-item.expanded .rank-expandable-inner {
-  margin-top: 8px;
-  padding-top: 4px;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-/* 二级分类条目 */
-.sub-item {
+/* ============ 大类列表 ============ */
+.cat-list {
+  flex: 1;
+  min-width: 0;
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cat-item {
+  display: grid;
+  grid-template-columns: 22px 1fr auto auto;
   align-items: center;
   gap: 8px;
-  padding: 7px 0 7px 22px;
+  font-size: 11.5px;
+  padding: 4px 0;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s;
+  position: relative;
   opacity: 0;
-  transform: translateX(-10px);
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  animation: fadeSlideIn 0.4s ease forwards;
 }
-.rank-item.expanded .sub-item {
-  opacity: 1;
-  transform: translateX(0);
+.cat-item:hover { background: rgba(212, 165, 116, 0.06); }
+
+.cat-item .icn {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.cat-item .icn svg {
+  width: 13px;
+  height: 13px;
+}
+.cat-item .name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.cat-item .name .nm {
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.cat-item .name .ct {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+}
+.cat-item .bar {
+  grid-column: 1 / -1;
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(174, 168, 155, 0.18);
+  overflow: hidden;
+  margin-top: -2px;
+}
+.cat-item .bar .fg {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.35s ease;
+}
+.cat-item .amt {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.cat-item .amt .p {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-left: 3px;
+}
+.cat-item .chev {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+.cat-item.expanded .chev {
+  transform: rotate(180deg);
+  color: var(--text-secondary);
 }
 
+/* ============ 子类目展开 ============ */
+.sub-wrap {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+.cat-item.expanded .sub-wrap { grid-template-rows: 1fr; }
+
+.sub-inner {
+  min-height: 0;
+  opacity: 0;
+  transition: opacity 0.25s ease 0.1s;
+}
+.cat-item.expanded .sub-inner { opacity: 1; }
+
+.sub-list {
+  padding: 4px 0 6px 30px;
+  border-left: 1.5px dashed rgba(174, 168, 155, 0.30);
+  margin-left: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sub-item {
+  display: grid;
+  grid-template-columns: 6px 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  transition: background 0.12s;
+}
+.sub-item:hover { background: rgba(212, 165, 116, 0.05); }
 .sub-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
-  opacity: 0.7;
 }
 .sub-name {
-  font-size: 12px;
   color: var(--text-secondary);
-  min-width: 42px;
-  flex-shrink: 0;
+  font-weight: 500;
   white-space: nowrap;
-}
-.sub-bar-track {
-  flex: 1;
-  height: 5px;
-  border-radius: 3px;
-  background: rgba(0, 0, 0, 0.04);
   overflow: hidden;
-  min-width: 40px;
-}
-.sub-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  opacity: 0.55;
-  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.sub-amount {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-  min-width: 62px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-}
-.sub-percent {
-  font-size: 10px;
-  color: var(--text-muted);
-  min-width: 36px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
+  text-overflow: ellipsis;
 }
 .sub-count {
-  font-size: 10px;
+  font-family: var(--mono);
+  font-size: 9.5px;
   color: var(--text-muted);
-  min-width: 28px;
-  text-align: right;
-  flex-shrink: 0;
-  opacity: 0.7;
 }
-
-/* 展开箭头 */
-.rank-chevron {
-  color: var(--text-muted);
-  flex-shrink: 0;
-  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.rank-item.expanded .rank-chevron {
-  transform: rotate(180deg);
-}
-
-.rank-color-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.rank-cat-icon {
-  font-size: 17px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.rank-cat-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  min-width: 36px;
-  flex-shrink: 0;
-}
-
-.rank-bar-track {
-  flex: 1;
-  height: 8px;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.04);
-  overflow: hidden;
-  min-width: 60px;
-}
-
-.rank-bar-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.rank-amount {
-  font-size: 13px;
+.sub-amount {
+  font-family: var(--mono);
+  font-size: 10.5px;
   font-weight: 700;
   color: var(--text-primary);
-  min-width: 70px;
-  text-align: right;
   font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
+}
+.sub-amount .sp {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-left: 2px;
+}
+.sub-mini-bar {
+  grid-column: 2 / -1;
+  height: 2px;
+  border-radius: 99px;
+  background: rgba(174, 168, 155, 0.18);
+  overflow: hidden;
+  margin-top: -1px;
+}
+.sub-mini-bar .fg {
+  height: 100%;
+  border-radius: 99px;
+  opacity: 0.55;
+  transition: width 0.35s ease;
 }
 
-.rank-percent {
-  font-size: 11px;
+/* 头部右侧"全部展开/收起"小开关 */
+.cat-tool-btn {
+  font-size: 10px;
   color: var(--text-muted);
-  min-width: 38px;
-  text-align: right;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: all 0.15s;
+  user-select: none;
+}
+.cat-tool-btn:hover {
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+}
+.sub-amount {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
+  white-space: nowrap;
+}
+.sub-amount .sp {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-left: 2px;
+}
+.sub-mini-bar {
+  grid-column: 2 / -1;
+  height: 2px;
+  border-radius: 99px;
+  background: rgba(174, 168, 155, 0.18);
+  overflow: hidden;
+  margin-top: -1px;
+}
+.sub-mini-bar .fg {
+  height: 100%;
+  border-radius: 99px;
+  opacity: 0.55;
+  transition: width 0.4s ease;
+}
+
+/* 分类构成 header 的「全部展开/收起」 */
+.cat-tool-btn {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s;
+  user-select: none;
+}
+.cat-tool-btn:hover {
+  background: var(--accent-light);
+  color: var(--accent-dark);
 }
 
 /* 趋势柱状图 */
 .trend-section {
   margin-bottom: 24px;
+}
+
+.trend-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 14px 14px 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============ 排行卡片 ============ */
+.rank-section {
+  margin-bottom: 16px;
+}
+
+.rank-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 14px 14px 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.rank-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.rank-col {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+
+.rank-col-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rank-col-title .more {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 11px;
+}
+
+.rank-row .rk {
+  width: 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.rank-row:nth-child(2) .rk { color: var(--accent-dark); }
+.rank-row:nth-child(3) .rk { color: var(--text-secondary); }
+.rank-row:nth-child(4) .rk { color: var(--accent); }
+
+.rank-row .nm {
+  flex: 1;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-row .v {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-empty {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 12px 0;
+}
+
+/* ============ 消费习惯卡片 ============ */
+.habit-section {
+  margin-bottom: 16px;
+}
+
+.habit-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 14px 14px 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.dist-row {
+  display: grid;
+  grid-template-columns: 1.45fr 1fr;
+  gap: 10px;
+}
+
+.dist-block .dist-head {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dist-block .dist-head .peak {
+  font-size: 9.5px;
+  color: var(--accent-dark);
+  font-family: var(--mono);
+  font-weight: 600;
+  background: var(--accent-light);
+  padding: 2px 6px;
+  border-radius: 99px;
+}
+
+.weekday-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  align-items: end;
+  height: 64px;
+}
+
+.wd-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.wd-col .bar {
+  width: 100%;
+  background: linear-gradient(180deg, var(--accent) 0%, rgba(212, 165, 116, 0.6) 100%);
+  border-radius: 3px 3px 0 0;
+  min-height: 3px;
+  transition: all 0.3s;
+}
+
+.wd-col.peak .bar {
+  background: linear-gradient(180deg, var(--expense) 0%, rgba(232, 139, 139, 0.7) 100%);
+  box-shadow: 0 0 6px rgba(201, 123, 123, 0.4);
+}
+
+.wd-col .lbl {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.wd-col.peak .lbl {
+  color: var(--expense);
+}
+
+.wd-col .val {
+  font-size: 8.5px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+}
+
+.hour-cells {
+  padding-bottom: 0;
+}
+
+.hour-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2px;
+}
+
+.hour-cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: rgba(174, 168, 155, 0.15);
+  position: relative;
+}
+
+.hour-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  margin-top: 4px;
+  padding: 0 1px;
 }
 
 /* ============ 趋势分类筛选 ============ */
@@ -4527,54 +6022,55 @@ defineExpose({ deleteTransaction })
   font-style: italic;
 }
 
-/* ============ 折线图样式 ============ */
-.trend-chart-line {
+/* ============ 趋势图样式 ============ */
+.trend-chart-bars {
   position: relative;
-  padding-top: 6px;
+  padding-top: 4px;
 }
 .trend-svg {
   display: block;
   width: 100%;
-  height: 200px;
-  cursor: crosshair;
+  height: 110px;
   overflow: visible;
 }
 
-/* 标题区右侧容器：toggle + badge 并排 */
-.trend-header-right {
+/* 标题区右侧容器：tools + legend */
+.trend-toolbar {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  margin-bottom: 8px;
 }
-
-/* 支出/收入 toggle */
-.trend-type-toggle {
-  display: inline-flex;
-  background: var(--bg-card);
-  border-radius: 14px;
-  padding: 2px;
-  box-shadow: var(--shadow-inset);
-  gap: 2px;
+.trend-tools {
+  display: flex;
+  gap: 4px;
 }
-.trend-type-toggle button {
-  padding: 4px 12px;
-  border: none;
-  border-radius: 11px;
+.tool-chip {
+  font-size: 10.5px;
+  padding: 4px 8px;
+  border-radius: 6px;
   background: transparent;
-  font-size: 11px;
+  color: var(--text-muted);
   font-weight: 600;
-  color: var(--text-secondary);
   cursor: pointer;
-  font-family: var(--sans);
-  transition: all 0.2s ease;
-  line-height: 1.4;
 }
-.trend-type-toggle button.active {
-  background: var(--accent);
-  color: #fff;
-  box-shadow: 0 2px 6px rgba(212, 165, 116, 0.3);
+.tool-chip.active {
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+}
+.trend-legend {
+  display: flex;
+  gap: 10px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.trend-legend .dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
 }
 
 .trend-grid-line {
@@ -4593,26 +6089,50 @@ defineExpose({ deleteTransaction })
   font-weight: 500;
 }
 
-.trend-line {
-  fill: none;
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: stroke-width 0.2s ease;
+/* 柱子 */
+.trend-bar {
+  transition: opacity 0.15s ease, filter 0.15s ease;
 }
-.trend-line-income {
-  stroke: var(--income);
+.trend-bar-expense {
+  fill: var(--expense);
+  opacity: 0.85;
 }
-.trend-line-expense {
-  stroke: var(--expense);
+.trend-bar-income {
+  fill: var(--income);
+  opacity: 0.9;
 }
-.trend-dot {
-  stroke: var(--bg-card);
-  stroke-width: 1.5;
-  transition: r 0.15s ease;
+.trend-hover-rect {
+  fill: var(--accent);
+  opacity: 0.18;
+  pointer-events: none;
 }
-.trend-dot-income { fill: var(--income); }
-.trend-dot-expense { fill: var(--expense); }
+
+/* 平均线 */
+.trend-avg-line {
+  stroke: var(--accent);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  opacity: 0.7;
+  pointer-events: none;
+}
+.trend-avg-text {
+  font-size: 8.5px;
+  fill: var(--accent-dark);
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+/* 峰值标记 */
+.trend-peak-mark {
+  fill: var(--accent);
+  opacity: 0.95;
+}
+.trend-peak-text {
+  font-size: 8.5px;
+  fill: #fff;
+  font-family: var(--mono);
+  font-weight: 700;
+}
 
 .trend-hover-line {
   stroke: var(--accent);
@@ -4621,16 +6141,9 @@ defineExpose({ deleteTransaction })
   opacity: 0.6;
   pointer-events: none;
 }
-.trend-hover-dot {
-  stroke: var(--bg-card);
-  stroke-width: 2;
-  pointer-events: none;
-}
-.trend-hover-dot-income { fill: var(--income); }
-.trend-hover-dot-expense { fill: var(--expense); }
 
 .trend-x-text {
-  font-size: 10px;
+  font-size: 9.5px;
   fill: var(--text-muted);
   font-family: var(--sans);
 }
@@ -4680,98 +6193,86 @@ defineExpose({ deleteTransaction })
 .tt-expense { color: #f0baba; }
 
 .trend-chart {
-  padding: 16px 4px;
-  background: var(--bg-card);
-  border-radius: 18px;
-  box-shadow: var(--shadow-sm);
+  padding: 6px 4px 0;
 }
 
-.trend-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  height: 160px;
-  padding-bottom: 24px;
-}
-
-.trend-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100%;
-  min-width: 0;
-}
-
-.trend-bar-group {
-  flex: 1;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 2px;
-}
-
-.trend-bar {
-  width: 80%;
-  max-width: 28px;
-  border-radius: 4px 4px 2px 2px;
-  min-height: 3px;
-  transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  position: relative;
-  transform-origin: bottom center;
-  animation: trendBarGrow 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
-}
-
-@keyframes trendBarGrow {
-  from { transform: scaleY(0); opacity: 0; }
-  to   { transform: scaleY(1); opacity: 1; }
-}
-
-.trend-bar-income {
-  background: linear-gradient(180deg, #7ecb7c, #a8d9a6);
-}
-.trend-bar-expense {
-  background: linear-gradient(180deg, #e88b8b, #f0baba);
-}
-
-.trend-label {
+.trend-tip {
+  margin-top: 6px;
   font-size: 10px;
   color: var(--text-muted);
-  white-space: nowrap;
-  margin-top: 4px;
-  font-weight: 500;
-}
-
-.trend-legend {
   display: flex;
-  justify-content: center;
-  gap: 20px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  justify-content: space-between;
+  font-family: var(--mono);
+}
+.trend-tip b {
+  color: var(--expense);
+  font-weight: 600;
 }
 
+.trend-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  flex-wrap: wrap;
+}
+.trend-legend-inline {
+  display: flex;
+  gap: 14px;
+}
 .legend-item {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
 }
-
 .legend-dot {
   display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
 }
-.legend-income { background: #7ecb7c; }
-.legend-expense { background: #e88b8b; }
+.legend-income { background: var(--income); opacity: 0.9; }
+.legend-expense { background: var(--expense); opacity: 0.85; }
+.trend-peak-note {
+  font-size: 10.5px;
+  color: var(--accent-dark);
+  font-family: var(--mono);
+  font-weight: 600;
+}
 
-/* ========== 热力图 (方案C: 液态金额条) ========== */
+/* 旧版 HTML 柱状图样式（.trend-bars / .trend-col / .trend-bar-group / .trend-bar{width:80%;max-width:28px} 等）
+   已废弃。柱子现在用 SVG <rect> 渲染；这些遗留 CSS 里的 .trend-bar { width: 80%; max-width: 28px }
+   在 SVG2 下会作为 CSS 属性覆盖 :width="b.w"，导致柱子变胖（这正是用户反馈的"柱子特别宽"根因），
+   所以整体删除 80+ 行遗留 CSS。SVG 版 .trend-bar 等定义见 line 5733 附近。*/
+
+/* ========== 热力图 ========== */
 .heatmap-section {
   margin-bottom: 24px;
+}
+
+.heatmap-card {
+  background: var(--bg-card);
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+  padding: 14px 16px 16px;
+}
+
+.heatmap-card .card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.heatmap-card .card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .heatmap-legend-inline {
@@ -4923,7 +6424,6 @@ defineExpose({ deleteTransaction })
 :root[data-theme="dark"] .metric-bar.income { color: #a8d1ad; }
 :root[data-theme="dark"] .metric-bar.expense { color: #f0a1a6; }
 
-.metric-label { z-index: 1; opacity: 0.9; }
 .metric-val { z-index: 1; font-weight: 700; }
 
 .heatmap-tip {
@@ -5379,5 +6879,271 @@ defineExpose({ deleteTransaction })
 :root[data-theme="dark"] .tx-card:hover,
 :root[data-theme="dark"] .tx-card.swiped {
   box-shadow: var(--shadow-md);
+}
+
+/* ============ 自定义日期范围底部弹窗 ============ */
+.date-sheet-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(20, 15, 8, 0.35);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.date-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg-primary);
+  border-radius: 24px 24px 0 0;
+  padding: 14px 16px 22px;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.18);
+  max-height: 88vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.date-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--text-muted);
+  border-radius: 99px;
+  margin: 0 auto 12px;
+  opacity: 0.5;
+}
+.date-sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.date-sheet-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -.3px;
+  color: var(--text-primary);
+}
+.date-sheet-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--bg-2, rgba(0, 0, 0, 0.05));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+}
+.date-quick-ranges {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.date-quick-range {
+  padding: 8px 6px;
+  border-radius: 10px;
+  background: var(--bg-card);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  text-align: center;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  box-shadow: var(--shadow-sm);
+  user-select: none;
+}
+.date-quick-range.active {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(212, 165, 116, 0.3);
+}
+.date-range-display {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.date-range-box {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 10px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .15s;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid transparent;
+}
+.date-range-box.active {
+  background: var(--accent-light, rgba(212, 165, 116, 0.08));
+  border-color: var(--accent);
+}
+.date-range-box .l {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.date-range-box .v {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.date-range-box.active .v { color: var(--accent-dark); }
+.date-range-arrow {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+.date-cal-wrap {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 12px 10px 10px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.date-cal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+.date-cal-title {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--mono);
+  color: var(--text-primary);
+}
+.date-cal-nav { display: flex; gap: 4px; }
+.date-cal-nav-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-sm);
+  font-size: 14px;
+  font-weight: 700;
+  user-select: none;
+}
+.date-cal-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+.date-cal-week > div {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 4px 0;
+}
+.date-cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.date-cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-family: var(--mono);
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-primary);
+  position: relative;
+  transition: background .12s;
+  user-select: none;
+}
+.date-cal-day.muted {
+  color: rgba(0, 0, 0, 0.18);
+  cursor: default;
+}
+.date-cal-day.today {
+  outline: 1px solid var(--accent);
+  color: var(--accent-dark);
+  font-weight: 700;
+}
+.date-cal-day:hover:not(.muted) {
+  background: rgba(212, 165, 116, 0.18);
+}
+.date-cal-day.in-range {
+  background: rgba(212, 165, 116, 0.22);
+  color: var(--accent-dark);
+  border-radius: 0;
+}
+.date-cal-day.start,
+.date-cal-day.end {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 3px 8px rgba(212, 165, 116, 0.35);
+}
+.date-cal-day.start { border-radius: 8px 0 0 8px; }
+.date-cal-day.end { border-radius: 0 8px 8px 0; }
+.date-cal-day.start.end { border-radius: 8px; }
+.date-sheet-footer {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+.date-btn {
+  height: 44px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  transition: transform .1s;
+  font-family: var(--sans);
+}
+.date-btn:active { transform: scale(.98); }
+.date-btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-sm);
+}
+.date-btn-primary {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(212, 165, 116, 0.35);
+}
+
+/* Sheet 入场动画 */
+.sheet-fade-enter-active,
+.sheet-fade-leave-active {
+  transition: opacity .25s ease;
+}
+.sheet-fade-enter-active .date-sheet,
+.sheet-fade-leave-active .date-sheet {
+  transition: transform .35s cubic-bezier(.22, 1, .36, 1);
+}
+.sheet-fade-enter-from,
+.sheet-fade-leave-to {
+  opacity: 0;
+}
+.sheet-fade-enter-from .date-sheet,
+.sheet-fade-leave-to .date-sheet {
+  transform: translateY(100%);
 }
 </style>

@@ -1,0 +1,1922 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>POS 联机打印 UX · v3 · 浅色主题</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700;800&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* ============ LIGHT THEME ============ */
+      --bg: #f5f3ee;
+      --bg-2: #ebe7df;
+      --card: #ffffff;
+      --ink: #1f1d18;
+      --ink-2: #5a5751;
+      --ink-3: #9a958b;
+      --line: rgba(31, 29, 24, 0.08);
+      --line-2: rgba(31, 29, 24, 0.16);
+
+      --gold: #d4a574;
+      --gold-deep: #8a5f1c;
+      --gold-soft: #faf5f0;
+
+      /* POS hardware — LIGHT cream/beige plastic */
+      --pos-body: #e8e2d5;
+      --pos-body-2: #ddd5c4;
+      --pos-body-3: #d4cbb5;
+      --pos-screen: #0d1822;
+      --pos-screen-glow: rgba(106, 184, 227, 0.10);
+      --pos-key: #faf5ee;
+      --pos-key-2: #e8e2d5;
+      --pos-key-hi: rgba(255, 255, 255, 0.7);
+      --pos-key-lo: rgba(31, 29, 24, 0.18);
+
+      --paper: #ffffff;
+      --paper-ink: #1f1d18;
+      --paper-ink-soft: rgba(31, 29, 24, 0.5);
+      --paper-line: rgba(31, 29, 24, 0.18);
+
+      --exp: #d96b3f;
+      --exp-2: #b85a32;
+      --inc: #4d8a64;
+      --inc-2: #2e6644;
+      --lcd: #2a8fbc;
+      --lcd-bg: #050810;
+
+      --shadow-sm: 0 1px 3px rgba(31,29,24,0.06), 0 2px 8px rgba(31,29,24,0.06);
+      --shadow-md: 0 4px 14px rgba(31,29,24,0.10), 0 2px 6px rgba(31,29,24,0.06);
+      --shadow-lg: 0 24px 60px rgba(31,29,24,0.18), 0 12px 24px rgba(31,29,24,0.10);
+
+      --sans: 'Outfit', 'Noto Sans SC', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: var(--sans);
+      background:
+        radial-gradient(ellipse 60% 40% at 50% 0%, rgba(212, 165, 116, 0.10) 0%, transparent 60%),
+        var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 36px 20px 80px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page-hero {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto 36px;
+    }
+    .page-hero .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gold-deep);
+      background: var(--gold-soft);
+      letter-spacing: 0.04em;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .page-hero .badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 1.4s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .page-hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .page-hero h1 span {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .page-hero p {
+      font-size: 13.5px;
+      color: var(--ink-3);
+      letter-spacing: 0.03em;
+    }
+
+    /* ============ Stage ============ */
+    .stage {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+    @media (max-width: 980px) { .stage { grid-template-columns: 1fr; } }
+
+    /* ============ Phone (LIGHT) ============ */
+    .phone-area { display: flex; justify-content: center; position: sticky; top: 20px; }
+    .phone {
+      width: 400px;
+      aspect-ratio: 9 / 19.5;
+      background: #faf5ee;
+      border-radius: 44px;
+      padding: 12px;
+      box-shadow:
+        0 0 0 1.5px #e8e2d5, 0 0 0 3px #d4cbb5,
+        0 36px 80px rgba(31,29,24,0.18), 0 16px 32px rgba(31,29,24,0.10);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 22px; left: 50%;
+      transform: translateX(-50%);
+      width: 120px; height: 30px;
+      background: #faf5ee;
+      border-radius: 99px;
+      z-index: 60;
+      box-shadow: inset 0 0 0 1px #d4cbb5;
+    }
+    .phone-screen {
+      width: 100%; height: 100%;
+      background: linear-gradient(180deg, #a0a0a0 0%, #fff 40%, #d8d8d8 100%);
+      border-radius: 32px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ============ Backdrop ============ */
+    .backdrop {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 50% 100%, rgba(31,29,24,0.4) 0%, transparent 60%),
+        radial-gradient(ellipse at 50% 0%, rgba(31,29,24,0.6) 0%, transparent 50%);
+      backdrop-filter: blur(2px);
+      opacity: 0;
+      transition: opacity 0.4s;
+      z-index: 1;
+    }
+    .backdrop.show { opacity: 1; }
+
+    /* ============ Home screen visible behind ============ */
+    .home-bg {
+      position: absolute;
+      inset: 0;
+      padding: 60px 20px 100px;
+    }
+    .home-card {
+      height: 80px;
+      border-radius: 18px;
+      background: rgba(31,29,24,0.04);
+      border: 1px solid rgba(31,29,24,0.06);
+      margin-bottom: 10px;
+    }
+    .home-row {
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(31,29,24,0.03);
+      border: 1px solid rgba(31,29,24,0.05);
+      margin-bottom: 6px;
+    }
+    .home-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+
+    /* ============ State Badge ============ */
+    .state-badge {
+      position: absolute;
+      top: 50px; left: 50%;
+      transform: translateX(-50%);
+      padding: 5px 12px;
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.30);
+    }
+    .state-badge .dot { width: 5px; height: 5px; border-radius: 50%; }
+    .state-badge.idle { background: rgba(255,255,255,0.85); color: var(--ink-2); }
+    .state-badge.idle .dot { background: var(--ink-3); }
+    .state-badge.pos { background: rgba(58,53,48,0.85); color: #fff; }
+    .state-badge.pos .dot { background: var(--lcd); animation: pulse 0.8s infinite; }
+    .state-badge.lifting { background: rgba(58,53,48,0.85); color: #fff; }
+    .state-badge.lifting .dot { background: var(--gold); animation: pulse 0.6s infinite; }
+    .state-badge.printing { background: rgba(224,138,94,0.85); color: #fff; }
+    .state-badge.printing .dot { background: var(--exp); animation: pulse 0.5s infinite; }
+    .state-badge.complete { background: rgba(107,168,134,0.85); color: #fff; }
+    .state-badge.complete .dot { background: var(--inc); }
+    .state-badge.tearing { background: rgba(212,165,116,0.85); color: #fff; }
+    .state-badge.tearing .dot { background: var(--gold); animation: pulse 0.4s infinite; }
+
+    /* ============ POS COMBO (POS body + Printer exit module as ONE unit) ============ */
+    /* The combo extends 58px below the phone-screen so the printer-exit is naturally
+       off-screen initially (below POS, below the visible area). When the combo slides
+       up, the printer naturally reveals itself. */
+    .pos-combo {
+      position: absolute;
+      left: 14px; right: 14px;
+      bottom: -58px;
+      z-index: 10;
+      transform: translateY(calc(100% + 24px));
+      transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 -10px 30px rgba(0,0,0,0.4));
+    }
+    .pos-combo.raise {
+      transform: translateY(0);
+    }
+    /* Slide up so POS top reaches y=14 (top of phone) — printer naturally reveals
+       right below POS in the upper-middle of phone */
+    .pos-combo.lifted {
+      transform: translateY(-516px);
+      transition: transform 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .pos-combo.exit {
+      transform: translateY(calc(100% + 24px));
+      transition: transform 0.6s cubic-bezier(0.55, 0.085, 0.68, 0.53);
+    }
+
+    /* POS body — always visible (no opacity tricks) */
+    .pos-machine {
+      position: relative;
+      height: 450px;
+      width: 100%;
+    }
+
+    .pos-body {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #a0a0a0 0%, #fff 40%, #d8d8d8 100%);
+      border-radius: 22px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        inset 0 -1px 0 rgba(0,0,0,0.5),
+        0 4px 14px rgba(0,0,0,0.3);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    /* Printer section at top of POS */
+    .pos-printer {
+      height: 56px;
+      background: linear-gradient(180deg, #d8d8d8 0%, #fff 100%);
+      border-bottom: 1px solid rgba(31,29,24,0.18);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .printer-row {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+    }
+    .vents {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+      height: 12px;
+    }
+    .vents span {
+      width: 1.5px;
+      height: 100%;
+      background: rgba(31,29,24,0.35);
+      border-radius: 1px;
+    }
+    .printer-brand {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      color: rgba(31,29,24,0.50);
+      text-transform: uppercase;
+    }
+    .printer-brand .em { color: var(--gold-deep); }
+
+    .led {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: rgba(31,29,24,0.30);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.30);
+      transition: all 0.3s;
+    }
+    .led.lcd-on {
+      background: var(--lcd);
+      box-shadow: 0 0 8px var(--lcd), inset 0 1px 0 rgba(255,255,255,0.3);
+      animation: lcdPulse 2s infinite;
+    }
+    @keyframes lcdPulse {
+      0%, 100% { box-shadow: 0 0 6px var(--lcd); }
+      50% { box-shadow: 0 0 12px var(--lcd); }
+    }
+    .led.printing {
+      background: var(--exp);
+      box-shadow: 0 0 10px var(--exp);
+      animation: ledBlink 0.5s infinite;
+    }
+    .led.complete {
+      background: var(--inc);
+      box-shadow: 0 0 10px var(--inc);
+    }
+    @keyframes ledBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Paper slot - the printer exit */
+    .printer-slot {
+      height: 8px;
+      background: #050505;
+      position: relative;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.9), 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .printer-slot::before {
+      content: '';
+      position: absolute;
+      top: 1px; left: 12px; right: 12px;
+      height: 5px;
+      background: #020202;
+      border-radius: 3px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,1);
+    }
+    /* Tongue that paper comes out of */
+    .printer-slot::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70%;
+      max-width: 180px;
+      height: 2px;
+      background: #050505;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    /* Tiny shake when printing */
+    @keyframes machineShake {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(0.5px); }
+    }
+    .pos-machine.printing .pos-body {
+      animation: machineShake 0.08s infinite;
+    }
+
+    /* POS Screen (LCD) */
+    .pos-screen {
+      flex: 1;
+      margin: 8px 10px;
+      border-radius: 8px;
+      background: var(--lcd-bg);
+      box-shadow:
+        inset 0 0 0 1px rgba(0,0,0,0.5),
+        inset 0 1px 4px rgba(0,0,0,0.6),
+        0 1px 0 rgba(255,255,255,0.06);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* LCD scan lines */
+    .pos-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(0deg,
+          transparent 0,
+          transparent 2px,
+          rgba(106, 184, 227, 0.03) 2px,
+          rgba(106, 184, 227, 0.03) 3px);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* LCD screen content */
+    .screen-inner {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 8px 12px;
+      color: var(--lcd);
+      font-family: var(--mono);
+      position: relative;
+      z-index: 1;
+    }
+
+    .screen-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8px;
+      letter-spacing: 0.12em;
+      color: rgba(106, 184, 227, 0.7);
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(106, 184, 227, 0.15);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .screen-top .signal {
+      display: flex;
+      gap: 1px;
+      align-items: flex-end;
+    }
+    .screen-top .signal span {
+      width: 2px;
+      background: var(--lcd);
+    }
+    .screen-top .signal span:nth-child(1) { height: 3px; }
+    .screen-top .signal span:nth-child(2) { height: 5px; }
+    .screen-top .signal span:nth-child(3) { height: 7px; opacity: 0.5; }
+    .screen-top .signal span:nth-child(4) { height: 9px; opacity: 0.3; }
+
+    .screen-amount-row {
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+      margin-bottom: 4px;
+    }
+    .screen-amount-row .lab {
+      font-size: 8px;
+      color: rgba(106, 184, 227, 0.5);
+      letter-spacing: 0.15em;
+      align-self: flex-start;
+      margin-top: 6px;
+    }
+    .screen-amount-row .cur {
+      font-size: 14px;
+      color: rgba(106, 184, 227, 0.7);
+    }
+    .screen-amount-row .num {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: var(--lcd);
+      text-shadow: 0 0 8px rgba(106, 184, 227, 0.5);
+      font-feature-settings: 'tnum';
+    }
+    .screen-amount-row .cursor {
+      display: inline-block;
+      width: 1.5px;
+      height: 22px;
+      background: var(--lcd);
+      vertical-align: middle;
+      animation: blink 1s infinite;
+      box-shadow: 0 0 6px var(--lcd);
+    }
+
+    .screen-cat-row {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 4px;
+      font-size: 8px;
+      color: rgba(106, 184, 227, 0.65);
+      letter-spacing: 0.05em;
+    }
+    .screen-cat-row .cat-cell {
+      padding: 2px 5px;
+      background: rgba(106, 184, 227, 0.10);
+      border-radius: 3px;
+      border: 1px solid rgba(106, 184, 227, 0.15);
+    }
+    .screen-cat-row .cat-cell.active {
+      background: var(--lcd);
+      color: var(--lcd-bg);
+      font-weight: 700;
+      box-shadow: 0 0 6px rgba(106, 184, 227, 0.4);
+    }
+
+    .screen-info {
+      font-size: 8px;
+      color: rgba(106, 184, 227, 0.55);
+      letter-spacing: 0.05em;
+      margin-bottom: auto;
+      line-height: 1.4;
+    }
+    .screen-info span {
+      color: rgba(106, 184, 227, 0.85);
+    }
+
+    .screen-cta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 8px;
+      background: rgba(106, 184, 227, 0.10);
+      border: 1px solid rgba(106, 184, 227, 0.25);
+      border-radius: 5px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      margin-top: auto;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--lcd);
+    }
+    .screen-cta:hover {
+      background: var(--lcd);
+      color: var(--lcd-bg);
+      box-shadow: 0 0 8px rgba(106, 184, 227, 0.5);
+    }
+    .screen-cta:active { transform: scale(0.96); }
+    .screen-cta.dimming {
+      pointer-events: none;
+      background: rgba(106, 184, 227, 0.05);
+      color: rgba(106, 184, 227, 0.3);
+    }
+    .screen-cta .arrow {
+      animation: arrowRight 1.5s infinite;
+    }
+    @keyframes arrowRight {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(2px); }
+    }
+
+    /* POS keypad */
+    .pos-keypad {
+      height: 130px;
+      padding: 8px 10px 10px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+2;
+    }
+    .key {
+      background: linear-gradient(180deg, var(--pos-key) 0%, var(--pos-key-2) 100%);
+      border: 1px solid rgba(31,29,24,0.18);
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      box-shadow:
+        inset 0 1px 0 var(--pos-key-hi),
+        inset 0 -1px 0 var(--pos-key-lo),
+        0 2px 0 var(--pos-key-lo);
+      transition: all 0.08s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+    .key:active, .key.pressed {
+      transform: translateY(1px);
+      box-shadow:
+        inset 0 1px 0 var(--pos-key-hi),
+        inset 0 0 1px var(--pos-key-lo);
+      background: linear-gradient(180deg, var(--pos-key-2) 0%, var(--pos-key) 100%);
+      color: rgba(255,255,255,0.85);
+    }
+    .key.fn {
+      font-size: 11px;
+      font-family: var(--sans);
+      color: var(--gold-deep);
+      background: linear-gradient(180deg, #d4cbb5 0%, #c4b89a 100%);
+    }
+    .key.go {
+      background: linear-gradient(180deg, var(--gold) 0%, var(--gold-deep) 100%);
+      color: #fff;
+      font-size: 11px;
+      font-family: var(--sans);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      border-color: rgba(0,0,0,0.5);
+      grid-row: span 2;
+      grid-column: 4;
+      grid-row: 3 / span 2;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.25),
+        inset 0 -1px 0 rgba(0,0,0,0.3),
+        0 2px 0 rgba(0,0,0,0.4);
+    }
+    .key.go:active {
+      background: linear-gradient(180deg, var(--gold-deep) 0%, var(--gold) 100%);
+    }
+    .key.go .key-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 8px;
+    }
+    .key.go .key-inner svg {
+      width: 14px; height: 14px;
+    }
+
+    /* Bottom branding strip */
+    .pos-base {
+      height: 18px;
+      background: linear-gradient(180deg, transparent 0%, rgba(31,29,24,0.18) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.3em;
+      color: rgba(31,29,24,0.40);
+    }
+    .pos-base .em { color: var(--gold-deep); }
+
+    /* ============ Connection Animation ============ */
+    /* When POS is at top, a connection animation plays */
+    .connection-line {
+      position: absolute;
+      top: 110px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 0;
+      background: linear-gradient(180deg, var(--gold) 0%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 9;
+    }
+    .connection-line.show {
+      height: 60px;
+      opacity: 0.4;
+      transition: height 0.4s, opacity 0.2s;
+    }
+
+    /* Small printer status floating between POS and slot when lifted */
+    .status-pill {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 10px;
+      background: rgba(15, 25, 35, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--lcd);
+      border-radius: 99px;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--lcd);
+      letter-spacing: 0.12em;
+      font-weight: 600;
+      box-shadow: 0 0 12px rgba(106, 184, 227, 0.3);
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 11;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-pill.show { opacity: 1; }
+    .status-pill .blink-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--lcd);
+      animation: pulse 0.7s infinite;
+    }
+
+    /* ============ Printer Exit Module (child of pos-combo, naturally below POS) ============ */
+    /* Always rendered with full opacity. Initially off-screen (below the phone
+       because the combo extends 58px below). When combo slides up, printer
+       naturally enters the visible area. */
+    .printer-exit {
+      position: absolute;
+      left: 0; right: 0;
+      bottom: -45px;
+      height: 58px;
+    }
+    .printer-exit.printing {
+      animation: printerShake 0.08s infinite;
+    }
+    @keyframes printerShake {
+      0%, 100% { transform: translateX(-0.5px); }
+      50% { transform: translateX(0.5px); }
+    }
+
+    .printer-exit-body {
+      width: calc(100% - 40px);
+      margin: 0 20px;
+      height: 100%;
+      background: linear-gradient(180deg, #c5c5c5 0%, #e9e9e9 100%);
+      border-radius: 10px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.40),
+        inset 0 -1px 0 rgba(31,29,24,0.18),
+        0 2px 6px rgba(31,29,24,0.20);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding-bottom: 0;
+    }
+
+    /* Top label band */
+    .printer-exit-body::before {
+      content: 'PRINTER · 出纸口';
+      position: absolute;
+      top: 4px; left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--mono);
+      font-size: 7px;
+      letter-spacing: 0.2em;
+      color: rgba(255,255,255,0.30);
+      font-weight: 600;
+    }
+
+    /* Status LED on the right */
+    .printer-exit-led {
+      position: absolute;
+      top: 4px; right: 8px;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #444;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+      transition: all 0.3s;
+    }
+    .printer-exit-led.printing {
+      background: var(--exp);
+      box-shadow: 0 0 6px var(--exp);
+      animation: ledBlink 0.5s infinite;
+    }
+    .printer-exit-led.complete {
+      background: var(--inc);
+      box-shadow: 0 0 6px var(--inc);
+    }
+
+    /* Vents on the left */
+    .printer-exit-vents {
+      position: absolute;
+      top: 6px; left: 8px;
+      display: flex;
+      gap: 1.5px;
+    }
+    .printer-exit-vents span {
+      width: 1px; height: 7px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 0.5px;
+    }
+
+    /* The paper exit slot — where paper comes out */
+    .printer-slot-exit {
+      width: 92%;
+      height: 8px;
+      background: #050505;
+      border-radius: 4px;
+      box-shadow:
+        inset 0 2px 3px rgba(0,0,0,0.9),
+        0 1px 0 rgba(255,255,255,0.05);
+      position: relative;
+      margin-top: 8px;
+    }
+    /* Paper-exit tongue */
+    .printer-slot-exit::before {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      max-width: 160px;
+      height: 2px;
+      background: #050505;
+      box-shadow:
+        inset 0 1px 1px rgba(0,0,0,0.9),
+        0 1px 0 rgba(255,255,255,0.04);
+    }
+    /* Subtle highlight on slot edge */
+    .printer-slot-exit::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 4px; right: 4px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent);
+    }
+
+    /* Inset "light" at the slot showing paper inside (small ambient glow) */
+    .slot-glow {
+      position: absolute;
+      top: 1px; left: 8px; right: 8px;
+      height: 5px;
+      background: linear-gradient(180deg, rgba(106,184,227,0.15) 0%, transparent 100%);
+      border-radius: 3px;
+    }
+
+    /* ============ Receipt ============ */
+    .receipt-wrap {
+      position: absolute;
+      top: 603px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 60px);
+      max-width: 280px;
+      z-index: 8;
+      perspective: 800px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s 0.6s;
+    }
+    .receipt-wrap.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .receipt {
+      background: var(--paper);
+      position: relative;
+      padding: 14px 16px 12px;
+      color: var(--paper-ink);
+      box-shadow:
+        0 8px 24px rgba(0,0,0,0.18),
+        inset 0 0 0 1px rgba(255,255,255,0.4),
+        -5px 0 12px rgba(0,0,0,0.08),
+        5px 0 12px rgba(0,0,0,0.08);
+      font-family: var(--mono);
+      transform-origin: 50% 0%;
+      will-change: transform, clip-path, opacity;
+      clip-path: inset(0 0 100% 0);
+      transition:
+        clip-path 3.2s cubic-bezier(0.55, 0.085, 0.45, 0.95),
+        transform 0.7s cubic-bezier(0.5, 0, 0.5, 1),
+        opacity 0.5s ease-out,
+        box-shadow 0.5s ease-out;
+      background-image:
+        radial-gradient(circle at 25% 25%, rgba(31, 29, 24, 0.03) 0.5px, transparent 1px),
+        radial-gradient(circle at 75% 75%, rgba(31, 29, 24, 0.03) 0.5px, transparent 1px);
+      background-size: 4px 4px;
+    }
+    .receipt.printing {
+      clip-path: inset(0 0 0% 0);
+    }
+    .receipt.tearing {
+      clip-path: inset(0 0 0 0);
+      transform: translateY(80px) rotate(-4deg) scale(0.95);
+      opacity: 0;
+      box-shadow:
+        0 30px 50px rgba(0,0,0,0.20),
+        -8px 4px 20px rgba(0,0,0,0.15),
+        8px 4px 20px rgba(0,0,0,0.15);
+    }
+
+    /* Tear edge */
+    .tear-edge {
+      position: relative;
+      height: 8px;
+      margin: 4px -16px 0;
+      background: var(--paper);
+      -webkit-mask: radial-gradient(circle at 4px 4px, #000 4px, transparent 5px) 0 0 / 8px 8px repeat-x;
+      mask: radial-gradient(circle at 4px 4px, #000 4px, transparent 5px) 0 0 / 8px 8px repeat-x;
+      transform: scaleY(-1);
+    }
+
+    /* ============ Receipt Content ============ */
+    .r-head {
+      text-align: center;
+      padding: 0 0 6px;
+      opacity: 0;
+      animation: fadeIn 0.3s 0.1s forwards;
+    }
+    .r-head .logo {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .r-head .logo .gold { color: var(--gold-deep); }
+    .r-head .sub {
+      font-size: 7px;
+      letter-spacing: 0.12em;
+      color: var(--paper-ink-soft);
+      margin-top: 1px;
+    }
+
+    .r-time {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      color: var(--paper-ink-soft);
+      padding: 3px 0 4px;
+      letter-spacing: 0.04em;
+      opacity: 0;
+      animation: fadeIn 0.3s 0.3s forwards;
+    }
+
+    .r-dot {
+      height: 1px;
+      background: repeating-linear-gradient(90deg, var(--paper-line) 0, var(--paper-line) 3px, transparent 3px, transparent 6px);
+      margin: 5px 0;
+      opacity: 0;
+      animation: fadeIn 0.3s forwards;
+    }
+    .r-dot.d1 { animation-delay: 0.5s; }
+    .r-dot.d2 { animation-delay: 1.4s; }
+    .r-dot.d3 { animation-delay: 2.0s; }
+
+    .r-cat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 3px 0 6px;
+      opacity: 0;
+      animation: fadeIn 0.4s 0.7s forwards;
+    }
+    .r-cat .ic {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.05);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .r-cat .ic svg {
+      width: 12px; height: 12px;
+      stroke: #1f1d18; fill: none; stroke-width: 2;
+    }
+    .r-cat .text .lab {
+      font-size: 7px;
+      letter-spacing: 0.18em;
+      color: var(--paper-ink-soft);
+      text-transform: uppercase;
+    }
+    .r-cat .text .val {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .r-amount {
+      text-align: center;
+      padding: 8px 0 5px;
+      opacity: 0;
+      animation: rAmountIn 0.6s 1.0s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes rAmountIn {
+      0% { opacity: 0; transform: scale(0.7); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .r-amount .cur {
+      font-size: 14px;
+      color: var(--paper-ink-soft);
+      vertical-align: top;
+      margin-right: 2px;
+    }
+    .r-amount .num {
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--exp-2);
+      line-height: 1;
+    }
+    .r-amount.inc .num { color: var(--inc-2); }
+    .r-amount .badge {
+      display: inline-block;
+      margin-top: 3px;
+      padding: 2px 7px;
+      background: var(--exp-2);
+      color: #fff;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      border-radius: 99px;
+      font-family: var(--sans);
+    }
+    .r-amount.inc .badge { background: var(--inc-2); }
+
+    .r-detail {
+      opacity: 0;
+      animation: fadeIn 0.4s 1.6s forwards;
+    }
+    .r-detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      font-size: 9.5px;
+    }
+    .r-detail-row .lab { color: var(--paper-ink-soft); }
+    .r-detail-row .val {
+      font-weight: 600;
+      color: var(--paper-ink);
+      max-width: 60%;
+      text-align: right;
+      font-family: var(--sans);
+    }
+
+    .r-barcode {
+      padding: 5px 0 4px;
+      opacity: 0;
+      animation: fadeIn 0.4s 2.2s forwards;
+    }
+    .r-barcode .bars {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 1px;
+      height: 22px;
+    }
+    .r-barcode .bars div {
+      width: 1.4px;
+      background: var(--paper-ink);
+      transform-origin: bottom;
+      transform: scaleY(0);
+      animation: barcodeGrow 0.4s forwards;
+    }
+    @keyframes barcodeGrow { 0% { transform: scaleY(0); } 100% { transform: scaleY(1); } }
+    .r-barcode .code {
+      text-align: center;
+      font-size: 7px;
+      letter-spacing: 0.3em;
+      color: var(--paper-ink-soft);
+      margin-top: 3px;
+    }
+
+    .r-footer {
+      text-align: center;
+      padding: 4px 0 2px;
+      opacity: 0;
+      animation: fadeIn 0.4s 2.7s forwards;
+    }
+    .r-footer .thanks {
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+    }
+    .r-footer .sub {
+      font-size: 7px;
+      letter-spacing: 0.1em;
+      color: var(--paper-ink-soft);
+      margin-top: 2px;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+    /* Tear indicator */
+    .tear-indicator {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 14px;
+      pointer-events: none;
+      z-index: 20;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .tear-indicator.show { opacity: 1; }
+    .tear-indicator .line {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: repeating-linear-gradient(90deg,
+        var(--gold) 0, var(--gold) 4px,
+        transparent 4px, transparent 8px);
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 0.5s cubic-bezier(0.5, 0, 0.5, 1);
+    }
+    .tear-indicator.show .line { transform: scaleX(1); }
+    .tear-indicator .scissors {
+      position: absolute;
+      top: -10px; left: 0;
+      font-size: 14px;
+      transform: translateX(0);
+      transition: transform 0.4s cubic-bezier(0.5, 0, 0.5, 1);
+      color: var(--gold);
+    }
+
+    .paper-bits {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      pointer-events: none;
+    }
+    .bit {
+      position: absolute;
+      width: 3px; height: 3px;
+      background: var(--paper);
+      border-radius: 1px;
+      opacity: 0;
+    }
+    .bit.fly {
+      animation: bitFly 0.8s forwards;
+    }
+    @keyframes bitFly {
+      0% { opacity: 0.9; transform: translate(0, 0) rotate(0); }
+      100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(var(--r)); }
+    }
+
+    .tap-hint {
+      position: absolute;
+      bottom: -36px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: var(--ink-2);
+      letter-spacing: 0.1em;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .tap-hint.show { opacity: 1; }
+    .tap-hint .bounce-dot {
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 6px var(--gold);
+      animation: bounceDot 1.4s infinite;
+    }
+    @keyframes bounceDot {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-3px); }
+    }
+
+    /* ============ Controls panel ============ */
+    .controls {
+      background: var(--card);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: var(--shadow-md);
+    }
+    .controls h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 4px; }
+    .controls h2 .em { color: var(--gold); }
+    .controls .sub { font-size: 12.5px; color: var(--ink-3); margin-bottom: 20px; line-height: 1.5; }
+
+    .btn-big {
+      width: 100%; padding: 14px;
+      border: none;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 14px;
+      box-shadow: 0 8px 20px rgba(212, 165, 116, 0.30);
+      cursor: pointer;
+      font-family: var(--sans);
+      letter-spacing: 0.02em;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-big:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,0.22); }
+    .btn-big:active { transform: scale(0.98); }
+    .btn-big .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--lcd);
+      box-shadow: 0 0 8px var(--lcd);
+      animation: pulse 1.4s infinite;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .quick-actions button {
+      padding: 9px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-2);
+      cursor: pointer;
+      border-radius: 10px;
+      font-family: var(--sans);
+      transition: all 0.15s;
+    }
+    .quick-actions button:hover { background: var(--bg); border-color: var(--line-2); }
+
+    .control-group { margin-top: 18px; }
+    .control-group .lab {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.12em; color: var(--ink-2);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .control-group .seg {
+      display: flex;
+      background: var(--bg-2);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .control-group .seg button {
+      flex: 1;
+      padding: 8px 0;
+      border: none; background: transparent;
+      font-size: 12px; font-weight: 600;
+      color: var(--ink-3);
+      cursor: pointer;
+      border-radius: 8px;
+      font-family: var(--sans);
+    }
+    .control-group .seg button.active {
+      background: var(--card);
+      color: var(--ink);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .timeline { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+    .timeline h3 {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.12em; color: var(--ink-2);
+      text-transform: uppercase; margin-bottom: 14px;
+    }
+    .tl-item {
+      display: flex; gap: 10px; padding: 8px 0; align-items: flex-start;
+    }
+    .tl-item .time {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--gold-deep);
+      background: var(--gold-soft);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      flex-shrink: 0;
+      min-width: 56px;
+      text-align: center;
+    }
+    .tl-item .desc {
+      font-size: 11.5px; color: var(--ink-2); line-height: 1.5;
+    }
+    .tl-item .desc b { color: var(--ink); font-weight: 700; }
+
+    .hint {
+      margin-top: 16px;
+      padding: 12px 14px;
+      background: var(--gold-soft);
+      border-radius: 12px;
+      font-size: 11.5px;
+      color: var(--gold-deep);
+      line-height: 1.5;
+      display: flex; gap: 8px;
+    }
+    .hint .icon {
+      flex-shrink: 0;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--gold);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    .mini-section { margin-top: 24px; }
+    .mini-section h3 { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--ink); }
+    .mini-section .steps {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+    }
+    .mini-section .step {
+      padding: 8px 4px;
+      background: var(--bg);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 9.5px;
+      color: var(--ink-2);
+      font-weight: 500;
+      line-height: 1.2;
+    }
+    .mini-section .step .n {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--gold-deep);
+      background: var(--gold-soft);
+      padding: 1px 4px;
+      border-radius: 3px;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-hero">
+    <div class="badge"><span class="dot"></span>POS Terminal UX · v3</div>
+    <h1>POS 联机<span>打印</span></h1>
+    <p>点 + → POS 从屏幕底部弹出 → 在 POS 屏幕填写 → 完成 → POS 上滑联机打印机 → 纸张打印 → tap 撕下</p>
+  </div>
+
+  <div class="stage">
+    <!-- Phone -->
+    <div class="phone-area">
+      <div class="phone">
+        <div class="phone-screen">
+
+          <div class="backdrop"></div>
+
+          <!-- Home screen ghost -->
+          <div class="home-bg" id="homeBg">
+            <div class="home-title">FloGold</div>
+            <div class="home-card"></div>
+            <div class="home-row"></div>
+            <div class="home-row"></div>
+            <div class="home-row"></div>
+            <div class="home-row"></div>
+          </div>
+
+          <div class="state-badge idle" id="stateBadge">
+            <span class="dot"></span>
+            <span id="stateText">PHASE 1 · IDLE 待点 +</span>
+          </div>
+
+          <!-- POS COMBO (POS body + printer-exit module, moves as one unit) -->
+          <div class="pos-combo" id="posCombo">
+
+          <!-- POS MACHINE -->
+          <div class="pos-machine" id="posMachine">
+            <div class="pos-body">
+              <!-- Top: Printer Module -->
+              <div class="pos-printer">
+                <div class="printer-row">
+                  <div class="vents">
+                    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                  </div>
+                  <div class="printer-brand">FloGold<span class="em"> · POS</span></div>
+                  <div class="led" id="led"></div>
+                </div>
+                <div class="printer-slot"></div>
+              </div>
+
+              <!-- LCD Screen -->
+              <div class="pos-screen">
+                <div class="screen-inner">
+                  <div class="screen-top">
+                    <span>FloGold · 联机</span>
+                    <div class="signal"><span></span><span></span><span></span><span></span></div>
+                  </div>
+                  <div class="screen-amount-row">
+                    <span class="lab">支出</span>
+                    <span class="cur">¥</span>
+                    <span class="num" id="screenNum">128.50</span>
+                    <span class="cursor" id="screenCursor"></span>
+                  </div>
+                  <div class="screen-cat-row">
+                    <span class="cat-cell">餐饮</span>
+                    <span class="cat-cell active">交通</span>
+                    <span class="cat-cell">购物</span>
+                    <span class="cat-cell">娱乐</span>
+                    <span class="cat-cell">居家</span>
+                  </div>
+                  <div class="screen-info">
+                    > 商户 <span>滴滴出行</span><br>
+                    > 地点 <span>国贸</span><br>
+                    > 备注 <span>加班回家</span>
+                  </div>
+                  <div class="screen-cta" id="screenCta" onclick="liftPOS()">
+                    <span>完成 → 联机打印</span>
+                    <span class="arrow">→</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Keypad -->
+              <div class="pos-keypad">
+                <button class="key" onclick="keyTap(this, '1')">1</button>
+                <button class="key" onclick="keyTap(this, '2')">2</button>
+                <button class="key" onclick="keyTap(this, '3')">3</button>
+                <button class="key fn" onclick="keyTap(this, '⌫')">⌫</button>
+                <button class="key" onclick="keyTap(this, '4')">4</button>
+                <button class="key" onclick="keyTap(this, '5')">5</button>
+                <button class="key" onclick="keyTap(this, '6')">6</button>
+                <button class="key fn" onclick="keyTap(this, '+')">+</button>
+                <button class="key" onclick="keyTap(this, '7')">7</button>
+                <button class="key" onclick="keyTap(this, '8')">8</button>
+                <button class="key" onclick="keyTap(this, '9')">9</button>
+                <button class="key fn" onclick="keyTap(this, '-')">−</button>
+                <button class="key" onclick="keyTap(this, '.')">.</button>
+                <button class="key" onclick="keyTap(this, '0')">0</button>
+                <button class="key fn" onclick="keyTap(this, '00')">00</button>
+                <button class="key go" onclick="liftPOS()">
+                  <div class="key-inner">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>完成</span>
+                  </div>
+                </button>
+              </div>
+
+              <div class="pos-base">FloGold<span class="em"> · 80mm THERMAL</span></div>
+            </div>
+
+          <!-- Printer Exit Module (absolute positioned below POS) -->
+          <div class="printer-exit" id="printerExit">
+            <div class="printer-exit-body">
+              <div class="printer-exit-vents">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <div class="printer-exit-led" id="exitLed"></div>
+              <div class="printer-slot-exit">
+                <div class="slot-glow"></div>
+              </div>
+            </div>
+          </div>
+
+          </div><!-- /.pos-machine -->
+
+          </div><!-- /.pos-combo -->
+
+          <!-- Connection line and status pill -->
+          <div class="connection-line" id="connLine">          </div>
+          <div class="status-pill" id="statusPill">
+            <span class="blink-dot"></span>
+            <span>正在联机打印…</span>
+          </div>
+
+          <!-- Receipt -->
+          <div class="receipt-wrap" id="receiptWrap">
+            <div class="tear-indicator" id="tearIndicator">
+              <div class="line"></div>
+              <div class="scissors">✂</div>
+            </div>
+            <div class="paper-bits" id="paperBits"></div>
+
+            <div class="receipt" id="receipt">
+              <div class="r-head">
+                <div class="logo">FloGold<span class="gold"> · 记账小票</span></div>
+                <div class="sub">RECEIPT · FG202607090841</div>
+              </div>
+              <div class="r-time">
+                <span>2026/07/09</span>
+                <span>17:42 周四</span>
+              </div>
+              <div class="r-dot d1"></div>
+              <div class="r-cat">
+                <div class="ic">
+                  <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                </div>
+                <div class="text">
+                  <div class="lab">CATEGORY</div>
+                  <div class="val">交通 · 地铁</div>
+                </div>
+              </div>
+              <div class="r-amount" id="rAmount">
+                <div><span class="cur">¥</span><span class="num" id="rNum">128.50</span></div>
+                <span class="badge" id="rBadge">支 出</span>
+              </div>
+              <div class="r-dot d2"></div>
+              <div class="r-detail">
+                <div class="r-detail-row"><span class="lab">商户</span><span class="val">滴滴出行</span></div>
+                <div class="r-detail-row"><span class="lab">地点</span><span class="val">国贸 · 北京</span></div>
+                <div class="r-detail-row"><span class="lab">备注</span><span class="val">加班回家</span></div>
+              </div>
+              <div class="r-dot d3"></div>
+              <div class="r-barcode">
+                <div class="bars" id="bars"></div>
+                <div class="code">*128.50·20260709*</div>
+              </div>
+              <div class="r-footer">
+                <div class="thanks">— THANK YOU —</div>
+                <div class="sub">感谢使用 FloGold · 每一笔都值得记录</div>
+              </div>
+              <div class="tear-edge"></div>
+            </div>
+
+            <div class="tap-hint" id="tapHint">
+              <span class="bounce-dot"></span>
+              <span>点击纸张 → 撕下小票</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <h2>v3 交互式<span class="em">演示</span></h2>
+      <p class="sub">点按钮看 POS 从底部弹出 + 上滑联机打印机 + 吐纸 + 撕纸的完整流程</p>
+
+      <button class="btn-big" id="mainBtn" onclick="openPOS()">
+        <span class="dot"></span>
+        ① 模拟「+」→ POS 弹出
+      </button>
+
+      <div class="quick-actions">
+        <button onclick="resetDemo()">↻ 重置</button>
+        <button onclick="skipToPrint()">⏭ 跳打印</button>
+        <button onclick="triggerTear()">✂ 撕纸</button>
+      </div>
+
+      <div class="control-group">
+        <div class="lab">收支类型</div>
+        <div class="seg">
+          <button class="active" id="segExp" onclick="setType('expense')">支出</button>
+          <button id="segInc" onclick="setType('income')">收入</button>
+        </div>
+      </div>
+
+      <div class="mini-section">
+        <h3>硬件联机流程</h3>
+        <div class="steps">
+          <div class="step"><div class="n">①</div>POS 弹出</div>
+          <div class="step"><div class="n">②</div>POS 操作</div>
+          <div class="step"><div class="n">③</div>组合上滑</div>
+          <div class="step"><div class="n">④</div>联机状态</div>
+          <div class="step"><div class="n">⑤</div>联机吐纸</div>
+          <div class="step"><div class="n">⑥</div>撕下小票</div>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <h3>完整时间线</h3>
+        <div class="tl-item">
+          <span class="time">0 ms</span>
+          <span class="desc">用户点「<b>+</b>」backdrop 浮现</span>
+        </div>
+        <div class="tl-item">
+          <span class="time">100</span>
+          <span class="desc">POS 从屏幕底部 <b>translateY(100%+24px) → 0</b> 弹出 <span style="font-family:var(--mono);font-size:9px;color:var(--ink-3)">spring 0.7s</span></span>
+        </div>
+        <div class="tl-item">
+          <span class="time">800</span>
+          <span class="desc">POS 落地投影出现，<b>LCD 屏幕蓝光点亮</b>，LED 闪蓝</span>
+        </div>
+        <div class="tl-item">
+          <span class="time">∞</span>
+          <span class="desc">用户在 <b>POS 屏幕</b> 上选择分类、看到金额</span>
+        </div>
+        <div class="tl-item">
+          <span class="time">tap</span>
+          <span class="desc">点 POS 屏幕 <b>「完成 →」</b> 按钮或键盘绿色按钮</span>
+        </div>
+        <div class="tl-item">
+          <span class="time">+0</span>
+          <span class="desc">POS LCD 屏暗下 <b>「PRINTER CONNECTING...」</b></span>
+        </div>
+        <div class="tl-item">
+          <span class="time">+200</span>
+          <span class="desc">POS 从底部向上滑动 <b>到顶部联机位</b> <span style="font-family:var(--mono);font-size:9px;color:var(--ink-3)">0.8s</span></span>
+        </div>
+        <div class="tl-item">
+          <span class="time">+1000</span>
+          <span class="desc">顶部出现 <b>金色虚线连接 + 联机状态 pill</b></span>
+        </div>
+        <div class="tl-item">
+          <span class="time">+1500</span>
+          <span class="desc">LED 转红，纸张 <b>从 POS 顶部插槽吐出</b></span>
+        </div>
+        <div class="tl-item">
+          <span class="time">+4500</span>
+          <span class="desc">POS 微震模拟电机，打印完成，<b>LED 转绿</b></span>
+        </div>
+        <div class="tl-item">
+          <span class="time">tap</span>
+          <span class="desc">点纸张 → 剪刀扫过 + 纸屑飞散 + 纸张坠落</span>
+        </div>
+        <div class="tl-item">
+          <span class="time">+700</span>
+          <span class="desc">POS <b>回落到底部初始位</b>，准备记账下一笔</span>
+        </div>
+      </div>
+
+      <div class="hint">
+        <div class="icon">!</div>
+        <div>
+          <b>v3 概念：</b>把记账 App 完全「硬件化」—— POS 是银行终端的灵魂形态。点 + 像刷卡机一样弹出，提交后 POS 像插上电源的打印机一样联机打印。这是 FloGold 区别于所有记账 App 的<strong>标志性交互</strong>。
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const ST = { phase: 'idle' };
+  const TY = { current: 'expense' };
+
+  const $ = id => document.getElementById(id);
+  const posMachine = $('posMachine');
+  const posCombo = $('posCombo');
+  const led = $('led');
+  const printerExit = $('printerExit');
+  const exitLed = $('exitLed');
+  const screenCta = $('screenCta');
+  const screenCursor = $('screenCursor');
+  const receipt = $('receipt');
+  const tearIndicator = $('tearIndicator');
+  const tapHint = $('tapHint');
+  const paperBits = $('paperBits');
+  const stateBadge = $('stateBadge');
+  const stateText = $('stateText');
+  const backdrop = document.querySelector('.backdrop');
+  const receiptWrap = $('receiptWrap');
+  const connLine = $('connLine');
+  const statusPill = $('statusPill');
+  const homeBg = $('homeBg');
+
+  function setBadge(phase) {
+    stateBadge.classList.remove('idle', 'pos', 'lifting', 'printing', 'complete', 'tearing');
+    stateBadge.classList.add(phase);
+    const labels = {
+      idle: 'PHASE 1 · IDLE 待点 +',
+      pos: 'PHASE 2 · POS 弹出中',
+      ready: 'PHASE 2 · POS 操作中',
+      lifting: 'PHASE 3 · POS 联机中',
+      printing: 'PHASE 4 · 打印机吐纸中',
+      complete: 'PHASE 5 · 完成 待撕纸',
+      tearing: 'PHASE 6 · 撕下中'
+    };
+    stateText.textContent = labels[phase] || phase;
+  }
+
+  function makeBars(id, count) {
+    const c = $(id);
+    if (!c || c.children.length) return;
+    const heights = [];
+    for (let i = 0; i < count; i++) heights.push(35 + Math.abs(Math.sin(i * 1.7)) * 60);
+    heights.forEach((h, i) => {
+      const d = document.createElement('div');
+      d.style.height = h + '%';
+      c.appendChild(d);
+    });
+    requestAnimationFrame(() => {
+      Array.from(c.children).forEach((d, i) => {
+        d.style.animation = `barcodeGrow 0.4s ${2.0 + i * 0.015}s cubic-bezier(0.5,0,0.5,1) forwards`;
+      });
+    });
+  }
+
+  function setType(t) {
+    TY.current = t;
+    $('segExp').classList.toggle('active', t === 'expense');
+    $('segInc').classList.toggle('active', t === 'income');
+    $('rAmount').classList.remove('inc', 'exp');
+    $('rAmount').classList.add(t === 'expense' ? 'exp' : 'inc');
+    $('rBadge').textContent = t === 'expense' ? '支 出' : '收 入';
+  }
+
+  function keyTap(btn, key) {
+    if (ST.phase !== 'ready') return;
+    btn.classList.add('pressed');
+    setTimeout(() => btn.classList.remove('pressed'), 100);
+  }
+
+  // === Step 1: Tap + → POS pops up from bottom ===
+  function openPOS() {
+    if (ST.phase !== 'idle') return;
+    ST.phase = 'pos';
+    setBadge('pos');
+    backdrop.classList.add('show');
+    homeBg.style.opacity = '0.3';
+
+    setTimeout(() => {
+      posCombo.classList.add('raise');
+    }, 100);
+
+    // POS lands, LCD lights up
+    setTimeout(() => {
+      ST.phase = 'ready';
+      setBadge('ready');
+      led.classList.add('lcd-on');
+    }, 800);
+  }
+
+  // === Step 3: Confirm → POS slides up to top ===
+  function liftPOS() {
+    if (ST.phase !== 'ready') return;
+    ST.phase = 'lifting';
+    setBadge('lifting');
+
+    // Screen dims
+    screenCursor.style.display = 'none';
+    screenCta.classList.add('dimming');
+    // LCD screen showing "CONNECTING"
+    const screenInner = document.querySelector('.screen-inner');
+    const screenTop = document.querySelector('.screen-top span');
+    const origTop = screenTop.textContent;
+    screenTop.textContent = 'CONNECTING';
+    screenTop.style.color = 'var(--gold)';
+
+    // POS combo slides UP to top of phone (POS + printer-exit move as one unit)
+    posCombo.classList.remove('raise');
+    posCombo.classList.add('lifted');
+
+    // Connection animation appears
+    setTimeout(() => {
+      connLine.classList.add('show');
+      statusPill.classList.add('show');
+    }, 800);
+
+    // POS reaches top, start printing
+    setTimeout(() => {
+      ST.phase = 'printing';
+      setBadge('printing');
+
+      // Reveal receipt wrap
+      receiptWrap.classList.add('visible');
+
+      // LEDs turn red
+      led.classList.remove('lcd-on');
+      led.classList.add('printing');
+      exitLed.classList.remove('complete');
+      exitLed.classList.add('printing');
+
+      // Both printers vibrate
+      posMachine.classList.add('printing');
+      printerExit.classList.add('printing');
+
+      // Trigger printing
+      receipt.classList.remove('printing', 'tearing');
+      void receipt.offsetWidth;
+      receipt.classList.add('printing');
+      makeBars('bars', 40);
+
+      // === After print complete (3.2s anim + buffer) → transition to complete state ===
+      setTimeout(() => {
+        posMachine.classList.remove('printing');
+        printerExit.classList.remove('printing');
+        led.classList.remove('printing');
+        exitLed.classList.remove('printing');
+        exitLed.classList.add('complete');
+        ST.phase = 'complete';
+        setBadge('complete');
+        // Tap hint appears
+        setTimeout(() => tapHint.classList.add('show'), 300);
+      }, 3500);
+    }, 1500);
+  }
+
+  // === Step 5: Receipt complete + tap to tear ===
+  function triggerTear() {
+    if (ST.phase === 'idle' || ST.phase === 'printing' || ST.phase === 'lifting') return;
+    if (ST.phase === 'pos' || ST.phase === 'ready') {
+      liftPOS();
+      setTimeout(() => {
+        if (ST.phase === 'printing') {
+          // Skip to complete
+          receipt.classList.remove('printing');
+          void receipt.offsetWidth;
+          receipt.classList.add('printing');
+          makeBars('bars', 40);
+        }
+        setTimeout(triggerTear, 800);
+      }, 1500);
+      return;
+    }
+    if (ST.phase === 'tearing' || ST.phase === 'complete' || ST.phase === 'printing') {
+      if (ST.phase === 'printing') {
+        // jump to complete first
+        receipt.classList.remove('printing');
+        void receipt.offsetWidth;
+        receipt.classList.add('printing');
+        makeBars('bars', 40);
+        setTimeout(triggerTear, 1000);
+        return;
+      }
+    }
+    if (ST.phase !== 'complete') return;
+
+    ST.phase = 'tearing';
+    setBadge('tearing');
+    tapHint.classList.remove('show');
+    led.classList.remove('complete');
+
+    tearIndicator.classList.add('show');
+    const scissors = tearIndicator.querySelector('.scissors');
+    scissors.style.transform = 'translateX(260px)';
+
+    for (let i = 0; i < 14; i++) {
+      const bit = document.createElement('div');
+      bit.className = 'bit';
+      bit.style.left = (Math.random() * 100) + '%';
+      bit.style.top = '0';
+      const tx = (Math.random() - 0.5) * 80;
+      const ty = 20 + Math.random() * 30;
+      const r = (Math.random() - 0.5) * 360;
+      bit.style.setProperty('--tx', tx + 'px');
+      bit.style.setProperty('--ty', ty + 'px');
+      bit.style.setProperty('--r', r + 'deg');
+      paperBits.appendChild(bit);
+      setTimeout(() => bit.classList.add('fly'), 200 + Math.random() * 100);
+      setTimeout(() => bit.remove(), 1200);
+    }
+
+    setTimeout(() => {
+      receipt.classList.remove('printing');
+      void receipt.offsetWidth;
+      receipt.classList.add('tearing');
+      led.classList.remove('complete');
+    }, 400);
+
+    setTimeout(() => {
+      tearIndicator.classList.remove('show');
+      posCombo.classList.remove('lifted');
+      posCombo.classList.add('raise');
+      connLine.classList.remove('show');
+      statusPill.classList.remove('show');
+      printerExit.classList.remove('printing');
+      exitLed.classList.remove('printing', 'complete');
+      setBadge('idle');
+    }, 1200);
+
+    setTimeout(() => {
+      ST.phase = 'idle';
+      setBadge('idle');
+      receiptWrap.classList.remove('visible');
+      posMachine.classList.remove('printing');
+      led.classList.remove('printing', 'complete', 'lcd-on');
+      receipt.classList.remove('printing', 'tearing');
+      $('bars').innerHTML = '';
+      paperBits.innerHTML = '';
+      backdrop.classList.remove('show');
+      homeBg.style.opacity = '1';
+    }, 1900);
+  }
+
+  // Click paper to tear
+  receipt.addEventListener('click', e => {
+    e.stopPropagation();
+    // Only allow when complete
+    if (ST.phase !== 'complete') return;
+    triggerTear();
+  });
+
+  function skipToPrint() {
+    if (ST.phase === 'idle') {
+      openPOS();
+      setTimeout(() => {
+        // Force lift
+        liftPOS();
+        setTimeout(() => {
+          // Force jump to complete
+          receipt.classList.remove('printing');
+          void receipt.offsetWidth;
+          receipt.classList.add('printing');
+          makeBars('bars', 40);
+          // Skip to complete
+          setTimeout(() => {
+            posMachine.classList.remove('printing');
+            led.classList.remove('printing');
+            led.classList.add('complete');
+            ST.phase = 'complete';
+            setBadge('complete');
+            setTimeout(() => tapHint.classList.add('show'), 300);
+          }, 2200);
+        }, 200);
+      }, 400);
+    }
+  }
+
+  function resetDemo() {
+    ST.phase = 'idle';
+    setBadge('idle');
+
+    posCombo.classList.remove('raise', 'lifted');
+    posMachine.classList.remove('printing');
+    led.classList.remove('lcd-on', 'printing', 'complete');
+    printerExit.classList.remove('printing');
+    exitLed.classList.remove('printing', 'complete');
+    screenCta.classList.remove('dimming');
+    screenCursor.style.display = '';
+    const screenTop = document.querySelector('.screen-top span');
+    if (screenTop) screenTop.textContent = 'FloGold · 联机';
+
+    receiptWrap.classList.remove('visible');
+    connLine.classList.remove('show');
+    statusPill.classList.remove('show');
+
+    receipt.classList.remove('printing', 'tearing');
+
+    tearIndicator.classList.remove('show');
+    tapHint.classList.remove('show');
+
+    backdrop.classList.remove('show');
+    homeBg.style.opacity = '1';
+
+    $('bars').innerHTML = '';
+    paperBits.innerHTML = '';
+  }
+
+  // Initialize
+  setType('expense');
+  setBadge('idle');
+</script>
+</body>
+</html>

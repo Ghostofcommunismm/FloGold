@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>方案 C · 液态玻璃 — 记一笔</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1610;
+      --ink-2: #5a5346;
+      --ink-3: #9a9183;
+      --line: rgba(255, 255, 255, 0.18);
+      --line-2: rgba(255, 255, 255, 0.32);
+
+      --glass: rgba(255, 255, 255, 0.72);
+      --glass-2: rgba(255, 255, 255, 0.48);
+      --glass-border: rgba(255, 255, 255, 0.55);
+
+      --gold: #d4a574;
+      --gold-soft: #f7ece0;
+      --exp: #e08a5e;
+      --exp-bg: #fdeee6;
+      --inc: #6ba886;
+      --inc-bg: #e6f1ea;
+
+      --sans: 'Outfit', 'Noto Sans SC', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: var(--sans);
+      min-height: 100vh;
+      padding: 36px 16px 80px;
+      -webkit-font-smoothing: antialiased;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 20%, #ffd4a0 0%, transparent 50%),
+        radial-gradient(ellipse 50% 40% at 80% 30%, #ffb6c8 0%, transparent 50%),
+        radial-gradient(ellipse 70% 50% at 50% 90%, #c8b6f7 0%, transparent 50%),
+        linear-gradient(135deg, #f5e8d6 0%, #f0d6e0 50%, #e0d6f0 100%);
+      background-attachment: fixed;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 30% 40%, rgba(255,255,255,0.3) 0%, transparent 30%),
+        radial-gradient(circle at 70% 60%, rgba(255,200,150,0.2) 0%, transparent 40%);
+      pointer-events: none;
+    }
+    .page-title {
+      text-align: center;
+      margin-bottom: 36px;
+      position: relative;
+      z-index: 1;
+    }
+    .page-title h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+    .page-title h1 span {
+      color: var(--gold);
+      font-weight: 800;
+    }
+    .page-title p {
+      font-size: 12.5px;
+      color: rgba(26, 22, 16, 0.55);
+      margin-top: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ============ Phone ============ */
+    .phone {
+      max-width: 400px;
+      width: 100%;
+      margin: 0 auto;
+      aspect-ratio: 9 / 19.5;
+      background: linear-gradient(135deg, #2a2a2a 0%, #0a0a0a 100%);
+      border-radius: 44px;
+      padding: 12px;
+      box-shadow: 0 36px 80px rgba(0,0,0,0.32), 0 16px 32px rgba(0,0,0,0.18);
+      position: relative;
+      z-index: 1;
+    }
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 22px; left: 50%;
+      transform: translateX(-50%);
+      width: 120px; height: 30px;
+      background: #0a0a0a;
+      border-radius: 99px;
+      z-index: 20;
+    }
+    .phone-screen {
+      width: 100%; height: 100%;
+      border-radius: 32px;
+      overflow: hidden;
+      position: relative;
+      background:
+        radial-gradient(ellipse 70% 50% at 30% 20%, #ffd4a0 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 60%, #ffb6c8 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 20% 90%, #c8b6f7 0%, transparent 60%),
+        linear-gradient(135deg, #fef3e2 0%, #fce4ed 50%, #ede4fa 100%);
+    }
+
+    /* ============ 模拟首页背景 ============ */
+    .home-bg {
+      position: absolute;
+      inset: 0;
+      padding: 60px 20px 20px;
+    }
+    .home-bg .ghost-card {
+      height: 120px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.45);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.5);
+      margin-bottom: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+    }
+    .home-bg .ghost-row {
+      height: 60px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.35);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.4);
+      margin-bottom: 10px;
+    }
+
+    .scheme-tag {
+      position: absolute;
+      top: 18px; right: 18px;
+      background: rgba(255,255,255,0.5);
+      backdrop-filter: blur(16px) saturate(180%);
+      padding: 6px 12px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: 0.04em;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      z-index: 30;
+      border: 1px solid rgba(255,255,255,0.6);
+    }
+    .scheme-tag .dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    /* ============ 液态玻璃弹窗 ============ */
+    .modal-sheet {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      background: rgba(255, 255, 255, 0.62);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      border-radius: 32px 32px 0 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow:
+        0 -8px 32px rgba(0,0,0,0.06),
+        inset 0 1px 0 rgba(255,255,255,0.7);
+      padding: 8px 0 0;
+      max-height: 88%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: slideUp 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    /* 高光折射线 */
+    .modal-sheet::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 20%; right: 20%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
+      pointer-events: none;
+    }
+
+    /* Drag Handle */
+    .drag {
+      width: 36px; height: 4px;
+      background: rgba(26, 22, 16, 0.18);
+      border-radius: 2px;
+      margin: 8px auto 0;
+    }
+
+    /* ============ 顶部 ============ */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 8px;
+    }
+    .glass-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.6);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--ink);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .glass-btn svg {
+      width: 16px; height: 16px;
+      stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .glass-btn.go {
+      width: auto;
+      padding: 0 16px;
+      height: 36px;
+      border-radius: 18px;
+      background: rgba(26, 22, 16, 0.85);
+      backdrop-filter: blur(20px);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .glass-btn.go svg {
+      width: 14px; height: 14px;
+    }
+
+    .top-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    /* ============ 胶囊切换器 ============ */
+    .switch-row {
+      display: flex;
+      justify-content: center;
+      padding: 8px 16px 4px;
+    }
+    .switch-pill {
+      display: flex;
+      background: rgba(255,255,255,0.45);
+      backdrop-filter: blur(20px);
+      border-radius: 99px;
+      padding: 4px;
+      border: 1px solid rgba(255,255,255,0.6);
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .switch-pill button {
+      position: relative;
+      z-index: 1;
+      border: none;
+      background: transparent;
+      padding: 9px 32px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-2);
+      cursor: pointer;
+      border-radius: 99px;
+      font-family: var(--sans);
+      transition: color 0.25s;
+    }
+    .switch-pill button.active { color: #fff; }
+    .switch-pill .pill-bg {
+      position: absolute;
+      top: 4px; bottom: 4px;
+      border-radius: 99px;
+      transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .switch-pill .pill-bg.exp {
+      left: 4px; width: calc(50% - 4px);
+      background: linear-gradient(135deg, #e08a5e 0%, #c46b3f 100%);
+      box-shadow: 0 4px 12px rgba(196, 107, 63, 0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .switch-pill .pill-bg.inc {
+      left: 50%; width: calc(50% - 4px);
+      background: linear-gradient(135deg, #6ba886 0%, #4d8a64 100%);
+      box-shadow: 0 4px 12px rgba(77, 138, 100, 0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+
+    /* ============ 金额 ============ */
+    .amount-glass {
+      padding: 22px 24px 12px;
+      text-align: center;
+    }
+    .amount-glass .label {
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      color: var(--ink-3);
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .amount-glass .line {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 2px;
+      font-family: var(--mono);
+    }
+    .amount-glass .cur {
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--ink-2);
+      align-self: flex-start;
+      margin-top: 10px;
+    }
+    .amount-glass .num {
+      font-size: 64px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--ink);
+      line-height: 1;
+      font-feature-settings: 'tnum';
+    }
+    .amount-glass.exp .num { color: #c46b3f; }
+    .amount-glass.inc .num { color: #4d8a64; }
+    .amount-glass .cursor {
+      display: inline-block;
+      width: 2px; height: 52px;
+      background: var(--gold);
+      margin-left: 2px;
+      vertical-align: middle;
+      animation: blink 1.2s infinite;
+      box-shadow: 0 0 8px rgba(212,165,116,0.5);
+    }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+    .amount-glass .sub {
+      margin-top: 6px;
+      font-size: 11.5px;
+      color: var(--ink-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .amount-glass .sub .ch {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--exp);
+    }
+
+    /* ============ 分类 - 玻璃卡片 ============ */
+    .cat-glass {
+      margin: 12px 14px 0;
+      padding: 12px 8px;
+      background: rgba(255,255,255,0.45);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.55);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 2px;
+    }
+    .cat-cell {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: none;
+      background: transparent;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 6px 0;
+      position: relative;
+    }
+    .cat-cell .ic {
+      width: 38px; height: 38px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ink-2);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8);
+      transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      border: 1px solid rgba(255,255,255,0.7);
+    }
+    .cat-cell .ic svg {
+      width: 18px; height: 18px;
+      stroke: currentColor; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .cat-cell .lb {
+      font-size: 10.5px;
+      color: var(--ink-2);
+      font-weight: 500;
+    }
+    .cat-cell.active .ic {
+      transform: scale(1.1);
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-soft) 100%);
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(212,165,116,0.4), inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+    .cat-cell.active .lb {
+      color: var(--gold);
+      font-weight: 700;
+    }
+    .cat-cell:active { transform: scale(0.95); }
+
+    /* ============ 子分类 - 玻璃条 ============ */
+    .sub-glass {
+      margin: 10px 14px 0;
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.4);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.5);
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .sub-glass::-webkit-scrollbar { display: none; }
+    .sub-chip {
+      flex-shrink: 0;
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.55);
+      border-radius: 99px;
+      font-size: 11.5px;
+      color: var(--ink-2);
+      font-weight: 500;
+      cursor: pointer;
+      font-family: var(--sans);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+    .sub-chip.active {
+      background: linear-gradient(135deg, var(--gold) 0%, #b8895a 100%);
+      color: #fff;
+      font-weight: 600;
+      border-color: transparent;
+      box-shadow: 0 4px 10px rgba(212,165,116,0.35);
+    }
+
+    /* ============ 信息组 (商户/地点/日期/备注) ============ */
+    .info-glass {
+      margin: 10px 14px 0;
+      background: rgba(255,255,255,0.45);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.55);
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .ic {
+      width: 28px; height: 28px;
+      border-radius: 9px;
+      background: rgba(255,255,255,0.6);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ink-2);
+      flex-shrink: 0;
+    }
+    .info-row .ic svg {
+      width: 14px; height: 14px;
+      stroke: currentColor; fill: none; stroke-width: 2;
+    }
+    .info-row .lab {
+      font-size: 12.5px;
+      color: var(--ink-2);
+      font-weight: 500;
+      flex: 1;
+    }
+    .info-row .val {
+      font-size: 12.5px;
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .info-row .val.empty { color: var(--ink-3); font-weight: 400; }
+    .info-row .arr {
+      width: 12px; height: 12px;
+      stroke: var(--ink-3); fill: none; stroke-width: 2;
+    }
+
+    /* ============ 玻璃键盘 ============ */
+    .keypad-glass {
+      margin: 10px 8px 14px;
+      padding: 6px 6px 10px;
+      background: rgba(255,255,255,0.4);
+      backdrop-filter: blur(30px);
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.55);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7);
+      flex-shrink: 0;
+    }
+    .key-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .key {
+      aspect-ratio: 1.7 / 1;
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.7);
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--ink);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.12s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+    .key:active {
+      transform: scale(0.96);
+      background: rgba(212,165,116,0.18);
+    }
+    .key.fn {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+    .key.fn svg {
+      width: 18px; height: 18px;
+      stroke: currentColor; fill: none; stroke-width: 2;
+    }
+    .key.go {
+      grid-row: span 2;
+      background: linear-gradient(135deg, #1a1610 0%, #3a3530 100%);
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 700;
+      aspect-ratio: 1 / 2.6;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+    .key.go.exp {
+      background: linear-gradient(135deg, #e08a5e 0%, #c46b3f 100%);
+      box-shadow: 0 6px 18px rgba(196, 107, 63, 0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .key.go.inc {
+      background: linear-gradient(135deg, #6ba886 0%, #4d8a64 100%);
+      box-shadow: 0 6px 18px rgba(77, 138, 100, 0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="page-title">
+    <h1>方案 C · <span>液态玻璃</span></h1>
+    <p>参考 iOS 26 Liquid Glass / VisionOS — 折射高光 + 模糊玻璃 + 软渐变背景</p>
+  </div>
+
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="scheme-tag"><span class="dot"></span>方案 C · Liquid Glass</div>
+
+      <!-- 模拟首页 -->
+      <div class="home-bg">
+        <div class="ghost-card"></div>
+        <div class="ghost-row"></div>
+        <div class="ghost-row"></div>
+        <div class="ghost-row"></div>
+      </div>
+
+      <div class="modal-sheet">
+        <div class="drag"></div>
+
+        <div class="top-bar">
+          <button class="glass-btn" aria-label="关闭">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+          <span class="top-title">记一笔</span>
+          <button class="glass-btn go" aria-label="完成">
+            <svg viewBox="0 0 24 24" style="margin-right: 4px;"><polyline points="20 6 9 17 4 12"/></svg>
+            完成
+          </button>
+        </div>
+
+        <!-- 类型切换 -->
+        <div class="switch-row">
+          <div class="switch-pill">
+            <span class="pill-bg exp"></span>
+            <button class="active">支出</button>
+            <button>收入</button>
+          </div>
+        </div>
+
+        <!-- 金额 -->
+        <div class="amount-glass exp">
+          <div class="label">本笔支出</div>
+          <div class="line">
+            <span class="cur">¥</span>
+            <span class="num">128.50</span>
+            <span class="cursor"></span>
+          </div>
+          <div class="sub">
+            <span class="ch"></span>
+            实时汇率 · CNY
+          </div>
+        </div>
+
+        <!-- 分类 -->
+        <div class="cat-glass">
+          <div class="cat-grid">
+            <button class="cat-cell">
+              <div class="ic" style="background: rgba(255,210,210,0.7); color: #c97b7b;">
+                <svg viewBox="0 0 24 24"><path d="M3 11h18M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3M7 17v2M17 17v2"/></svg>
+              </div>
+              <span class="lb">餐饮</span>
+            </button>
+            <button class="cat-cell active">
+              <div class="ic">
+                <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              </div>
+              <span class="lb">交通</span>
+            </button>
+            <button class="cat-cell">
+              <div class="ic" style="background: rgba(255,210,235,0.7); color: #f472b6;">
+                <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg>
+              </div>
+              <span class="lb">购物</span>
+            </button>
+            <button class="cat-cell">
+              <div class="ic" style="background: rgba(220,210,255,0.7); color: #8b5cf6;">
+                <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </div>
+              <span class="lb">娱乐</span>
+            </button>
+            <button class="cat-cell">
+              <div class="ic" style="background: rgba(210,235,255,0.7); color: #4ba3d4;">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              </div>
+              <span class="lb">居家</span>
+            </button>
+            <button class="cat-cell">
+              <div class="ic" style="background: rgba(210,240,220,0.7); color: #6ba886;">
+                <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              </div>
+              <span class="lb">医疗</span>
+            </button>
+            <button class="cat-cell">
+              <div class="ic" style="background: rgba(255,225,200,0.7); color: #e08a3a;">
+                <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              </div>
+              <span class="lb">教育</span>
+            </button>
+            <button class="cat-cell">
+              <div class="ic" style="background: rgba(255,220,235,0.7); color: #d97ba7;">
+                <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </div>
+              <span class="lb">人情</span>
+            </button>
+            <button class="cat-cell">
+              <div class="ic" style="background: rgba(240,220,250,0.7); color: #a855f7;">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              </div>
+              <span class="lb">其他</span>
+            </button>
+            <button class="cat-cell">
+              <div class="ic" style="background: rgba(255,255,255,0.3); color: var(--ink-3);">
+                <svg viewBox="0 0 24 24" stroke-dasharray="2.5 2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              </div>
+              <span class="lb">添加</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 子分类 -->
+        <div class="sub-glass">
+          <button class="sub-chip active">地铁</button>
+          <button class="sub-chip">打车</button>
+          <button class="sub-chip">公交</button>
+          <button class="sub-chip">加油</button>
+          <button class="sub-chip">停车</button>
+          <button class="sub-chip">高铁</button>
+        </div>
+
+        <!-- 信息行 -->
+        <div class="info-glass">
+          <div class="info-row">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <span class="lab">地点</span>
+            <span class="val">国贸 · 北京</span>
+            <svg class="arr" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="info-row">
+            <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></div>
+            <span class="lab">日期</span>
+            <span class="val">07/09 · 今天</span>
+            <svg class="arr" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="info-row">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <span class="lab">备注</span>
+            <span class="val empty">添加备注…</span>
+            <svg class="arr" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <!-- 玻璃键盘 -->
+        <div class="keypad-glass">
+          <div class="key-grid">
+            <button class="key">1</button>
+            <button class="key">2</button>
+            <button class="key">3</button>
+            <button class="key fn">
+              <svg viewBox="0 0 24 24"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/></svg>
+            </button>
+            <button class="key">4</button>
+            <button class="key">5</button>
+            <button class="key">6</button>
+            <button class="key fn">+</button>
+            <button class="key">7</button>
+            <button class="key">8</button>
+            <button class="key">9</button>
+            <button class="key fn">-</button>
+            <button class="key">.</button>
+            <button class="key">0</button>
+            <button class="key fn">.</button>
+            <button class="key go exp">完成</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

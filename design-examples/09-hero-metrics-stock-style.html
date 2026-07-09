@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hero Metrics · 股票风格方案</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f3ee;
+      --bg-2: #ebe7df;
+      --card: #ffffff;
+      --ink: #1a1a1a;
+      --ink-2: #5a5a5a;
+      --ink-3: #9a9a9a;
+      --line: rgba(0, 0, 0, 0.08);
+
+      --gold: #d4a574;
+      --gold-soft: #faf5f0;
+
+      --up: #e54545;      /* 涨：红色 */
+      --up-bg: #feeaea;
+      --down: #22a06b;    /* 跌：绿色 */
+      --down-bg: #e8f7ef;
+
+      --shadow-sm: 0 2px 8px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.1);
+
+      --sans: 'Outfit', 'Noto Sans SC', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: var(--bg);
+      font-family: var(--sans);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 12px;
+      color: var(--ink-3);
+      margin-bottom: 36px;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .scheme {
+      position: relative;
+    }
+    .scheme-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+    .scheme-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+    .scheme-tag {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 99px;
+      background: var(--gold-soft);
+      color: #8a5f1c;
+    }
+
+    .phone-frame {
+      background: var(--bg);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    /* ==================== 方案 A：行情卡片 ==================== */
+    .scheme-a .hero-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px 20px 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .scheme-a .hero-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .scheme-a .hero-title {
+      font-size: 12px;
+      color: var(--ink-3);
+      font-weight: 500;
+    }
+    .scheme-a .hero-date {
+      font-size: 10px;
+      color: var(--ink-3);
+      font-family: var(--mono);
+    }
+    .scheme-a .hero-main {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .scheme-a .hero-price {
+      font-family: var(--mono);
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--up);
+      letter-spacing: -2px;
+      line-height: 1;
+    }
+    .scheme-a .hero-price .cur {
+      font-size: 18px;
+      color: var(--ink-2);
+      margin-right: 2px;
+    }
+    .scheme-a .hero-change {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .scheme-a .change-amount {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--up);
+    }
+    .scheme-a .change-percent {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--up-bg);
+      color: var(--up);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--mono);
+    }
+    .scheme-a .hero-row {
+      display: flex;
+      gap: 1px;
+      background: var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .scheme-a .hero-row-item {
+      flex: 1;
+      background: var(--bg);
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .scheme-a .hero-row-item .k {
+      font-size: 9px;
+      color: var(--ink-3);
+      margin-bottom: 3px;
+    }
+    .scheme-a .hero-row-item .v {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    /* ==================== 方案 B：K线风格 ==================== */
+    .scheme-b .hero-card {
+      background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
+      border-radius: 16px;
+      padding: 20px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .scheme-b .hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 120px;
+      height: 100%;
+      background: linear-gradient(90deg, transparent 0%, rgba(229, 69, 69, 0.1) 100%);
+      pointer-events: none;
+    }
+    .scheme-b .hero-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .scheme-b .hero-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .scheme-b .hero-title {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 500;
+    }
+    .scheme-b .hero-main {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .scheme-b .hero-price-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .scheme-b .hero-price {
+      font-family: var(--mono);
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--up);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .scheme-b .hero-price .cur {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-right: 4px;
+    }
+    .scheme-b .hero-change {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .scheme-b .change-arrow {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--up);
+      border-radius: 4px;
+    }
+    .scheme-b .change-arrow svg {
+      width: 12px;
+      height: 12px;
+      stroke: #fff;
+    }
+    .scheme-b .change-text {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--up);
+    }
+    .scheme-b .hero-mini-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 48px;
+    }
+    .scheme-b .mini-bar {
+      width: 6px;
+      border-radius: 2px;
+      background: rgba(229, 69, 69, 0.6);
+    }
+    .scheme-b .mini-bar.up { background: var(--up); }
+    .scheme-b .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .scheme-b .grid-item {
+      text-align: center;
+    }
+    .scheme-b .grid-item .k {
+      font-size: 9px;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 4px;
+    }
+    .scheme-b .grid-item .v {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* ==================== 方案 B-light：浅色K线风格 ==================== */
+    .scheme-b-light .hero-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      color: var(--ink);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
+    }
+    .scheme-b-light .hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 120px;
+      height: 100%;
+      background: linear-gradient(90deg, transparent 0%, rgba(229, 69, 69, 0.06) 100%);
+      pointer-events: none;
+    }
+    .scheme-b-light .hero-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .scheme-b-light .hero-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: var(--ink-3-bg);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+    .scheme-b-light .hero-title {
+      font-size: 11px;
+      color: var(--ink-3);
+      font-weight: 500;
+    }
+    .scheme-b-light .hero-main {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .scheme-b-light .hero-price-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .scheme-b-light .hero-price {
+      font-family: var(--mono);
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--up);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .scheme-b-light .hero-price .cur {
+      font-size: 16px;
+      color: var(--ink-3);
+      margin-right: 4px;
+    }
+    .scheme-b-light .hero-change {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .scheme-b-light .change-arrow {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--up);
+      border-radius: 4px;
+    }
+    .scheme-b-light .change-arrow svg {
+      width: 12px;
+      height: 12px;
+      stroke: #fff;
+    }
+    .scheme-b-light .change-text {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--up);
+    }
+    .scheme-b-light .hero-mini-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 48px;
+    }
+    .scheme-b-light .mini-bar {
+      width: 6px;
+      border-radius: 2px;
+      background: rgba(229, 69, 69, 0.25);
+    }
+    .scheme-b-light .mini-bar.up { background: var(--up); }
+    .scheme-b-light .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+    .scheme-b-light .grid-item {
+      text-align: center;
+    }
+    .scheme-b-light .grid-item .k {
+      font-size: 9px;
+      color: var(--ink-3);
+      margin-bottom: 4px;
+    }
+    .scheme-b-light .grid-item .v {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    /* 下跌状态 */
+    .scheme-b-light.down .hero-price { color: var(--down); }
+    .scheme-b-light.down .hero-card::before {
+      background: linear-gradient(90deg, transparent 0%, rgba(34, 160, 107, 0.06) 100%);
+    }
+    .scheme-b-light.down .change-arrow { background: var(--down); }
+    .scheme-b-light.down .change-text { color: var(--down); }
+    .scheme-b-light.down .mini-bar.up { background: var(--down); }
+
+    /* ==================== 方案 C：极简数字 ==================== */
+    .scheme-c .hero-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 24px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .scheme-c .hero-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .scheme-c .hero-title {
+      font-size: 11px;
+      color: var(--ink-3);
+      font-weight: 500;
+      letter-spacing: 1px;
+    }
+    .scheme-c .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 99px;
+      background: var(--up-bg);
+      color: var(--up);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--mono);
+    }
+    .scheme-c .hero-price {
+      font-family: var(--mono);
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -2px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .scheme-c .hero-price .cur {
+      font-size: 20px;
+      color: var(--ink-3);
+      margin-right: 4px;
+    }
+    .scheme-c .hero-price .decimal {
+      font-size: 28px;
+      color: var(--ink-2);
+    }
+    .scheme-c .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+    .scheme-c .grid-item {
+      text-align: center;
+    }
+    .scheme-c .grid-item .v {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .scheme-c .grid-item .k {
+      font-size: 9px;
+      color: var(--ink-3);
+      margin-top: 3px;
+    }
+
+    /* ==================== 方案 D：资金流向 ==================== */
+    .scheme-d .hero-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .scheme-d .hero-top {
+      display: flex;
+      gap: 12px;
+    }
+    .scheme-d .hero-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .scheme-d .hero-title {
+      font-size: 10px;
+      color: var(--ink-3);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .scheme-d .hero-price {
+      font-family: var(--mono);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--up);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .scheme-d .hero-price .cur {
+      font-size: 14px;
+      color: var(--ink-3);
+    }
+    .scheme-d .hero-change {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .scheme-d .change-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: var(--up-bg);
+      color: var(--up);
+      font-size: 10px;
+      font-weight: 600;
+      font-family: var(--mono);
+    }
+    .scheme-d .hero-side {
+      width: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .scheme-d .side-item {
+      text-align: right;
+    }
+    .scheme-d .side-item .k {
+      font-size: 9px;
+      color: var(--ink-3);
+    }
+    .scheme-d .side-item .v {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .scheme-d .hero-bar {
+      display: flex;
+      gap: 4px;
+      margin-top: 12px;
+    }
+    .scheme-d .bar-segment {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+    }
+    .scheme-d .bar-segment.expense { background: var(--up); }
+    .scheme-d .bar-segment.income { background: var(--down); }
+    .scheme-d .bar-legend {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 9px;
+      color: var(--ink-3);
+    }
+
+    /* ==================== 方案 E：仪表盘 ==================== */
+    .scheme-e .hero-card {
+      background: linear-gradient(135deg, #faf9f7 0%, #f0ede8 100%);
+      border-radius: 20px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .scheme-e .hero-card::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 160px;
+      height: 160px;
+      background: radial-gradient(circle, rgba(229, 69, 69, 0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .scheme-e .hero-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .scheme-e .hero-title {
+      font-size: 10px;
+      color: var(--ink-3);
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .scheme-e .hero-date {
+      font-size: 10px;
+      color: var(--ink-3);
+      font-family: var(--mono);
+    }
+    .scheme-e .hero-main {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .scheme-e .hero-price-box {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .scheme-e .hero-price {
+      font-family: var(--mono);
+      font-size: 44px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -2px;
+      line-height: 1;
+    }
+    .scheme-e .hero-price .cur {
+      font-size: 18px;
+      color: var(--ink-3);
+      margin-right: 4px;
+    }
+    .scheme-e .hero-change {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .scheme-e .change-amount {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--up);
+    }
+    .scheme-e .change-percent {
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--up-bg);
+      color: var(--up);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--mono);
+    }
+    .scheme-e .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      position: relative;
+      z-index: 1;
+    }
+    .scheme-e .grid-item {
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 10px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+    .scheme-e .grid-item .v {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .scheme-e .grid-item .k {
+      font-size: 8px;
+      color: var(--ink-3);
+      margin-top: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hero Metrics · 股票风格</h1>
+  <p class="subtitle">参考股票行情、K线、资金流向等金融界面设计</p>
+
+  <div class="container">
+    <!-- 方案 A：行情卡片 -->
+    <div class="scheme scheme-a">
+      <div class="scheme-header">
+        <div class="scheme-title">方案 A：行情卡片</div>
+        <div class="scheme-tag">经典行情</div>
+      </div>
+      <div class="phone-frame">
+        <div class="hero-card">
+          <div class="hero-header">
+            <div class="hero-title">本月总支出</div>
+            <div class="hero-date">2026年7月</div>
+          </div>
+          <div class="hero-main">
+            <div class="hero-price"><span class="cur">¥</span>8,247</div>
+            <div class="hero-change">
+              <div class="change-amount">+890</div>
+              <div class="change-percent">↑ 12.1%</div>
+            </div>
+          </div>
+          <div class="hero-row">
+            <div class="hero-row-item">
+              <div class="k">日均</div>
+              <div class="v">¥275</div>
+            </div>
+            <div class="hero-row-item">
+              <div class="k">笔数</div>
+              <div class="v">32笔</div>
+            </div>
+            <div class="hero-row-item">
+              <div class="k">最高</div>
+              <div class="v">¥890</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案 B：K线风格 -->
+    <div class="scheme scheme-b">
+      <div class="scheme-header">
+        <div class="scheme-title">方案 B：K线风格</div>
+        <div class="scheme-tag">深色 · 专业</div>
+      </div>
+      <div class="phone-frame">
+        <div class="hero-card">
+          <div class="hero-header">
+            <div class="hero-badge">本月</div>
+            <div class="hero-title">总支出</div>
+          </div>
+          <div class="hero-main">
+            <div class="hero-price-box">
+              <div class="hero-price"><span class="cur">¥</span>8,247</div>
+              <div class="hero-change">
+                <div class="change-arrow">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                </div>
+                <div class="change-text">+12.1%</div>
+              </div>
+            </div>
+            <div class="hero-mini-chart">
+              <div class="mini-bar" style="height: 60%"></div>
+              <div class="mini-bar up" style="height: 80%"></div>
+              <div class="mini-bar" style="height: 45%"></div>
+              <div class="mini-bar up" style="height: 90%"></div>
+              <div class="mini-bar" style="height: 70%"></div>
+              <div class="mini-bar up" style="height: 100%"></div>
+              <div class="mini-bar" style="height: 55%"></div>
+            </div>
+          </div>
+          <div class="hero-grid">
+            <div class="grid-item">
+              <div class="k">日均</div>
+              <div class="v">¥275</div>
+            </div>
+            <div class="grid-item">
+              <div class="k">笔数</div>
+              <div class="v">32</div>
+            </div>
+            <div class="grid-item">
+              <div class="k">预算</div>
+              <div class="v">68%</div>
+            </div>
+            <div class="grid-item">
+              <div class="k">储蓄</div>
+              <div class="v">32%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案 B-light：浅色K线风格 -->
+    <div class="scheme scheme-b-light">
+      <div class="scheme-header">
+        <div class="scheme-title">方案 B-light：浅色K线</div>
+        <div class="scheme-tag">浅色 · 简约</div>
+      </div>
+      <div class="phone-frame">
+        <div class="hero-card">
+          <div class="hero-header">
+            <div class="hero-badge">本月</div>
+            <div class="hero-title">总支出</div>
+          </div>
+          <div class="hero-main">
+            <div class="hero-price-box">
+              <div class="hero-price"><span class="cur">¥</span>8,247</div>
+              <div class="hero-change">
+                <div class="change-arrow">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                </div>
+                <div class="change-text">+12.1%</div>
+              </div>
+            </div>
+            <div class="hero-mini-chart">
+              <div class="mini-bar" style="height: 60%"></div>
+              <div class="mini-bar up" style="height: 80%"></div>
+              <div class="mini-bar" style="height: 45%"></div>
+              <div class="mini-bar up" style="height: 90%"></div>
+              <div class="mini-bar" style="height: 70%"></div>
+              <div class="mini-bar up" style="height: 100%"></div>
+              <div class="mini-bar" style="height: 55%"></div>
+            </div>
+          </div>
+          <div class="hero-grid">
+            <div class="grid-item">
+              <div class="k">日均</div>
+              <div class="v">¥275</div>
+            </div>
+            <div class="grid-item">
+              <div class="k">笔数</div>
+              <div class="v">32</div>
+            </div>
+            <div class="grid-item">
+              <div class="k">预算</div>
+              <div class="v">68%</div>
+            </div>
+            <div class="grid-item">
+              <div class="k">储蓄</div>
+              <div class="v">32%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 下跌状态示例 -->
+      <div class="scheme-header" style="margin-top: 24px;">
+        <div class="scheme-title">方案 B-light（下跌）</div>
+        <div class="scheme-tag" style="background: rgba(34, 160, 107, 0.15); color: #22a06b;">绿跌 · 省钱</div>
+      </div>
+      <div class="phone-frame">
+        <div class="hero-card" style="position: relative;">
+          <!-- 下跌状态 -->
+          <div class="hero-header">
+            <div class="hero-badge">本月</div>
+            <div class="hero-title">总支出</div>
+          </div>
+          <div class="hero-main">
+            <div class="hero-price-box">
+              <div class="hero-price" style="color: #22a06b;"><span class="cur">¥</span>6,847</div>
+              <div class="hero-change">
+                <div class="change-arrow" style="background: #22a06b;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                </div>
+                <div class="change-text" style="color: #22a06b;">-12.1%</div>
+              </div>
+            </div>
+            <div class="hero-mini-chart">
+              <div class="mini-bar" style="height: 60%; background: rgba(34, 160, 107, 0.25);"></div>
+              <div class="mini-bar up" style="height: 80%; background: #22a06b;"></div>
+              <div class="mini-bar" style="height: 45%; background: rgba(34, 160, 107, 0.25);"></div>
+              <div class="mini-bar up" style="height: 90%; background: #22a06b;"></div>
+              <div class="mini-bar" style="height: 70%; background: rgba(34, 160, 107, 0.25);"></div>
+              <div class="mini-bar up" style="height: 100%; background: #22a06b;"></div>
+              <div class="mini-bar" style="height: 55%; background: rgba(34, 160, 107, 0.25);"></div>
+            </div>
+          </div>
+          <div class="hero-grid">
+            <div class="grid-item">
+              <div class="k">日均</div>
+              <div class="v">¥228</div>
+            </div>
+            <div class="grid-item">
+              <div class="k">笔数</div>
+              <div class="v">28</div>
+            </div>
+            <div class="grid-item">
+              <div class="k">预算</div>
+              <div class="v">56%</div>
+            </div>
+            <div class="grid-item">
+              <div class="k">储蓄</div>
+              <div class="v">44%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案 C：极简数字 -->
+    <div class="scheme scheme-c">
+      <div class="scheme-header">
+        <div class="scheme-title">方案 C：极简数字</div>
+        <div class="scheme-tag">醒目 · 聚焦</div>
+      </div>
+      <div class="phone-frame">
+        <div class="hero-card">
+          <div class="hero-header">
+            <div class="hero-title">本月总支出</div>
+            <div class="hero-badge">↑ 12.1%</div>
+          </div>
+          <div class="hero-price"><span class="cur">¥</span>8,247<span class="decimal">.56</span></div>
+          <div class="hero-grid">
+            <div class="grid-item">
+              <div class="v">¥275</div>
+              <div class="k">日均</div>
+            </div>
+            <div class="grid-item">
+              <div class="v">32</div>
+              <div class="k">笔数</div>
+            </div>
+            <div class="grid-item">
+              <div class="v">¥890</div>
+              <div class="k">最高</div>
+            </div>
+            <div class="grid-item">
+              <div class="v">68%</div>
+              <div class="k">预算</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案 D：资金流向 -->
+    <div class="scheme scheme-d">
+      <div class="scheme-header">
+        <div class="scheme-title">方案 D：资金流向</div>
+        <div class="scheme-tag">对比 · 流向</div>
+      </div>
+      <div class="phone-frame">
+        <div class="hero-card">
+          <div class="hero-top">
+            <div class="hero-main">
+              <div class="hero-title">本月总支出</div>
+              <div class="hero-price"><span class="cur">¥</span>8,247</div>
+              <div class="hero-change">
+                <div class="change-badge">↑ +890</div>
+                <div class="change-badge">+12.1%</div>
+              </div>
+            </div>
+            <div class="hero-side">
+              <div class="side-item">
+                <div class="k">日均</div>
+                <div class="v">¥275</div>
+              </div>
+              <div class="side-item">
+                <div class="k">笔数</div>
+                <div class="v">32</div>
+              </div>
+              <div class="side-item">
+                <div class="k">预算</div>
+                <div class="v">68%</div>
+              </div>
+            </div>
+          </div>
+          <div class="hero-bar">
+            <div class="bar-segment expense" style="flex: 68"></div>
+            <div class="bar-segment income" style="flex: 32"></div>
+          </div>
+          <div class="bar-legend">
+            <span>支出 ¥8,247</span>
+            <span>结余 ¥3,912</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案 E：仪表盘 -->
+    <div class="scheme scheme-e">
+      <div class="scheme-header">
+        <div class="scheme-title">方案 E：仪表盘</div>
+        <div class="scheme-tag">柔和 · 现代</div>
+      </div>
+      <div class="phone-frame">
+        <div class="hero-card">
+          <div class="hero-header">
+            <div class="hero-title">本月总支出</div>
+            <div class="hero-date">2026.07</div>
+          </div>
+          <div class="hero-main">
+            <div class="hero-price-box">
+              <div class="hero-price"><span class="cur">¥</span>8,247</div>
+            </div>
+            <div class="hero-change">
+              <div class="change-amount">+¥890</div>
+              <div class="change-percent">↑ 12.1%</div>
+            </div>
+          </div>
+          <div class="hero-grid">
+            <div class="grid-item">
+              <div class="v">¥275</div>
+              <div class="k">日均</div>
+            </div>
+            <div class="grid-item">
+              <div class="v">32</div>
+              <div class="k">笔数</div>
+            </div>
+            <div class="grid-item">
+              <div class="v">¥890</div>
+              <div class="k">最高</div>
+            </div>
+            <div class="grid-item">
+              <div class="v">68%</div>
+              <div class="k">预算</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
