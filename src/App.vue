@@ -1313,7 +1313,7 @@ const categoryNames = computed(() => categories.value.slice(1).map(c => c.name))
 
 const posForm = computed(() => ({
   type: form.type,
-  amount: calcAmount(form.amount),
+  amount: form.amount,
   category: form.category,
   subCategory: form.subCategory,
   merchant: form.merchant,
@@ -1337,8 +1337,9 @@ function updatePosForm(val: Partial<typeof posForm.value>) {
   if (val.note !== undefined) form.note = val.note
 }
 
-function handlePosSave(tx: Partial<Transaction>) {
-  if (!tx.amount) return
+function handlePosSave(tx: Partial<typeof posForm.value>) {
+  const amount = calcAmount(String(tx.amount ?? ''))
+  if (!amount) return
 
   const icon = getCategoryIcon(form.category)
   const newTx: Transaction = {
@@ -1347,7 +1348,7 @@ function handlePosSave(tx: Partial<Transaction>) {
     category: form.category,
     subCategory: form.type === 'expense' ? form.subCategory : undefined,
     date: form.date || todayStr(),
-    amount: tx.amount,
+    amount,
     type: form.type,
     icon,
     tag: form.type === 'income' ? '收入' : form.subCategory,
