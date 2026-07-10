@@ -14,7 +14,36 @@
                   <div class="vents">
                     <span v-for="i in 10" :key="i"></span>
                   </div>
-                  <div class="printer-brand">FloGold<span class="em"> · POS</span></div>
+                  <!-- 实体按键：支出 / 收入 / 转账（替换 brand 位置） -->
+                  <div class="type-bar">
+                    <button
+                      type="button"
+                      class="type-physical-btn"
+                      :class="['expense', { active: localForm.type === 'expense' }]"
+                      :disabled="phase !== 'ready'"
+                      @click="setType('expense')"
+                    >
+                      <span class="led-dot exp"></span>支出
+                    </button>
+                    <button
+                      type="button"
+                      class="type-physical-btn"
+                      :class="['income', { active: localForm.type === 'income' }]"
+                      :disabled="phase !== 'ready'"
+                      @click="setType('income')"
+                    >
+                      <span class="led-dot inc"></span>收入
+                    </button>
+                    <button
+                      type="button"
+                      class="type-physical-btn"
+                      :class="['transfer', { active: localForm.type === 'transfer' }]"
+                      :disabled="phase !== 'ready'"
+                      @click="setType('transfer')"
+                    >
+                      <span class="led-dot trf"></span>转账
+                    </button>
+                  </div>
                   <div ref="ledRef" class="led" :class="ledClass"></div>
                 </div>
                 <div class="printer-slot"></div>
@@ -37,27 +66,195 @@
                       <div class="conn-text">PRINTER CONNECTING</div>
                     </div>
                   </template>
+                  <template v-else-if="isDatePicking">
+                    <!-- 模式：日期选择（点击 📅 M/D 后整屏变为时间选择界面） -->
+                    <div class="datepick-screen">
+                      <div class="datepick-header">
+                        <button
+                          type="button"
+                          class="datepick-btn cancel"
+                          @click="cancelDatePick"
+                        >取消</button>
+                        <div class="datepick-title">选择日期</div>
+                        <button
+                          type="button"
+                          class="datepick-btn confirm"
+                          @click="confirmDatePick"
+                        >确定</button>
+                      </div>
+
+                      <div class="datepick-month-nav">
+                        <button
+                          type="button"
+                          class="datepick-nav"
+                          @click="dpPrevMonth"
+                          aria-label="上个月"
+                        >‹</button>
+                        <span class="datepick-month-text">{{ dpViewYear }} 年 {{ dpViewMonth }} 月</span>
+                        <button
+                          type="button"
+                          class="datepick-nav"
+                          :disabled="!dpCanNextMonth"
+                          @click="dpNextMonth"
+                          aria-label="下个月"
+                        >›</button>
+                      </div>
+
+                      <div class="datepick-weekdays">
+                        <span v-for="(w, i) in dpWeekDays" :key="i">{{ w }}</span>
+                      </div>
+
+                      <div class="datepick-days">
+                        <button
+                          v-for="(cell, i) in dpCells"
+                          :key="i"
+                          type="button"
+                          class="datepick-day"
+                          :class="{
+                            selected: cell.date === pickDateTemp,
+                            today: cell.date === dpTodayStr,
+                            'other-month': !cell.inMonth,
+                            disabled: !cell.inMonth || cell.isFuture
+                          }"
+                          :disabled="!cell.inMonth || cell.isFuture"
+                          @click="selectPickDay(cell)"
+                        >{{ cell.day }}</button>
+                      </div>
+
+                      <div class="datepick-quick-row">
+                        <button class="datepick-quick" type="button" @click="dpQuickPick(0)">今天</button>
+                        <button class="datepick-quick" type="button" @click="dpQuickPick(-1)">昨天</button>
+                        <button class="datepick-quick" type="button" @click="dpQuickPick(-2)">前天</button>
+                        <button class="datepick-quick" type="button" @click="dpQuickPick(-7)">一周前</button>
+                      </div>
+                    </div>
+                  </template>
                   <template v-else>
+                    <!-- 1. 金额 -->
                     <div class="screen-amount-row">
-                      <span class="lab">{{ form.type === 'expense' ? '支出' : '收入' }}</span>
                       <span class="cur">¥</span>
                       <span class="num">{{ displayAmount }}</span>
                       <span v-if="phase === 'ready'" class="cursor"></span>
                     </div>
-                    <div class="screen-cat-row">
-                      <span
-                        v-for="cat in displayCategories"
+
+                    <!-- 2. 一级分类（分页） -->
+                    <div v-if="localForm.type !== 'transfer'" class="screen-cat-row">
+                      <button
+                        type="button"
+                        class="cat-page prev"
+                        :disabled="catPageIndex === 0"
+                        @click="prevCatPage"
+                      >‹</button>
+                      <button
+                        v-for="cat in visibleCategories"
                         :key="cat"
+                        type="button"
                         class="cat-cell"
                         :class="{ active: cat === localForm.category }"
                         @click="handleSelectCategory(cat)"
-                      >{{ cat }}</span>
+                      >{{ cat }}</button>
+                      <button
+                        type="button"
+                        class="cat-page next"
+                        :disabled="catPageIndex >= totalCatPages - 1"
+                        @click="nextCatPage"
+                      >›</button>
                     </div>
+
+                    <!-- 3. 二级分类（若有，转账时隐藏） -->
+                    <div
+                      v-if="availableSubCategories.length > 0 && localForm.type !== 'transfer'"
+                      class="screen-subcat-row"
+                    >
+                      <button
+                        v-for="sub in availableSubCategories"
+                        :key="sub"
+                        type="button"
+                        class="subcat-cell"
+                        :class="{ active: sub === localForm.subCategory }"
+                        @click="handleSelectSubCategory(sub)"
+                      >{{ sub }}</button>
+                    </div>
+
+                    <!-- 4. 商户 / 地点 / 备注 真实可输入 -->
                     <div class="screen-info">
-                      > 商户 <span>{{ localForm.merchant || '—' }}</span><br>
-                      > 地点 <span>{{ localForm.location || '—' }}</span><br>
-                      > 备注 <span>{{ localForm.note || '—' }}</span>
+                      <div class="info-row">
+                        <span class="info-lab">商户</span>
+                        <input
+                          v-model="localForm.merchant"
+                          type="text"
+                          class="info-input"
+                          placeholder="如：全家便利店"
+                          maxlength="20"
+                          :disabled="phase !== 'ready'"
+                        />
+                      </div>
+                      <div class="info-row">
+                        <span class="info-lab">地点</span>
+                        <input
+                          v-model="localForm.location"
+                          type="text"
+                          class="info-input"
+                          placeholder="如：公司楼下"
+                          maxlength="20"
+                          :disabled="phase !== 'ready'"
+                        />
+                      </div>
+                      <div class="info-row">
+                        <span class="info-lab">备注</span>
+                        <input
+                          v-model="localForm.note"
+                          type="text"
+                          class="info-input"
+                          placeholder="选填"
+                          maxlength="40"
+                          :disabled="phase !== 'ready'"
+                        />
+                      </div>
                     </div>
+
+                    <!-- 4.5 日期快速选择 + 📅 入口（在备注栏下方） -->
+                    <div class="screen-date-row">
+                      <button
+                        type="button"
+                        class="date-quick-btn"
+                        :class="{ active: isQuick(currentDate, 0) }"
+                        :disabled="phase !== 'ready'"
+                        @click="pickDate(todayISO())"
+                      >今天</button>
+                      <button
+                        type="button"
+                        class="date-quick-btn"
+                        :class="{ active: isQuick(currentDate, -1) }"
+                        :disabled="phase !== 'ready'"
+                        @click="pickDate(offsetISO(-1))"
+                      >昨天</button>
+                      <button
+                        type="button"
+                        class="date-quick-btn"
+                        :class="{ active: isQuick(currentDate, -2) }"
+                        :disabled="phase !== 'ready'"
+                        @click="pickDate(offsetISO(-2))"
+                      >前天</button>
+                      <button
+                        type="button"
+                        class="date-picker-btn"
+                        :class="{ custom: !isQuick(currentDate, 0) && !isQuick(currentDate, -1) && !isQuick(currentDate, -2) }"
+                        :disabled="phase !== 'ready'"
+                        @click="enterDatePickMode"
+                        aria-label="选择其他日期"
+                      >
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                          <line x1="16" y1="2" x2="16" y2="6"/>
+                          <line x1="8" y1="2" x2="8" y2="6"/>
+                          <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span>{{ formatMD(currentDate) }}</span>
+                      </button>
+                    </div>
+
+                    <!-- 5. 联机打印 -->
                     <div class="screen-cta" @click="handleConfirm">
                       <span>完成 → 联机打印</span>
                       <span class="arrow">→</span>
@@ -159,7 +356,11 @@
               </div>
               <div class="r-amount" :class="localForm.type">
                 <div><span class="cur">¥</span><span class="num">{{ cleanAmount }}</span></div>
-                <span class="badge"><template v-if="localForm.type === 'expense'">支出</template><template v-else>收<br>入</template></span>
+                <span class="badge">
+                  <template v-if="localForm.type === 'expense'">支出</template>
+                  <template v-else-if="localForm.type === 'income'">收<br>入</template>
+                  <template v-else>转<br>账</template>
+                </span>
               </div>
               <div class="r-dot d2"></div>
               <div class="r-detail">
@@ -204,15 +405,17 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 interface Props {
   show: boolean
   form: {
-    type: 'expense' | 'income'
+    type: 'expense' | 'income' | 'transfer'
     amount: string
     category: string
     subCategory?: string
     merchant?: string
     location?: string
     note?: string
+    date?: string
   }
   categories: string[]
+  subCategories: Record<string, string[]>
 }
 
 const props = defineProps<Props>()
@@ -225,14 +428,50 @@ const emit = defineEmits<{
 // ========== 弹窗开关 ==========
 const isOpen = ref(false)
 const localForm = ref({ ...props.form })
+const catPageIndex = ref(0) // 一级分类翻页索引
+
+// 防止双向 watch 死循环：emit 时记录指纹，回灌 props.form 若指纹一致则视为"自己的回声"忽略
+let lastEmitKey = '__init__'
+function formKey(f: Props['form']): string {
+  return [
+    f.type,
+    f.amount,
+    f.category,
+    f.subCategory ?? '',
+    f.merchant ?? '',
+    f.location ?? '',
+    f.note ?? '',
+    f.date ?? ''
+  ].join('\x1f')
+}
 
 watch(() => props.form, (newForm) => {
+  const key = formKey(newForm)
+  if (key === lastEmitKey) return // 自己刚 emit 出去的，忽略
+  lastEmitKey = key
   localForm.value = { ...newForm }
 }, { deep: true })
 
 watch(localForm, (newForm) => {
+  lastEmitKey = formKey(newForm)
   emit('update:form', { ...newForm })
 }, { deep: true })
+
+// type 变化时重置分类选择
+watch(() => localForm.value.type, () => {
+  localForm.value.category = ''
+  localForm.value.subCategory = ''
+  catPageIndex.value = 0
+})
+
+// category 变化时重置子分类（若当前 subCategory 不属于新 category）
+watch(() => localForm.value.category, (newCat) => {
+  const subs = props.subCategories[newCat] || []
+  // 若当前 subCategory 不属于新 category 的子分类列表，才重置
+  if (!subs.includes(localForm.value.subCategory || '')) {
+    localForm.value.subCategory = ''
+  }
+})
 
 watch(() => props.show, (show) => {
   if (show) {
@@ -258,11 +497,19 @@ onUnmounted(() => {
   clearAllTimers()
 })
 
-// 物理键盘输入（仅在 ready 阶段响应）
+// 物理键盘输入（仅在 ready 阶段响应；输入框聚焦时让位给原生输入）
 function onKeydown(e: KeyboardEvent) {
   if (!props.show) return
+  // 在文本输入框或可编辑元素中：不要拦截按键（让用户正常打字）
+  const target = e.target as HTMLElement | null
+  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+    if (e.key === 'Escape') {
+      const el = target as HTMLInputElement
+      if (typeof el.blur === 'function') el.blur()
+    }
+    return
+  }
   if (phase.value !== 'ready') {
-    // Escape 在非动画阶段也可关闭
     if (e.key === 'Escape' && (phase.value === 'idle' || phase.value === 'ready')) {
       handleClose()
     }
@@ -274,8 +521,6 @@ function onKeydown(e: KeyboardEvent) {
     handleKeyTap('.')
   } else if (e.key === 'Backspace') {
     handleKeyTap('⌫')
-  } else if (e.key === '00' || (e.key === '0' && e.shiftKey)) {
-    handleKeyTap('00')
   } else if (e.key === 'Enter') {
     handleConfirm()
   } else if (e.key === 'Escape') {
@@ -321,13 +566,164 @@ function clearAllTimers() {
 const keypadKeys = ['1', '2', '3', '⌫', '4', '5', '6', '+', '7', '8', '9', '-', '.', '0', 'go']
 
 const displayAmount = computed(() => localForm.value.amount || '0')
-const displayCategories = computed(() => props.categories.slice(0, 5))
+
+// 一级分类分页显示（每页 4 个）
+const CAT_PAGE_SIZE = 4
+const totalCatPages = computed(() => Math.ceil(props.categories.length / CAT_PAGE_SIZE))
+const visibleCategories = computed(() => {
+  const start = catPageIndex.value * CAT_PAGE_SIZE
+  return props.categories.slice(start, start + CAT_PAGE_SIZE)
+})
+
+// 当前一级分类下的二级分类列表
+const availableSubCategories = computed(() => {
+  if (!localForm.value.category) return []
+  return props.subCategories[localForm.value.category] || []
+})
+
+// ============ 日期选择 ============
+function todayISO(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+function offsetISO(delta: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() + delta)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+function isQuick(date: string, delta: number): boolean {
+  if (!date) return delta === 0
+  return date === offsetISO(delta)
+}
+function formatMD(date: string): string {
+  if (!date) return ''
+  const [, m, d] = date.split('-')
+  return `${parseInt(m)}/${parseInt(d)}`
+}
+
+const currentDate = computed<string>(() => localForm.value.date || todayISO())
+
+function pickDate(iso: string) {
+  localForm.value.date = iso
+}
+
+// ============ 日历模式（点击 📅 后整屏切换为时间选择界面） ============
+const isDatePicking = ref(false)
+const pickDateTemp = ref<string>(todayISO())
+const dpViewYear = ref(new Date().getFullYear())
+const dpViewMonth = ref(new Date().getMonth() + 1)
+const dpWeekDays = ['一', '二', '三', '四', '五', '六', '日']
+
+const dpTodayStr = computed<string>(() => todayISO())
+
+interface DpCell {
+  day: number
+  date: string
+  inMonth: boolean
+  isFuture: boolean
+}
+
+const dpMaxDate = computed<Date>(() => {
+  const [y, m, d] = dpTodayStr.value.split('-').map(Number)
+  return new Date(y, m - 1, d)
+})
+
+const dpCanNextMonth = computed(() => {
+  const vm = new Date(dpViewYear.value, dpViewMonth.value - 1, 1)
+  const mm = new Date(dpMaxDate.value.getFullYear(), dpMaxDate.value.getMonth(), 1)
+  return vm < mm
+})
+
+const dpCells = computed<DpCell[]>(() => {
+  const first = new Date(dpViewYear.value, dpViewMonth.value - 1, 1)
+  let startWeekday = first.getDay()
+  startWeekday = startWeekday === 0 ? 6 : startWeekday - 1
+
+  const daysInMonth = new Date(dpViewYear.value, dpViewMonth.value, 0).getDate()
+  const prevMonthDays = new Date(dpViewYear.value, dpViewMonth.value - 1, 0).getDate()
+  const maxD = dpMaxDate.value
+
+  const out: DpCell[] = []
+  for (let i = startWeekday - 1; i >= 0; i--) {
+    out.push({ day: prevMonthDays - i, date: '', inMonth: false, isFuture: false })
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dt = new Date(dpViewYear.value, dpViewMonth.value - 1, d)
+    const isFuture = dt > maxD
+    out.push({ day: d, date: fmt(dpViewYear.value, dpViewMonth.value, d), inMonth: true, isFuture })
+  }
+  while (out.length < 42) {
+    const tailIdx = out.length - startWeekday - daysInMonth
+    out.push({ day: tailIdx + 1, date: '', inMonth: false, isFuture: false })
+  }
+  return out
+})
+
+function fmt(y: number, m: number, d: number): string {
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+}
+
+function enterDatePickMode() {
+  if (phase.value !== 'ready') return
+  // 用当前已选日期（或今天）作为初始选中和视图
+  const seed = localForm.value.date || todayISO()
+  pickDateTemp.value = seed
+  const [y, m] = seed.split('-').map(Number)
+  dpViewYear.value = y
+  dpViewMonth.value = m
+  isDatePicking.value = true
+}
+
+function cancelDatePick() {
+  isDatePicking.value = false
+}
+
+function confirmDatePick() {
+  localForm.value.date = pickDateTemp.value
+  isDatePicking.value = false
+}
+
+function selectPickDay(cell: DpCell) {
+  if (!cell.inMonth || cell.isFuture) return
+  pickDateTemp.value = cell.date
+}
+
+function dpPrevMonth() {
+  if (dpViewMonth.value === 1) {
+    dpViewMonth.value = 12
+    dpViewYear.value -= 1
+  } else {
+    dpViewMonth.value -= 1
+  }
+}
+
+function dpNextMonth() {
+  if (!dpCanNextMonth.value) return
+  if (dpViewMonth.value === 12) {
+    dpViewMonth.value = 1
+    dpViewYear.value += 1
+  } else {
+    dpViewMonth.value += 1
+  }
+}
+
+function dpQuickPick(delta: number) {
+  const d = new Date()
+  d.setDate(d.getDate() + delta)
+  const y = d.getFullYear()
+  const m = d.getMonth() + 1
+  const day = d.getDate()
+  dpViewYear.value = y
+  dpViewMonth.value = m
+  pickDateTemp.value = fmt(y, m, day)
+}
 
 const ledClass = computed(() => {
   if (phase.value === 'printing') return 'printing'
   if (phase.value === 'complete') return 'complete'
   if (phase.value === 'tearing') return ''
-  return localForm.value.amount ? 'lcd-on' : ''
+  // ready 阶段：永远亮起蓝色发光（含 idle 阶段只要 modal 展开）
+  return 'lcd-on'
 })
 
 const exitLedClass = computed(() => {
@@ -423,6 +819,27 @@ function handleKeyTap(key: string) {
 function handleSelectCategory(cat: string) {
   if (phase.value !== 'ready') return
   localForm.value.category = cat
+}
+
+function handleSelectSubCategory(sub: string) {
+  if (phase.value !== 'ready') return
+  localForm.value.subCategory = sub
+}
+
+function setType(t: 'expense' | 'income' | 'transfer') {
+  if (phase.value !== 'ready') return
+  if (localForm.value.type === t) return
+  localForm.value.type = t
+}
+
+function prevCatPage() {
+  if (phase.value !== 'ready') return
+  catPageIndex.value = Math.max(0, catPageIndex.value - 1)
+}
+
+function nextCatPage() {
+  if (phase.value !== 'ready') return
+  catPageIndex.value = Math.min(totalCatPages.value - 1, catPageIndex.value + 1)
 }
 
 // ========== 核心流程：上滑 → 联机 → 打印 → 完成 ==========
@@ -615,7 +1032,7 @@ function handleClose() {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 0 16px 24px;
+  padding: 0 0px 24px;
 }
 
 [data-theme="light"] .pos-modal-overlay {
@@ -626,7 +1043,7 @@ function handleClose() {
 .pos-combo {
   position: relative;
   width: 100%;
-  max-width: 380px;
+  max-width: 450px;
   transform: translateY(calc(100% + 24px));
   transition: transform 0.7s cubic-bezier(.12,.64,.21,1.08);
   filter: drop-shadow(0 -10px 30px rgba(0,0,0,0.4));
@@ -701,10 +1118,11 @@ function handleClose() {
 
 .printer-row {
   flex: 1;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   padding: 0 14px;
+  gap: 0;
 }
 
 .vents {
@@ -712,6 +1130,7 @@ function handleClose() {
   gap: 2px;
   align-items: center;
   height: 12px;
+  justify-self: start;
 }
 
 .vents span {
@@ -725,29 +1144,27 @@ function handleClose() {
   background: rgba(255,255,255,0.3);
 }
 
-.printer-brand {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  color: rgba(31,29,24,0.50);
-  text-transform: uppercase;
-}
-
-[data-theme="dark"] .printer-brand {
-  color: rgba(255,255,255,0.5);
-}
-
-.printer-brand .em {
-  color: var(--gold-deep);
-}
-
 .led {
+  position: relative;
   width: 7px; height: 7px;
   border-radius: 50%;
   background: rgba(31,29,24,0.30);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.30);
   transition: all 0.3s;
+  justify-self: end;
+}
+
+/* LED 外圈 halo：默认隐藏，激活时显示 */
+.led::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: var(--lcd);
+  opacity: 0;
+  filter: blur(4px);
+  transition: opacity 0.3s, background 0.3s;
+  z-index: -1;
 }
 
 [data-theme="dark"] .led {
@@ -755,15 +1172,40 @@ function handleClose() {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
 }
 
+.led.lcd-on::after { opacity: 0.55; animation: ledHaloPulse 2s ease-in-out infinite; }
+.led.printing::after { opacity: 0.7; background: var(--exp); animation: ledHaloPulse 0.5s infinite; }
+.led.complete::after { opacity: 0.6; background: var(--inc); }
+
+@keyframes ledHaloPulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.15); }
+}
+
 .led.lcd-on {
   background: var(--lcd);
-  box-shadow: 0 0 8px var(--lcd), inset 0 1px 0 rgba(255,255,255,0.3);
-  animation: lcdPulse 2s infinite;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 0 6px var(--lcd),
+    0 0 14px rgba(42, 143, 188, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  animation: lcdPulse 2s ease-in-out infinite;
 }
 
 @keyframes lcdPulse {
-  0%, 100% { box-shadow: 0 0 6px var(--lcd); }
-  50% { box-shadow: 0 0 12px var(--lcd); }
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.4),
+      0 0 5px var(--lcd),
+      0 0 10px rgba(42, 143, 188, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.6),
+      0 0 10px var(--lcd),
+      0 0 20px rgba(42, 143, 188, 0.85),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
 }
 
 .led.printing {
@@ -934,14 +1376,6 @@ function handleClose() {
   margin-bottom: 4px;
 }
 
-.screen-amount-row .lab {
-  font-size: 8px;
-  color: rgba(106, 184, 227, 0.5);
-  letter-spacing: 0.15em;
-  align-self: flex-start;
-  margin-top: 6px;
-}
-
 .screen-amount-row .cur {
   font-size: 14px;
   color: rgba(106, 184, 227, 0.7);
@@ -972,40 +1406,594 @@ function handleClose() {
   51%, 100% { opacity: 0; }
 }
 
+/* ============ 类型切换（实体按钮在 printer-row 内） ============ */
+.type-bar {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+  justify-self: center;
+}
+
+.type-physical-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  height: 28px;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(31, 29, 24, 0.55);
+  background: linear-gradient(180deg, #f4efe5 0%, #ddd2bd 100%);
+  border: 1px solid rgba(31, 29, 24, 0.32);
+  border-radius: 5px;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 0 rgba(31, 29, 24, 0.18),
+    0 2px 0 rgba(31, 29, 24, 0.30);
+  transition: transform 0.05s, box-shadow 0.05s, background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+[data-theme="dark"] .type-physical-btn {
+  color: rgba(255, 255, 255, 0.55);
+  background: linear-gradient(180deg, #3a3530 0%, #252220 100%);
+  border-color: rgba(0, 0, 0, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.4),
+    0 2px 0 rgba(0, 0, 0, 0.55);
+}
+
+.type-physical-btn .led-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(31, 29, 24, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+[data-theme="dark"] .type-physical-btn .led-dot {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.type-physical-btn .led-dot.exp { background: #c97b7b; box-shadow: 0 0 4px rgba(201, 123, 123, 0.6); }
+.type-physical-btn .led-dot.inc { background: #7aaa8a; box-shadow: 0 0 4px rgba(122, 170, 138, 0.6); }
+.type-physical-btn .led-dot.trf { background: #6aabd6; box-shadow: 0 0 4px rgba(106, 171, 214, 0.6); }
+
+.type-physical-btn:hover:not(:disabled):not(.active) {
+  background: linear-gradient(180deg, #f9f5ec 0%, #e6dbc8 100%);
+  color: rgba(31, 29, 24, 0.8);
+}
+[data-theme="dark"] .type-physical-btn:hover:not(:disabled):not(.active) {
+  background: linear-gradient(180deg, #45403a 0%, #2a2622 100%);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.type-physical-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 0 1px rgba(31, 29, 24, 0.3);
+}
+
+.type-physical-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* 激活态：根据 type 上不同色（支出红/收入绿/转账蓝） */
+.type-physical-btn.expense.active {
+  background: linear-gradient(180deg, #d96b3f 0%, #b14d24 100%);
+  color: #fff;
+  border-color: rgba(60, 22, 8, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 220, 200, 0.4),
+    inset 0 -2px 0 rgba(60, 22, 8, 0.45),
+    0 0 10px rgba(217, 107, 63, 0.45),
+    0 2px 0 rgba(60, 22, 8, 0.5);
+}
+.type-physical-btn.expense.active .led-dot.exp { background: #ffe9d8; box-shadow: 0 0 6px #fff; }
+
+.type-physical-btn.income.active {
+  background: linear-gradient(180deg, #4d8a64 0%, #2e6644 100%);
+  color: #fff;
+  border-color: rgba(14, 50, 30, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(220, 240, 226, 0.4),
+    inset 0 -2px 0 rgba(14, 50, 30, 0.45),
+    0 0 10px rgba(77, 138, 100, 0.45),
+    0 2px 0 rgba(14, 50, 30, 0.5);
+}
+.type-physical-btn.income.active .led-dot.inc { background: #d8f0e0; box-shadow: 0 0 6px #fff; }
+
+.type-physical-btn.transfer.active {
+  background: linear-gradient(180deg, #2a8fbc 0%, #156a92 100%);
+  color: #fff;
+  border-color: rgba(8, 38, 60, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(220, 240, 250, 0.4),
+    inset 0 -2px 0 rgba(8, 38, 60, 0.45),
+    0 0 10px rgba(42, 143, 188, 0.45),
+    0 2px 0 rgba(8, 38, 60, 0.5);
+}
+.type-physical-btn.transfer.active .led-dot.trf { background: #d8ecf6; box-shadow: 0 0 6px #fff; }
+
+/* ============ 一级分类 ============ */
+/* ============ 日期选择行 ============ */
+.screen-date-row {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.date-quick-btn,
+.date-picker-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 5px 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(106, 184, 227, 0.08);
+  border: 1px solid rgba(106, 184, 227, 0.18);
+  border-radius: 4px;
+  color: rgba(106, 184, 227, 0.7);
+  cursor: pointer;
+  text-align: center;
+  letter-spacing: 0.03em;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.date-quick-btn:hover:not(:disabled):not(.active),
+.date-picker-btn:hover:not(:disabled):not(.active) {
+  background: rgba(106, 184, 227, 0.16);
+  color: rgba(106, 184, 227, 0.95);
+}
+
+.date-quick-btn.active,
+.date-picker-btn.active {
+  background: var(--lcd);
+  color: var(--lcd-bg);
+  font-weight: 700;
+  border-color: var(--lcd);
+  box-shadow: 0 0 6px rgba(106, 184, 227, 0.4);
+}
+
+.date-picker-btn.custom {
+  background: rgba(212, 165, 116, 0.12);
+  border-color: rgba(212, 165, 116, 0.32);
+  color: var(--gold);
+}
+.date-picker-btn.custom:hover:not(:disabled) {
+  background: rgba(212, 165, 116, 0.22);
+  color: var(--gold-deep);
+}
+
+.date-quick-btn:disabled,
+.date-picker-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.date-picker-btn svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.date-picker-btn span {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============ 日期选择（整屏）============ */
+.datepick-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--sans);
+  color: var(--lcd);
+  animation: datepickIn 0.28s ease-out;
+}
+
+@keyframes datepickIn {
+  from { opacity: 0; transform: scale(0.985); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.datepick-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 6px;
+  border-bottom: 1px solid rgba(106, 184, 227, 0.18);
+}
+
+.datepick-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(106, 184, 227, 0.85);
+}
+
+.datepick-btn {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.datepick-btn.cancel {
+  background: rgba(106, 184, 227, 0.10);
+  border: 1px solid rgba(106, 184, 227, 0.20);
+  color: rgba(106, 184, 227, 0.7);
+}
+.datepick-btn.cancel:hover {
+  background: rgba(106, 184, 227, 0.18);
+  color: rgba(106, 184, 227, 1);
+}
+.datepick-btn.cancel:active {
+  transform: translateY(1px);
+}
+
+.datepick-btn.confirm {
+  background: rgba(42, 143, 188, 0.18);
+  border: 1px solid var(--lcd);
+  color: var(--lcd);
+  text-shadow: 0 0 6px rgba(106, 184, 227, 0.4);
+}
+.datepick-btn.confirm:hover {
+  background: var(--lcd);
+  color: var(--lcd-bg);
+  box-shadow: 0 0 10px rgba(106, 184, 227, 0.45);
+}
+.datepick-btn.confirm:active {
+  transform: translateY(1px);
+}
+
+.datepick-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 4px 0;
+}
+
+.datepick-month-text {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--lcd);
+  text-shadow: 0 0 4px rgba(106, 184, 227, 0.3);
+  min-width: 100px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.datepick-nav {
+  border: none;
+  background: rgba(106, 184, 227, 0.10);
+  border: 1px solid rgba(106, 184, 227, 0.18);
+  border-radius: 4px;
+  color: rgba(106, 184, 227, 0.6);
+  cursor: pointer;
+  font-size: 14px;
+  font-family: var(--mono);
+  font-weight: 700;
+  width: 26px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.datepick-nav:hover:not(:disabled) {
+  color: rgba(106, 184, 227, 1);
+  background: rgba(106, 184, 227, 0.20);
+}
+.datepick-nav:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.datepick-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  font-size: 9px;
+  font-family: var(--sans);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(106, 184, 227, 0.55);
+  text-align: center;
+}
+.datepick-weekdays span {
+  padding: 2px 0;
+}
+
+.datepick-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  font-family: var(--mono);
+}
+
+.datepick-day {
+  border: none;
+  background: rgba(106, 184, 227, 0.06);
+  color: rgba(106, 184, 227, 0.75);
+  padding: 6px 0;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.12s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.datepick-day:hover:not(:disabled):not(.selected) {
+  background: rgba(106, 184, 227, 0.16);
+  color: rgba(106, 184, 227, 1);
+}
+
+.datepick-day.other-month {
+  opacity: 0.22;
+  color: rgba(106, 184, 227, 0.5);
+  cursor: default;
+}
+
+.datepick-day.today:not(.selected) {
+  color: var(--gold);
+  box-shadow: inset 0 0 0 1px rgba(212, 165, 116, 0.45);
+}
+
+.datepick-day.selected {
+  background: var(--lcd);
+  color: var(--lcd-bg);
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(106, 184, 227, 0.5);
+}
+
+.datepick-day:disabled {
+  opacity: 0.18;
+  cursor: not-allowed;
+}
+
+.datepick-quick-row {
+  display: flex;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 4px;
+  border-top: 1px dashed rgba(106, 184, 227, 0.18);
+}
+
+.datepick-quick {
+  flex: 1;
+  border: 1px solid rgba(106, 184, 227, 0.18);
+  background: rgba(106, 184, 227, 0.10);
+  color: rgba(106, 184, 227, 0.7);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 5px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.12s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.datepick-quick:hover {
+  background: rgba(106, 184, 227, 0.20);
+  color: rgba(106, 184, 227, 1);
+}
+.datepick-quick:active {
+  transform: translateY(1px);
+}
+
 .screen-cat-row {
   display: flex;
   gap: 4px;
+  align-items: stretch;
   margin-bottom: 4px;
-  font-size: 8px;
-  color: rgba(106, 184, 227, 0.65);
-  letter-spacing: 0.05em;
 }
 
 .screen-cat-row .cat-cell {
-  padding: 2px 5px;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 7px 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
   background: rgba(106, 184, 227, 0.10);
-  border-radius: 3px;
-  border: 1px solid rgba(106, 184, 227, 0.15);
+  border: 1px solid rgba(106, 184, 227, 0.18);
+  border-radius: 4px;
+  color: rgba(106, 184, 227, 0.75);
   cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.screen-cat-row .cat-cell:hover:not(.active) {
+  background: rgba(106, 184, 227, 0.18);
+  color: rgba(106, 184, 227, 0.95);
 }
 
 .screen-cat-row .cat-cell.active {
   background: var(--lcd);
   color: var(--lcd-bg);
   font-weight: 700;
+  border-color: var(--lcd);
   box-shadow: 0 0 6px rgba(106, 184, 227, 0.4);
 }
 
-.screen-info {
-  font-size: 8px;
+.screen-cat-row .cat-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  padding: 0;
+  background: rgba(106, 184, 227, 0.10);
+  border: 1px solid rgba(106, 184, 227, 0.20);
+  border-radius: 4px;
   color: rgba(106, 184, 227, 0.55);
-  letter-spacing: 0.05em;
-  margin-bottom: auto;
-  line-height: 1.4;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: var(--mono);
+  font-weight: 700;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
-.screen-info span {
-  color: rgba(106, 184, 227, 0.85);
+.screen-cat-row .cat-page:hover:not(:disabled) {
+  color: rgba(106, 184, 227, 1);
+  background: rgba(106, 184, 227, 0.20);
+}
+
+.screen-cat-row .cat-page:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+/* ============ 二级分类 ============ */
+.screen-subcat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.screen-subcat-row .subcat-cell {
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(106, 184, 227, 0.08);
+  border: 1px solid rgba(106, 184, 227, 0.15);
+  border-radius: 3px;
+  color: rgba(106, 184, 227, 0.75);
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.screen-subcat-row .subcat-cell:hover:not(.active) {
+  background: rgba(106, 184, 227, 0.16);
+  color: rgba(106, 184, 227, 0.95);
+}
+
+.screen-subcat-row .subcat-cell.active {
+  background: rgba(106, 184, 227, 0.85);
+  color: var(--lcd-bg);
+  font-weight: 700;
+  border-color: var(--lcd);
+  box-shadow: 0 0 6px rgba(106, 184, 227, 0.4);
+}
+
+/* ============ 商户 / 地点 / 备注 输入区 ============ */
+.screen-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+  padding: 4px 0 6px;
+  border-top: 1px dashed rgba(106, 184, 227, 0.15);
+  margin-top: 2px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  padding: 0 4px;
+  border-bottom: 1px dashed rgba(106, 184, 227, 0.18);
+  transition: background 0.15s;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row:focus-within {
+  background: rgba(106, 184, 227, 0.08);
+  border-bottom-color: var(--lcd);
+}
+
+.info-lab {
+  flex-shrink: 0;
+  width: 40px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(106, 184, 227, 0.6);
+}
+
+.info-lab::before {
+  content: '› ';
+  opacity: 0.7;
+  margin-right: 1px;
+}
+
+.info-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(106, 184, 227, 1);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 0;
+  text-shadow: 0 0 4px rgba(106, 184, 227, 0.35);
+  letter-spacing: 0.02em;
+  caret-color: var(--lcd);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.info-input::placeholder {
+  color: rgba(106, 184, 227, 0.32);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.info-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .screen-cta {
@@ -1346,7 +2334,7 @@ function handleClose() {
 /* ============ 小票 ============ */
 .receipt-wrap {
   position: absolute;
-  top: 480px;
+  top: 550px;
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 40px);

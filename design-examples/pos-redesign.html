@@ -1,0 +1,1873 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>POS 弹窗 · 4 种优化方案对比</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============== Design Tokens ============== */
+    :root {
+      --bg: #f5f3ee;
+      --bg-2: #ebe7df;
+      --ink: #1f1d18;
+      --ink-2: #5a5751;
+      --ink-3: #9a958b;
+      --line: rgba(31, 29, 24, 0.10);
+      --line-2: rgba(31, 29, 24, 0.20);
+
+      --gold: #d4a574;
+      --gold-2: #c19463;
+      --gold-deep: #8a5f1c;
+      --gold-soft: #faf5f0;
+
+      --exp: #d96b3f;
+      --inc: #4d8a64;
+      --lcd: #6ab8e3;
+      --lcd-bg: #050810;
+      --lcd-glow: rgba(106, 184, 227, 0.55);
+
+      --shadow-sm: 0 2px 8px rgba(174,168,155,.12);
+      --shadow-md: 0 4px 16px rgba(174,168,155,.18);
+      --shadow-lg: 0 10px 32px rgba(174,168,155,.25);
+
+      --sans: 'Outfit', 'Noto Sans SC', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--bg); }
+    body {
+      font-family: var(--sans);
+      color: var(--ink);
+      min-height: 100vh;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      background:
+        radial-gradient(ellipse 140% 60% at 10% 0%, rgba(212, 165, 116, 0.18) 0%, transparent 55%),
+        radial-gradient(ellipse 100% 50% at 90% 0%, rgba(107, 184, 227, 0.12) 0%, transparent 55%),
+        var(--bg);
+    }
+
+    /* ============== Page Layout ============== */
+    .page {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 48px 28px 80px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+    .page-header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+    .page-header h1 .accent { color: var(--gold-deep); }
+    .page-header .sub {
+      margin-top: 8px;
+      color: var(--ink-2);
+      font-size: 14px;
+      max-width: 640px;
+    }
+    .page-header .meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink-3);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: right;
+    }
+    .page-header .meta b { color: var(--ink-2); font-weight: 700; }
+
+    /* ============== Tabs ============== */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 6px;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid var(--line-2);
+      border-radius: 14px;
+      margin-bottom: 28px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex: 1;
+      min-width: 168px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      line-height: 1.3;
+    }
+    .tab .tag {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      color: var(--ink-3);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .tab:hover { background: rgba(212, 165, 116, 0.08); color: var(--ink); }
+    .tab.active {
+      background: var(--ink);
+      color: var(--bg);
+      box-shadow: 0 4px 12px rgba(31, 29, 24, 0.20);
+    }
+    .tab.active .tag { color: var(--gold); }
+
+    /* ============== Layout: Left Meta + Right Stage ============== */
+    .panel {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 28px;
+      align-items: start;
+    }
+    @media (max-width: 980px) {
+      .panel { grid-template-columns: 1fr; }
+    }
+
+    /* ============== Meta Sidebar ============== */
+    .meta-side {
+      position: sticky;
+      top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .meta-card {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid var(--line-2);
+      border-radius: 16px;
+      padding: 18px 20px;
+      backdrop-filter: blur(6px);
+    }
+    .meta-card h3 {
+      font-size: 12px;
+      font-family: var(--mono);
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      color: var(--gold-deep);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .meta-card .concept {
+      font-size: 14px;
+      color: var(--ink);
+      line-height: 1.55;
+    }
+    .meta-card .concept b { color: var(--ink); font-weight: 700; }
+    .meta-card .concept em { font-style: normal; color: var(--gold-deep); font-weight: 600; }
+    .fix-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .fix-list li {
+      font-size: 12.5px;
+      color: var(--ink-2);
+      line-height: 1.55;
+      padding-left: 22px;
+      position: relative;
+    }
+    .fix-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(77, 138, 100, 0.12);
+      color: var(--inc);
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .spec-table th, .spec-table td {
+      text-align: left;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .spec-table th {
+      color: var(--ink-3);
+      font-weight: 600;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+    }
+    .spec-table td {
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 11.5px;
+    }
+    .spec-table td:first-child { color: var(--ink-2); font-family: var(--sans); }
+    .spec-table tr:last-child td { border-bottom: none; }
+
+    /* ============== Stage ============== */
+    .stage {
+      background: linear-gradient(180deg, #1a1815 0%, #2a2620 100%);
+      border-radius: 24px;
+      padding: 48px 24px 24px;
+      min-height: 720px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 50% 30% at 50% 0%, rgba(212, 165, 116, 0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 30% 20% at 20% 100%, rgba(106, 184, 227, 0.10) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .stage .stage-label {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: rgba(255, 255, 255, 0.55);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      z-index: 2;
+    }
+    .stage .stage-label .pill {
+      padding: 4px 10px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 99px;
+    }
+    .stage .stage-label .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .stage .stage-label .live::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 6px #4ade80;
+      animation: liveBlink 1.4s infinite;
+    }
+    @keyframes liveBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .stage .floor {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 80px;
+      background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.45) 100%);
+      pointer-events: none;
+    }
+
+    /* ============== POS Base Frame (shared) ============== */
+    .pos-stage {
+      position: relative;
+      width: 360px;
+      max-width: 100%;
+      margin: auto 0 0 0;
+      z-index: 1;
+    }
+
+    /* ============== A. Original (Buggy) ============== */
+    .stage[data-variant="original"] .pos-stage { transform: scale(0.92); transform-origin: top center; }
+
+    .a-pos {
+      background: linear-gradient(180deg, #a0a0a0 0%, #fff 40%, #d8d8d8 100%);
+      border-radius: 22px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        inset 0 -1px 0 rgba(0,0,0,0.5),
+        0 4px 14px rgba(0,0,0,0.4);
+      overflow: hidden;
+      position: relative;
+    }
+    .a-printer {
+      height: 56px;
+      background: linear-gradient(180deg, #d8d8d8 0%, #fff 100%);
+      border-bottom: 1px solid rgba(31,29,24,0.18);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      position: relative;
+    }
+    .a-printer::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 12px; right: 12px;
+      height: 8px;
+      background: #050505;
+    }
+    .a-printer .brand {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      color: rgba(31,29,24,0.5);
+    }
+    .a-printer .brand .em { color: var(--gold-deep); }
+    .a-screen {
+      background: var(--lcd-bg);
+      margin: 8px 10px;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--lcd);
+      font-family: var(--mono);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.5);
+      height: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .a-screen::before {
+      content: '';
+      position: absolute;
+      left: 10px; right: 10px;
+      height: 280px;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(106,184,227,0.04) 2px, rgba(106,184,227,0.04) 3px);
+      pointer-events: none;
+    }
+    .a-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      letter-spacing: 0.12em;
+      color: rgba(106,184,227,0.7);
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(106,184,227,0.15);
+      text-transform: uppercase;
+    }
+    .a-typeseg {
+      display: flex;
+      background: rgba(106,184,227,0.06);
+      border: 1px solid rgba(106,184,227,0.2);
+      border-radius: 7px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .a-typeseg button {
+      flex: 1;
+      padding: 8px 0;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 700;
+      background: transparent;
+      border: none;
+      color: rgba(106,184,227,0.55);
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .a-typeseg button.on {
+      background: var(--lcd);
+      color: var(--lcd-bg);
+    }
+    .a-amount {
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+      margin: 4px 0;
+    }
+    .a-amount .cur { font-size: 14px; color: rgba(106,184,227,0.7); }
+    .a-amount .num { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+    .a-cats {
+      display: flex;
+      gap: 4px;
+    }
+    .a-cats button {
+      flex: 1;
+      padding: 7px 4px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(106,184,227,0.1);
+      border: 1px solid rgba(106,184,227,0.18);
+      border-radius: 4px;
+      color: rgba(106,184,227,0.75);
+    }
+    .a-cats button.on {
+      background: var(--lcd);
+      color: var(--lcd-bg);
+      border-color: var(--lcd);
+    }
+    .a-info {
+      border-top: 1px dashed rgba(106,184,227,0.15);
+      padding-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .a-info .row {
+      display: flex;
+      gap: 8px;
+      height: 26px;
+      align-items: center;
+      border-bottom: 1px dashed rgba(106,184,227,0.18);
+      padding: 0 4px;
+      font-size: 10px;
+    }
+    .a-info .row .lab { width: 28px; color: rgba(106,184,227,0.6); }
+    .a-info .row .val { color: var(--lcd); font-size: 11px; }
+    .a-cta {
+      margin-top: auto;
+      padding: 6px 8px;
+      background: rgba(106,184,227,0.1);
+      border: 1px solid rgba(106,184,227,0.25);
+      border-radius: 5px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-align: center;
+    }
+    .a-keys {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      padding: 8px 10px 10px;
+      height: 160px;
+    }
+    .a-key {
+      background: linear-gradient(180deg, #faf5ee 0%, #e8e2d5 100%);
+      border: 1px solid rgba(31,29,24,0.18);
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .a-key.go {
+      background: linear-gradient(180deg, var(--gold) 0%, var(--gold-deep) 100%);
+      color: #fff;
+      grid-column: 4;
+      grid-row: 3 / span 2;
+      font-size: 11px;
+    }
+    .a-exit {
+      width: calc(100% - 40px);
+      margin: 6px 20px 0;
+      height: 30px;
+      background: linear-gradient(180deg, #c5c5c5 0%, #e9e9e9 100%);
+      border-radius: 6px;
+      box-shadow: inset 0 -1px 0 rgba(31,29,24,0.18);
+    }
+
+    /* ============== B. Variant 1: 复古绿屏计算器 (Retron) ============== */
+    .stage[data-variant="v1"] { background: linear-gradient(180deg, #2a2520 0%, #0d0c0a 100%); }
+    .v1-pos {
+      background: linear-gradient(180deg, #d6cfb8 0%, #b8ad94 100%);
+      border-radius: 28px 28px 18px 18px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+        0 12px 32px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+      padding: 14px 14px 0;
+    }
+    .v1-pos::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(90deg, transparent 0, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 3px);
+      pointer-events: none;
+    }
+    .v1-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 6px 10px;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      color: rgba(31, 29, 24, 0.5);
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(31, 29, 24, 0.1);
+    }
+    .v1-top-bar .brand .em { color: var(--gold-deep); }
+    .v1-top-bar .led {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 6px #4ade80;
+    }
+    .v1-screen-frame {
+      background: #1a1814;
+      border-radius: 10px 10px 4px 4px;
+      padding: 5px;
+      box-shadow:
+        inset 0 2px 4px rgba(0, 0, 0, 0.5),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+    }
+    .v1-screen {
+      background: #1f3326;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: var(--mono);
+      color: #6ee29c;
+      text-shadow: 0 0 4px rgba(110, 226, 156, 0.6);
+      position: relative;
+      overflow: hidden;
+      height: 130px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .v1-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(110, 226, 156, 0.04) 2px, rgba(110, 226, 156, 0.04) 3px);
+      pointer-events: none;
+    }
+    .v1-screen::after {
+      content: '';
+      position: absolute;
+      top: 4px; left: 6px;
+      width: 16px; height: 8px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+      border-radius: 50%;
+    }
+    .v1-screen .row1 {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      letter-spacing: 0.12em;
+      opacity: 0.6;
+      text-transform: uppercase;
+    }
+    .v1-screen .row2 {
+      display: flex;
+      align-items: baseline;
+      justify-content: flex-end;
+      gap: 2px;
+      margin-top: 2px;
+    }
+    .v1-screen .row2 .cur { font-size: 12px; opacity: 0.7; }
+    .v1-screen .row2 .num {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .v1-screen .row2 .cursor {
+      width: 1.5px;
+      height: 22px;
+      background: #6ee29c;
+      animation: blink 1s infinite;
+      margin-left: 2px;
+    }
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+    .v1-screen .row3 {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      opacity: 0.5;
+      letter-spacing: 0.05em;
+    }
+    .v1-screen .row3 .lab { opacity: 0.6; }
+    .v1-screen .row3 .val { color: #a3f3c4; }
+
+    .v1-body {
+      display: grid;
+      grid-template-columns: 1fr 78px;
+      gap: 10px;
+      padding: 12px 0 0;
+      align-items: stretch;
+    }
+    .v1-keypad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+    .v1-key {
+      height: 30px;
+      background: linear-gradient(180deg, #f5efde 0%, #c4baa0 100%);
+      border: 1px solid rgba(31, 29, 24, 0.18);
+      border-radius: 5px;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(31, 29, 24, 0.18),
+        0 2px 0 rgba(31, 29, 24, 0.15);
+      cursor: pointer;
+    }
+    .v1-key.fn {
+      font-size: 10px;
+      color: var(--gold-deep);
+      background: linear-gradient(180deg, #c4baa0 0%, #a89a80 100%);
+    }
+    .v1-key.go {
+      background: linear-gradient(180deg, var(--gold) 0%, var(--gold-deep) 100%);
+      color: #fff;
+      font-size: 10px;
+      font-family: var(--sans);
+      grid-column: 4;
+      grid-row: 3 / span 2;
+      height: auto;
+    }
+    .v1-side {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .v1-toggle {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      background: #2a2620;
+      border-radius: 8px;
+      padding: 4px;
+      box-shadow:
+        inset 0 1px 2px rgba(0, 0, 0, 0.4),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+    }
+    .v1-toggle-head {
+      font-family: var(--mono);
+      font-size: 7px;
+      letter-spacing: 0.16em;
+      color: rgba(255, 255, 255, 0.4);
+      text-align: center;
+      padding: 2px 0;
+      text-transform: uppercase;
+    }
+    .v1-toggle-btn {
+      height: 30px;
+      border-radius: 5px;
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 700;
+      background: linear-gradient(180deg, #3a3530 0%, #2a2620 100%);
+      color: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(0, 0, 0, 0.5);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .v1-toggle-btn.active {
+      background: linear-gradient(180deg, #6ee29c 0%, #2a8a52 100%);
+      color: #0d1f15;
+      border-color: rgba(110, 226, 156, 0.5);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        0 0 6px rgba(110, 226, 156, 0.4);
+    }
+    .v1-toggle-btn:not(.active):hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .v1-exit {
+      background: linear-gradient(180deg, #b8ad94 0%, #a89a80 100%);
+      border-radius: 0 0 18px 18px;
+      padding: 10px 14px 14px;
+      position: relative;
+    }
+    .v1-exit-slot {
+      height: 10px;
+      background: #050505;
+      border-radius: 3px;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9);
+      position: relative;
+    }
+    .v1-exit-slot::before {
+      content: '';
+      position: absolute;
+      top: 1px; left: 8px; right: 8px;
+      height: 4px;
+      background: linear-gradient(180deg, rgba(110, 226, 156, 0.2) 0%, transparent 100%);
+      border-radius: 2px;
+    }
+    .v1-exit-label {
+      font-family: var(--mono);
+      font-size: 7px;
+      letter-spacing: 0.2em;
+      color: rgba(31, 29, 24, 0.4);
+      text-align: center;
+      margin-top: 5px;
+      text-transform: uppercase;
+    }
+    .v1-exit-label .em { color: var(--gold-deep); }
+
+    /* V1 屏外信息条 (机身铭牌) */
+    .v1-nameplate {
+      position: absolute;
+      top: 70px;
+      right: -88px;
+      width: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      writing-mode: vertical-rl;
+    }
+    .v1-nameplate .tag {
+      background: linear-gradient(180deg, #f5efde 0%, #c4baa0 100%);
+      border: 1px solid rgba(31, 29, 24, 0.18);
+      border-radius: 4px;
+      padding: 6px 4px;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.1em;
+      color: var(--ink-2);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .v1-nameplate .tag b { color: var(--ink); display: block; font-size: 9px; margin-bottom: 2px; font-family: var(--sans); }
+
+    /* ============== C. Variant 2: ATM 银行机 (Bank) ============== */
+    .stage[data-variant="v2"] { background: linear-gradient(180deg, #1c2430 0%, #0a0e15 100%); }
+    .v2-pos {
+      background: linear-gradient(180deg, #b8c0c8 0%, #889098 100%);
+      border-radius: 18px 18px 6px 6px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+        0 12px 36px rgba(0, 0, 0, 0.6);
+      position: relative;
+      display: grid;
+      grid-template-columns: 60px 1fr 60px;
+      gap: 0;
+      overflow: hidden;
+    }
+    .v2-pos::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 4px, rgba(0,0,0,0.03) 4px, rgba(0,0,0,0.03) 5px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    /* 拉丝纹理 */
+    .v2-pos::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(90deg, transparent 0, transparent 1px, rgba(255,255,255,0.04) 1px, rgba(255,255,255,0.04) 2px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .v2-side {
+      background: linear-gradient(180deg, #4a5a6a 0%, #2a3540 100%);
+      padding: 14px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    .v2-side.right { background: linear-gradient(180deg, #2a3540 0%, #4a5a6a 100%); }
+    .v2-fkey {
+      height: 30px;
+      background: linear-gradient(180deg, #6a7a8a 0%, #3a4550 100%);
+      border: 1px solid rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 2px 0 rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+    }
+    .v2-fkey .num { font-family: var(--mono); font-size: 9px; opacity: 0.7; }
+    .v2-fkey .lab { font-family: var(--sans); font-size: 9px; font-weight: 600; }
+    .v2-fkey.inc { background: linear-gradient(180deg, #5a8a6a 0%, #2a5a3a 100%); }
+    .v2-fkey.exp { background: linear-gradient(180deg, #c97b5a 0%, #8a4a2a 100%); }
+
+    .v2-main {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    .v2-screen {
+      background: linear-gradient(180deg, #0a1820 0%, #050a10 100%);
+      border: 2px solid #0a0a0a;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: var(--mono);
+      color: #6ee29c;
+      text-shadow: 0 0 3px rgba(110, 226, 156, 0.5);
+      height: 110px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow:
+        inset 0 0 0 1px rgba(110, 226, 156, 0.15),
+        inset 0 2px 6px rgba(0, 0, 0, 0.6);
+    }
+    .v2-screen .row1 {
+      display: flex;
+      justify-content: space-between;
+      font-size: 7px;
+      letter-spacing: 0.18em;
+      color: rgba(110, 226, 156, 0.6);
+      text-transform: uppercase;
+      border-bottom: 1px dashed rgba(110, 226, 156, 0.2);
+      padding-bottom: 3px;
+    }
+    .v2-screen .row2 {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 3px;
+      flex: 1;
+    }
+    .v2-screen .row2 .cur { font-size: 14px; opacity: 0.7; }
+    .v2-screen .row2 .num {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .v2-screen .row3 {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      opacity: 0.7;
+      letter-spacing: 0.04em;
+    }
+    .v2-screen .row3 b { color: #a3f3c4; font-weight: 700; }
+
+    .v2-keypad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .v2-key {
+      height: 26px;
+      background: linear-gradient(180deg, #4a5a6a 0%, #2a3540 100%);
+      border: 1px solid rgba(0, 0, 0, 0.4);
+      border-radius: 3px;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 2px 0 rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+    }
+    .v2-key.fn {
+      font-family: var(--sans);
+      font-size: 9px;
+      background: linear-gradient(180deg, #6a7a8a 0%, #4a5a6a 100%);
+      color: #fff;
+    }
+    .v2-key.go {
+      background: linear-gradient(180deg, var(--gold) 0%, var(--gold-deep) 100%);
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 9px;
+      grid-column: 4;
+      grid-row: 3 / span 2;
+      height: auto;
+    }
+
+    .v2-card-slot {
+      height: 4px;
+      background: #050505;
+      border-radius: 2px;
+      margin: 0 12px 6px;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+    .v2-bottom-strip {
+      background: linear-gradient(180deg, #4a5a6a 0%, #2a3540 100%);
+      padding: 4px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    .v2-bottom-strip .em { color: var(--gold); }
+
+    .v2-exit {
+      background: linear-gradient(180deg, #889098 0%, #5a6068 100%);
+      padding: 8px 12px 10px;
+    }
+    .v2-exit-slot {
+      height: 8px;
+      background: #050505;
+      border-radius: 3px;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9);
+    }
+
+    /* ============== D. Variant 3: Cyberpunk 霓虹 HUD ============== */
+    .stage[data-variant="v3"] {
+      background:
+        radial-gradient(ellipse 60% 40% at 50% 30%, rgba(167, 139, 250, 0.18) 0%, transparent 60%),
+        linear-gradient(180deg, #0a0612 0%, #050308 100%);
+    }
+    .v3-pos {
+      background: linear-gradient(180deg, #1a1525 0%, #0a0612 100%);
+      border-radius: 20px 20px 12px 12px;
+      box-shadow:
+        inset 0 1px 0 rgba(167, 139, 250, 0.2),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(167, 139, 250, 0.3),
+        0 0 40px rgba(167, 139, 250, 0.15),
+        0 12px 36px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+    }
+    .v3-pos::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(167, 139, 250, 0.04) 2px, rgba(167, 139, 250, 0.04) 3px);
+      pointer-events: none;
+    }
+    .v3-hud-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      color: #a78bfa;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(167, 139, 250, 0.2);
+    }
+    .v3-hud-top .left { display: flex; gap: 12px; align-items: center; }
+    .v3-hud-top .right { display: flex; gap: 8px; align-items: center; }
+    .v3-hud-top .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #a78bfa;
+      box-shadow: 0 0 6px #a78bfa;
+      animation: liveBlink 1.4s infinite;
+    }
+    .v3-hud-top .barcode-mini {
+      display: flex;
+      gap: 1px;
+      height: 8px;
+    }
+    .v3-hud-top .barcode-mini span {
+      width: 1px;
+      background: #a78bfa;
+      opacity: 0.5;
+    }
+
+    .v3-screen {
+      margin: 10px;
+      padding: 14px 16px;
+      background: linear-gradient(180deg, rgba(167, 139, 250, 0.05) 0%, rgba(244, 114, 182, 0.03) 100%);
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      border-radius: 4px;
+      font-family: var(--mono);
+      color: #d8b4fe;
+      text-shadow: 0 0 6px rgba(167, 139, 250, 0.5);
+      position: relative;
+      clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+    }
+    .v3-screen::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(180deg, transparent 0%, rgba(167, 139, 250, 0.06) 50%, transparent 100%);
+      animation: hudSweep 4s infinite linear;
+      pointer-events: none;
+    }
+    @keyframes hudSweep {
+      0% { transform: translateY(-50%); }
+      100% { transform: translateY(50%); }
+    }
+    .v3-screen .corner-tl, .v3-screen .corner-tr, .v3-screen .corner-bl, .v3-screen .corner-br {
+      position: absolute;
+      width: 10px; height: 10px;
+      border: 1px solid #a78bfa;
+    }
+    .v3-screen .corner-tl { top: 4px; left: 4px; border-right: none; border-bottom: none; }
+    .v3-screen .corner-tr { top: 4px; right: 4px; border-left: none; border-bottom: none; }
+    .v3-screen .corner-bl { bottom: 4px; left: 4px; border-right: none; border-top: none; }
+    .v3-screen .corner-br { bottom: 4px; right: 4px; border-left: none; border-top: none; }
+
+    .v3-screen .row1 {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      letter-spacing: 0.15em;
+      opacity: 0.6;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .v3-screen .row2 {
+      display: flex;
+      align-items: baseline;
+      gap: 3px;
+      margin-bottom: 4px;
+    }
+    .v3-screen .row2 .cur { font-size: 12px; opacity: 0.6; }
+    .v3-screen .row2 .num {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #f472b6;
+      text-shadow: 0 0 8px rgba(244, 114, 182, 0.6);
+    }
+    .v3-screen .row2 .cursor {
+      width: 1.5px; height: 18px;
+      background: #f472b6;
+      box-shadow: 0 0 6px #f472b6;
+      animation: blink 0.8s infinite;
+    }
+    .v3-screen .row3 {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      letter-spacing: 0.1em;
+      opacity: 0.7;
+    }
+
+    .v3-dial-row {
+      display: flex;
+      gap: 8px;
+      padding: 0 10px 6px;
+    }
+    .v3-dial {
+      flex: 1;
+      background: rgba(167, 139, 250, 0.08);
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      border-radius: 4px;
+      padding: 6px 4px;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: rgba(167, 139, 250, 0.6);
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      transition: all 0.15s;
+    }
+    .v3-dial.active {
+      background: rgba(244, 114, 182, 0.15);
+      border-color: #f472b6;
+      color: #f472b6;
+      text-shadow: 0 0 4px rgba(244, 114, 182, 0.6);
+    }
+    .v3-dial:hover:not(.active) { color: #d8b4fe; }
+
+    .v3-keypad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      padding: 0 10px 10px;
+    }
+    .v3-key {
+      height: 30px;
+      background: linear-gradient(180deg, rgba(167, 139, 250, 0.12) 0%, rgba(167, 139, 250, 0.04) 100%);
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: #d8b4fe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .v3-key:hover { background: rgba(167, 139, 250, 0.18); border-color: #a78bfa; }
+    .v3-key.fn { color: #f472b6; font-size: 11px; }
+    .v3-key.go {
+      background: linear-gradient(180deg, #f472b6 0%, #a78bfa 100%);
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 10px;
+      border-color: transparent;
+      grid-column: 4;
+      grid-row: 3 / span 2;
+      height: auto;
+      box-shadow: 0 0 12px rgba(244, 114, 182, 0.4);
+    }
+
+    .v3-exit {
+      background: rgba(167, 139, 250, 0.05);
+      padding: 8px 14px 10px;
+      border-top: 1px solid rgba(167, 139, 250, 0.2);
+    }
+    .v3-exit-slot {
+      height: 8px;
+      background: #050505;
+      border-radius: 2px;
+      box-shadow:
+        inset 0 1px 2px rgba(0, 0, 0, 0.9),
+        0 0 8px rgba(167, 139, 250, 0.3);
+      position: relative;
+    }
+    .v3-exit-slot::before {
+      content: '';
+      position: absolute;
+      top: 1px; left: 8px; right: 8px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #a78bfa, transparent);
+      opacity: 0.6;
+      animation: slotPulse 2s infinite;
+    }
+    @keyframes slotPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.9; }
+    }
+
+    /* ============== E. Variant 4: 纸质小票铭牌 (Tag) ============== */
+    .stage[data-variant="v4"] { background: linear-gradient(180deg, #2a2820 0%, #1a1815 100%); }
+    .v4-pos {
+      background: linear-gradient(180deg, #e8e0d0 0%, #c8c0b0 100%);
+      border-radius: 20px 20px 8px 8px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+        0 12px 36px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      position: relative;
+    }
+    .v4-pos::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px);
+      pointer-events: none;
+    }
+    .v4-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      color: rgba(31, 29, 24, 0.5);
+      text-transform: uppercase;
+      border-bottom: 1px dashed rgba(31, 29, 24, 0.15);
+    }
+    .v4-topbar .em { color: var(--gold-deep); }
+    .v4-led {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 6px #4ade80;
+    }
+
+    .v4-screen {
+      margin: 10px;
+      padding: 14px;
+      background: linear-gradient(180deg, #fdfaf2 0%, #f4ecdc 100%);
+      border: 1px solid rgba(31, 29, 24, 0.15);
+      border-radius: 4px;
+      position: relative;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    .v4-screen::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background:
+        radial-gradient(circle at 3px 0, transparent 2px, #1a1815 2.5px) 0 0 / 6px 4px repeat-x;
+    }
+    .v4-screen::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 4px;
+      background:
+        radial-gradient(circle at 3px 4px, transparent 2px, #1a1815 2.5px) 0 0 / 6px 4px repeat-x;
+    }
+    .v4-amount-block {
+      text-align: center;
+      padding: 8px 0;
+    }
+    .v4-amount-block .lab {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      color: var(--ink-3);
+      text-transform: uppercase;
+    }
+    .v4-amount-block .amt {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 2px;
+      margin-top: 2px;
+    }
+    .v4-amount-block .cur { font-size: 16px; color: var(--ink-2); }
+    .v4-amount-block .num {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      font-feature-settings: 'tnum';
+    }
+    .v4-cat {
+      text-align: center;
+      padding: 6px 8px;
+      background: rgba(31, 29, 24, 0.04);
+      border-radius: 3px;
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-top: 6px;
+    }
+    .v4-cat .sub { color: var(--ink-3); font-size: 9px; font-weight: 400; margin-left: 4px; }
+
+    /* 票外信息条 */
+    .v4-info-tags {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px;
+      padding: 0 10px 8px;
+    }
+    .v4-tag {
+      background: linear-gradient(180deg, #fdfaf2 0%, #f0e8d8 100%);
+      border: 1px solid rgba(31, 29, 24, 0.15);
+      border-radius: 3px;
+      padding: 5px 6px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 1px 1px rgba(0, 0, 0, 0.1);
+    }
+    .v4-tag .lab {
+      font-family: var(--mono);
+      font-size: 7px;
+      letter-spacing: 0.1em;
+      color: var(--ink-3);
+      text-transform: uppercase;
+    }
+    .v4-tag .val {
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .v4-toggle {
+      display: flex;
+      gap: 6px;
+      padding: 0 10px 8px;
+    }
+    .v4-toggle-btn {
+      flex: 1;
+      padding: 8px 0;
+      border-radius: 4px;
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 700;
+      background: linear-gradient(180deg, #f5efde 0%, #c4baa0 100%);
+      color: var(--ink-2);
+      border: 1px solid rgba(31, 29, 24, 0.18);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 1px 0 rgba(31, 29, 24, 0.15);
+      cursor: pointer;
+      text-align: center;
+    }
+    .v4-toggle-btn.active.exp {
+      background: linear-gradient(180deg, #e8a888 0%, #b85a32 100%);
+      color: #fff;
+      border-color: rgba(0, 0, 0, 0.3);
+    }
+    .v4-toggle-btn.active.inc {
+      background: linear-gradient(180deg, #8aaa98 0%, #2e6644 100%);
+      color: #fff;
+      border-color: rgba(0, 0, 0, 0.3);
+    }
+
+    .v4-keypad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      padding: 0 10px 10px;
+    }
+    .v4-key {
+      height: 32px;
+      background: linear-gradient(180deg, #f5efde 0%, #c4baa0 100%);
+      border: 1px solid rgba(31, 29, 24, 0.18);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(31, 29, 24, 0.18),
+        0 2px 0 rgba(31, 29, 24, 0.15);
+      cursor: pointer;
+    }
+    .v4-key.fn {
+      font-size: 10px;
+      color: var(--gold-deep);
+    }
+    .v4-key.go {
+      background: linear-gradient(180deg, var(--gold) 0%, var(--gold-deep) 100%);
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 11px;
+      grid-column: 4;
+      grid-row: 3 / span 2;
+      height: auto;
+    }
+
+    .v4-exit {
+      background: linear-gradient(180deg, #c8c0b0 0%, #a89a80 100%);
+      padding: 10px 14px 14px;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    .v4-exit-slot {
+      height: 8px;
+      background: #050505;
+      border-radius: 2px;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9);
+      position: relative;
+    }
+    .v4-exit-slot::before {
+      content: '';
+      position: absolute;
+      top: 1px; left: 6px; right: 6px;
+      height: 3px;
+      background: linear-gradient(180deg, rgba(255, 220, 100, 0.2) 0%, transparent 100%);
+    }
+
+    /* ============== Mobile Fallback ============== */
+    @media (max-width: 980px) {
+      .page { padding: 24px 16px 60px; }
+      .page-header h1 { font-size: 24px; }
+      .tab { min-width: 130px; padding: 10px 12px; }
+      .meta-side { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <div>
+        <h1>POS 弹窗 · <span class="accent">四种优化方案</span></h1>
+        <p class="sub">
+          针对原版"屏幕内容拥挤、收支文字过大、整体视觉层次弱"三大痛点，从不同设计语言给出 4 套重做方向：复古绿屏 / ATM 银行机 / 赛博朋克 / 纸质铭牌。每套都重新分配了"屏幕 ↔ 机身实体区域"的信息密度。
+        </p>
+      </div>
+      <div class="meta">
+        <div><b>POS Modal Redesign</b></div>
+        <div>2026-07-10 · v2</div>
+      </div>
+    </header>
+
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-variant="original">
+        <span class="tag">0 · BASELINE</span>
+        <span>原版（痛点对照）</span>
+      </button>
+      <button class="tab" data-variant="v1">
+        <span class="tag">1 · RETRON</span>
+        <span>复古绿屏计算器</span>
+      </button>
+      <button class="tab" data-variant="v2">
+        <span class="tag">2 · BANK</span>
+        <span>ATM 银行机</span>
+      </button>
+      <button class="tab" data-variant="v3">
+        <span class="tag">3 · CYBER</span>
+        <span>赛博朋克 HUD</span>
+      </button>
+      <button class="tab" data-variant="v4">
+        <span class="tag">4 · TAG</span>
+        <span>纸质铭牌小票</span>
+      </button>
+    </nav>
+
+    <div class="panel">
+      <!-- Stage -->
+      <div class="stage" id="stage" data-variant="original">
+        <div class="stage-label">
+          <span class="pill" id="stagePill">BASELINE · 原版对照</span>
+          <span class="live">LIVE PREVIEW</span>
+        </div>
+        <div class="floor"></div>
+
+        <!-- Original -->
+        <div class="pos-stage" data-stage="original">
+          <div class="a-pos">
+            <div class="a-printer">
+              <span></span>
+              <span class="brand">FloGold<span class="em"> · POS</span></span>
+              <span></span>
+            </div>
+            <div class="a-screen">
+              <div class="a-top">
+                <span>FloGold · 联机</span>
+                <span>▂▃▄▅</span>
+              </div>
+              <div class="a-typeseg">
+                <button class="on">支出</button>
+                <button>收入</button>
+              </div>
+              <div class="a-amount">
+                <span class="cur">¥</span>
+                <span class="num">128.50</span>
+              </div>
+              <div class="a-cats">
+                <button class="on">餐饮</button>
+                <button>交通</button>
+                <button>购物</button>
+                <button>娱乐</button>
+              </div>
+              <div class="a-info">
+                <div class="row"><span class="lab">› 商户</span><span class="val">星巴克</span></div>
+                <div class="row"><span class="lab">› 地点</span><span class="val">公司楼下</span></div>
+                <div class="row"><span class="lab">› 备注</span><span class="val">—</span></div>
+              </div>
+              <div class="a-cta">完成 → 联机打印  →</div>
+            </div>
+            <div class="a-keys">
+              <div class="a-key">1</div><div class="a-key">2</div><div class="a-key">3</div><div class="a-key">⌫</div>
+              <div class="a-key">4</div><div class="a-key">5</div><div class="a-key">6</div><div class="a-key">+</div>
+              <div class="a-key">7</div><div class="a-key">8</div><div class="a-key">9</div>
+              <div class="a-key">.</div><div class="a-key">0</div>
+              <div class="a-key go">完成</div>
+            </div>
+          </div>
+          <div class="a-exit"></div>
+        </div>
+
+        <!-- V1: Retron -->
+        <div class="pos-stage" data-stage="v1" style="display:none;">
+          <div class="v1-pos">
+            <div class="v1-top-bar">
+              <span class="brand">FloGold<span class="em"> · POS-80</span></span>
+              <span class="led"></span>
+            </div>
+            <div class="v1-screen-frame">
+              <div class="v1-screen">
+                <div class="row1">
+                  <span>FloGold · 联机</span>
+                  <span>▂▃▄▅</span>
+                </div>
+                <div class="row2">
+                  <span class="cur">¥</span>
+                  <span class="num">128.50</span>
+                  <span class="cursor"></span>
+                </div>
+                <div class="row3">
+                  <span><span class="lab">CAT </span><span class="val">餐饮</span></span>
+                  <span><span class="lab">SUB </span><span class="val">咖啡</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="v1-body">
+              <div class="v1-keypad">
+                <div class="v1-key">1</div><div class="v1-key">2</div><div class="v1-key">3</div><div class="v1-key fn">⌫</div>
+                <div class="v1-key">4</div><div class="v1-key">5</div><div class="v1-key">6</div><div class="v1-key fn">+</div>
+                <div class="v1-key">7</div><div class="v1-key">8</div><div class="v1-key">9</div><div class="v1-key fn">−</div>
+                <div class="v1-key">.</div><div class="v1-key">0</div>
+                <div class="v1-key go">完成 ✓</div>
+              </div>
+              <div class="v1-side">
+                <div class="v1-toggle">
+                  <div class="v1-toggle-head">TX</div>
+                  <div class="v1-toggle-btn active">支出</div>
+                  <div class="v1-toggle-btn">收入</div>
+                </div>
+              </div>
+            </div>
+            <div class="v1-exit">
+              <div class="v1-exit-slot"></div>
+              <div class="v1-exit-label">PRINTER <span class="em">· 出纸口</span></div>
+            </div>
+          </div>
+          <!-- 屏外铭牌 -->
+          <div class="v1-nameplate">
+            <div class="tag"><b>商户</b>星巴克</div>
+            <div class="tag"><b>地点</b>公司楼下</div>
+            <div class="tag"><b>备注</b>—</div>
+          </div>
+        </div>
+
+        <!-- V2: Bank ATM -->
+        <div class="pos-stage" data-stage="v2" style="display:none;">
+          <div class="v2-pos">
+            <div class="v2-side">
+              <div class="v2-fkey"><span class="num">F1</span><span class="lab">餐饮</span></div>
+              <div class="v2-fkey"><span class="num">F2</span><span class="lab">交通</span></div>
+              <div class="v2-fkey"><span class="num">F3</span><span class="lab">购物</span></div>
+              <div class="v2-fkey"><span class="num">F4</span><span class="lab">娱乐</span></div>
+            </div>
+            <div class="v2-main">
+              <div class="v2-screen">
+                <div class="row1">
+                  <span>FloGold · TX</span>
+                  <span>●ONLINE</span>
+                </div>
+                <div class="row2">
+                  <span class="cur">¥</span>
+                  <span class="num">128.50</span>
+                </div>
+                <div class="row3">
+                  <span>CAT <b>餐饮</b></span>
+                  <span>SUB <b>咖啡</b></span>
+                </div>
+              </div>
+              <div class="v2-keypad">
+                <div class="v2-key">1</div><div class="v2-key">2</div><div class="v2-key">3</div><div class="v2-key fn">⌫</div>
+                <div class="v2-key">4</div><div class="v2-key">5</div><div class="v2-key">6</div><div class="v2-key fn">+</div>
+                <div class="v2-key">7</div><div class="v2-key">8</div><div class="v2-key">9</div><div class="v2-key fn">−</div>
+                <div class="v2-key">.</div><div class="v2-key">0</div>
+                <div class="v2-key go">ENTER</div>
+              </div>
+              <div class="v2-card-slot"></div>
+            </div>
+            <div class="v2-side right">
+              <div class="v2-fkey exp"><span class="num">F5</span><span class="lab">支出</span></div>
+              <div class="v2-fkey inc"><span class="num">F6</span><span class="lab">收入</span></div>
+              <div class="v2-fkey"><span class="num">F7</span><span class="lab">商户</span></div>
+              <div class="v2-fkey"><span class="num">F8</span><span class="lab">备注</span></div>
+            </div>
+          </div>
+          <div class="v2-exit">
+            <div class="v2-exit-slot"></div>
+          </div>
+          <div class="v2-bottom-strip">
+            <span>FloGold <span class="em">· 80mm THERMAL</span></span>
+            <span>READY ●</span>
+          </div>
+        </div>
+
+        <!-- V3: Cyberpunk -->
+        <div class="pos-stage" data-stage="v3" style="display:none;">
+          <div class="v3-pos">
+            <div class="v3-hud-top">
+              <div class="left">
+                <span>◉ SYS</span>
+                <span>SIG:88</span>
+                <span>PWR:OK</span>
+              </div>
+              <div class="right">
+                <span>TX.LOG</span>
+                <div class="barcode-mini">
+                  <span style="height:40%"></span><span style="height:80%"></span><span style="height:60%"></span><span style="height:100%"></span><span style="height:30%"></span><span style="height:70%"></span>
+                </div>
+                <span class="dot"></span>
+              </div>
+            </div>
+            <div class="v3-screen">
+              <span class="corner-tl"></span><span class="corner-tr"></span>
+              <span class="corner-bl"></span><span class="corner-br"></span>
+              <div class="row1">
+                <span>// AMOUNT //</span>
+                <span>EXP</span>
+              </div>
+              <div class="row2">
+                <span class="cur">¥</span>
+                <span class="num">128.50</span>
+                <span class="cursor"></span>
+              </div>
+              <div class="row3">
+                <span>CAT › 餐饮.咖啡</span>
+                <span>FREQ:1.2×</span>
+              </div>
+            </div>
+            <div class="v3-dial-row">
+              <div class="v3-dial active">餐饮</div>
+              <div class="v3-dial">交通</div>
+              <div class="v3-dial">购物</div>
+              <div class="v3-dial">娱乐</div>
+            </div>
+            <div class="v3-keypad">
+              <div class="v3-key">1</div><div class="v3-key">2</div><div class="v3-key">3</div><div class="v3-key fn">⌫</div>
+              <div class="v3-key">4</div><div class="v3-key">5</div><div class="v3-key">6</div><div class="v3-key fn">+</div>
+              <div class="v3-key">7</div><div class="v3-key">8</div><div class="v3-key">9</div><div class="v3-key fn">−</div>
+              <div class="v3-key">.</div><div class="v3-key">0</div>
+              <div class="v3-key go">EXEC</div>
+            </div>
+            <div class="v3-exit">
+              <div class="v3-exit-slot"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- V4: Paper Tag -->
+        <div class="pos-stage" data-stage="v4" style="display:none;">
+          <div class="v4-pos">
+            <div class="v4-topbar">
+              <span>FloGold<span class="em"> · POS-80</span></span>
+              <span class="v4-led"></span>
+            </div>
+            <div class="v4-screen">
+              <div class="v4-amount-block">
+                <div class="lab">— TOTAL —</div>
+                <div class="amt">
+                  <span class="cur">¥</span>
+                  <span class="num">128.50</span>
+                </div>
+              </div>
+              <div class="v4-cat">餐饮<span class="sub">/ 咖啡 · 星巴克</span></div>
+            </div>
+            <div class="v4-toggle">
+              <div class="v4-toggle-btn active exp">− 支出</div>
+              <div class="v4-toggle-btn inc">+ 收入</div>
+            </div>
+            <div class="v4-info-tags">
+              <div class="v4-tag">
+                <div class="lab">商户</div>
+                <div class="val">星巴克</div>
+              </div>
+              <div class="v4-tag">
+                <div class="lab">地点</div>
+                <div class="val">公司楼下</div>
+              </div>
+              <div class="v4-tag">
+                <div class="lab">备注</div>
+                <div class="val">—</div>
+              </div>
+            </div>
+            <div class="v4-keypad">
+              <div class="v4-key">1</div><div class="v4-key">2</div><div class="v4-key">3</div><div class="v4-key fn">⌫</div>
+              <div class="v4-key">4</div><div class="v4-key">5</div><div class="v4-key">6</div><div class="v4-key fn">+</div>
+              <div class="v4-key">7</div><div class="v4-key">8</div><div class="v4-key">9</div><div class="v4-key fn">−</div>
+              <div class="v4-key">.</div><div class="v4-key">0</div>
+              <div class="v4-key go">完成 ✓</div>
+            </div>
+            <div class="v4-exit">
+              <div class="v4-exit-slot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Meta Sidebar -->
+      <aside class="meta-side">
+        <div class="meta-card" id="conceptCard">
+          <h3>设计理念</h3>
+          <p class="concept" id="conceptText">
+            <b>原版痛点：</b>LCD 屏幕塞下了 6 段内容（收支切换 / 金额 / 分类 / 子分类 / 三行商户信息 / 完成按钮），<em>层级全靠字号和虚线区分</em>，缺少真实 POS 机的"机壳 ↔ 屏幕"层次感。收支分段按钮 13px 的字号在小屏幕上显得过于突出。
+          </p>
+        </div>
+
+        <div class="meta-card">
+          <h3>主要优化动作</h3>
+          <ul class="fix-list" id="fixList">
+            <li>屏幕内只保留"金额 + 当前分类"两行核心信息</li>
+            <li>收支切换、分类选择、商户备注全部移到机身"实体按钮"区域</li>
+            <li>屏幕高度从 280px 缩到 130px，让"POS 机壳"更突出</li>
+            <li>LCD 字号从 26px 提到 30px 提升主信息可读性</li>
+            <li>真实 POS 机的"侧键、磁卡槽、铭牌"成为新信息载体</li>
+          </ul>
+        </div>
+
+        <div class="meta-card">
+          <h3>关键参数</h3>
+          <table class="spec-table" id="specTable">
+            <tr><th>屏幕信息密度</th><td>高（拥挤）</td></tr>
+            <tr><th>金额字号</th><td>26px</td></tr>
+            <tr><th>收支按钮</th><td>13px / 屏内</td></tr>
+            <tr><th>分类入口</th><td>4 个分页 / 屏内</td></tr>
+            <tr><th>商户输入</th><td>3 行 Input / 屏内</td></tr>
+            <tr><th>完成按钮</th><td>屏内 CTA + 键盘 go</td></tr>
+          </table>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const variantData = {
+      original: {
+        concept: '<b>原版痛点：</b>LCD 屏幕塞下了 6 段内容（收支切换 / 金额 / 分类 / 子分类 / 三行商户信息 / 完成按钮），<em>层级全靠字号和虚线区分</em>，缺少真实 POS 机的"机壳 ↔ 屏幕"层次感。收支分段按钮 13px 的字号在小屏幕上显得过于突出。',
+        fixes: [
+          '屏幕内只保留"金额 + 当前分类"两行核心信息',
+          '收支切换、分类选择、商户备注全部移到机身"实体按钮"区域',
+          '屏幕高度从 280px 缩到 130px，让"POS 机壳"更突出',
+          'LCD 字号从 26px 提到 30px 提升主信息可读性',
+          '真实 POS 机的"侧键、磁卡槽、铭牌"成为新信息载体'
+        ],
+        specs: [
+          ['屏幕信息密度', '高（拥挤）'],
+          ['金额字号', '26px'],
+          ['收支按钮', '13px / 屏内'],
+          ['分类入口', '4 个分页 / 屏内'],
+          ['商户输入', '3 行 Input / 屏内'],
+          ['完成按钮', '屏内 CTA + 键盘 go']
+        ],
+        pill: 'BASELINE · 原版对照'
+      },
+      v1: {
+        concept: '<b>复古绿屏计算器 Retron</b> — 致敬 80 年代 Casio POS。屏幕从 LCD 蓝黑换成<b>深绿底 + 亮绿像素字</b>，高度压缩到 130px，<em>只显示金额和分类两行</em>。收支切换做成机身边上的"实体拨杆"（TX 键），商户 / 地点 / 备注移到机身<b>右侧"屏外铭牌"</b>，像贴在机壳上的便签。',
+        fixes: [
+          'LCD 从蓝黑换成深绿+像素绿，更复古专业',
+          '屏幕只留金额 + 分类两行，机器感回归',
+          '收支做成右侧"TX 实体拨杆组"，不再占屏幕',
+          '商户/地点/备注用屏外"贴纸铭牌"，还原 80s 质感',
+          '按键高度统一 30px，按下时有 2px 物理反馈'
+        ],
+        specs: [
+          ['屏幕信息密度', '低（克制）'],
+          ['金额字号', '30px (像素绿)'],
+          ['收支按钮', '11px / 机身边'],
+          ['分类入口', '屏内底部 + 屏外铭牌'],
+          ['商户输入', '屏外"便签铭牌"'],
+          ['完成按钮', '金色键盘 go (占 2 行)']
+        ],
+        pill: 'V1 · RETRON 复古绿屏'
+      },
+      v2: {
+        concept: '<b>ATM 银行机 Bank</b> — 把 POS 改成银行 ATM 的对称结构：<em>左右两列"功能键 F1-F8"</em>，中间是屏幕 + 键盘。<b>左列管分类</b>（F1-F4），<b>右列管类型 / 商户 / 备注</b>（F5-F8），收支直接做成橙绿对比的实体键。屏幕下方有"磁卡槽"装饰强化专业感。',
+        fixes: [
+          '机身边侧两列"功能键 F1-F8"，承担 80% 信息入口',
+          '收支做成绿/橙对比的实体键（F5/F6），不挤屏幕',
+          '屏幕从 280px 缩到 110px，留出空间给侧键',
+          '键盘区下方增加"磁卡槽"装饰，强化机壳实体感',
+          '底栏加"READY ●"状态指示，整体更专业商务'
+        ],
+        specs: [
+          ['屏幕信息密度', '极低（110px 高）'],
+          ['金额字号', '32px (绿色像素)'],
+          ['收支按钮', 'F5/F6 侧键 / 9px'],
+          ['分类入口', 'F1-F4 左侧 4 键'],
+          ['商户输入', 'F7 触发 / 屏外交互'],
+          ['完成按钮', '键盘 ENTER (2 行高)']
+        ],
+        pill: 'V2 · BANK ATM 银行机'
+      },
+      v3: {
+        concept: '<b>赛博朋克 HUD Cyber</b> — 深紫+霓虹粉/紫配色，顶栏带"◉ SYS / SIG:88 / PWR:OK"赛博状态条，屏幕做成<b>带 HUD 切角和扫描线动画</b>的全息框。金额用霓虹粉红，分类做成"拨盘式" 4 段切换，按键半透明带辉光。适合追求个性 / 夜店风 / 极客感的产品调性。',
+        fixes: [
+          '屏幕做成 HUD 切角 + 顶部扫描线，强化科技感',
+          '金额用霓虹粉 #f472b6，从冷淡蓝变成温暖高亮',
+          '分类从 4 个分页改成 4 段"拨盘式"等宽按钮',
+          '顶栏加 ◉SYS / SIG / PWR 状态条，像宇宙飞船仪表',
+          '按键从米色塑料改为半透明霓虹玻璃，键盘 go 带辉光'
+        ],
+        specs: [
+          ['屏幕信息密度', '中（带 HUD 装饰）'],
+          ['金额字号', '24px (霓虹粉)'],
+          ['收支按钮', 'EXP 文字态 / 屏顶'],
+          ['分类入口', '4 段拨盘 (屏幕下方)'],
+          ['商户输入', '可放屏内 / 屏外任选'],
+          ['完成按钮', 'EXEC 紫粉渐变 + 辉光']
+        ],
+        pill: 'V3 · CYBER 赛博朋克'
+      },
+      v4: {
+        concept: '<b>纸质铭牌小票 Tag</b> — 把 POS 还原成<b>"小票打孔机"形态</b>：屏幕顶部和底部有<b>真实打孔弧线</b>（半圆撕纸感），商户/地点/备注做成屏幕下方的"<em>三联打孔标签</em>"，像贴在机身上的牛皮纸标签。收支按钮做成"− 支出 / + 收入"两个凸起的圆形按钮，符号直观。',
+        fixes: [
+          '屏幕顶部/底部加打孔弧线，呼应下方小票的撕纸感',
+          '屏幕只留"金额 + 当前分类"，避免拥挤',
+          '商户/地点/备注做成屏幕下方"三联标签"',
+          '收支按钮用"−/+ + 文字"形式，比纯文字更直觉',
+          '整体走米色 + 牛皮纸 + 烫金的高质感路线'
+        ],
+        specs: [
+          ['屏幕信息密度', '低（金额 + 分类）'],
+          ['金额字号', '38px (衬线数字)'],
+          ['收支按钮', '11px / 凸起圆形 −/+'],
+          ['分类入口', '屏内文字 / 可点击'],
+          ['商户输入', '三联打孔标签 (屏下方)'],
+          ['完成按钮', '金色键盘 go (2 行)']
+        ],
+        pill: 'V4 · TAG 纸质铭牌'
+      }
+    };
+
+    const tabs = document.querySelectorAll('.tab');
+    const stage = document.getElementById('stage');
+    const stagePill = document.getElementById('stagePill');
+    const conceptText = document.getElementById('conceptText');
+    const fixList = document.getElementById('fixList');
+    const specTable = document.getElementById('specTable');
+    const stages = document.querySelectorAll('[data-stage]');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const variant = tab.dataset.variant;
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        stage.dataset.variant = variant;
+        stages.forEach(s => {
+          s.style.display = s.dataset.stage === variant ? '' : 'none';
+        });
+        const data = variantData[variant];
+        stagePill.textContent = data.pill;
+        conceptText.innerHTML = data.concept;
+        fixList.innerHTML = data.fixes.map(f => `<li>${f}</li>`).join('');
+        specTable.innerHTML = data.specs.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('');
+      });
+    });
+  </script>
+</body>
+</html>

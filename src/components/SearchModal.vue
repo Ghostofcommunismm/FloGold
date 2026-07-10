@@ -52,7 +52,8 @@
                   </div>
                 </div>
                 <span class="result-amount" :class="tx.type">
-                  {{ tx.type === 'income' ? '+' : '-' }}¥{{ tx.amount.toFixed(2) }}
+                  <template v-if="tx.type === 'transfer'">⇄ ¥{{ tx.amount.toFixed(2) }}</template>
+                  <template v-else>{{ tx.type === 'income' ? '+' : '-' }}¥{{ tx.amount.toFixed(2) }}</template>
                 </span>
               </div>
             </div>
@@ -161,6 +162,7 @@ const filtered = computed(() => {
 .result-icon-box { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
 .result-icon-box.income { background: var(--income-bg); }
 .result-icon-box.expense { background: var(--expense-bg); }
+.result-icon-box.transfer { background: rgba(106, 184, 227, 0.18); }
 .result-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow: hidden; }
 .result-name { font-size: 14px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .result-name :deep(mark) { background: var(--accent-light); color: var(--accent-dark); border-radius: 3px; padding: 0 2px; }
@@ -168,6 +170,7 @@ const filtered = computed(() => {
 .result-amount { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; flex-shrink: 0; }
 .result-amount.income { color: var(--income); }
 .result-amount.expense { color: var(--expense); }
+.result-amount.transfer { color: var(--lcd); }
 
 .modal-enter-active { transition: all 0.35s cubic-bezier(0.4,0,0.2,1); }
 .modal-leave-active { transition: all 0.25s cubic-bezier(0.4,0,0.2,1); }

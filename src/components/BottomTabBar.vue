@@ -50,6 +50,19 @@
         <span class="tab-label">资产</span>
       </button>
 
+      <!-- 基金 -->
+      <button
+        class="tab-item"
+        :class="{ active: modelValue === 'funds' }"
+        @click="$emit('update:modelValue', 'funds')"
+      >
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+          <polyline points="17 6 23 6 23 12"/>
+        </svg>
+        <span class="tab-label">基金</span>
+      </button>
+
       <!-- 我的 -->
       <button
         class="tab-item"

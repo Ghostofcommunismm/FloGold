@@ -7,7 +7,7 @@ export interface Transaction {
   subCategory?: string
   date: string // YYYY-MM-DD
   amount: number
-  type: 'income' | 'expense'
+  type: 'income' | 'expense' | 'transfer'
   icon: string
   tag: string
   merchant?: string

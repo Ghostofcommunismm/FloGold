@@ -165,7 +165,8 @@
                         </div>
                         <div class="tx-right">
                           <span class="tx-amount" :class="tx.type">
-                            {{ tx.type === 'income' ? '+' : '-' }}¥{{ tx.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                            <template v-if="tx.type === 'transfer'">⇄ ¥{{ tx.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</template>
+                            <template v-else>{{ tx.type === 'income' ? '+' : '-' }}¥{{ tx.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</template>
                           </span>
                         </div>
                       </div>
@@ -822,6 +823,23 @@
       />
     </motion.section>
 
+    <!-- ===== 基金页面（funds） ===== -->
+    <motion.section
+      v-if="activeTab === 'funds'"
+      key="funds"
+      class="page-shell"
+      :initial="{ opacity: 0, y: 10 }"
+      :animate="{ opacity: 1, y: 0 }"
+      :exit="{ opacity: 0, y: -8 }"
+      :transition="springs.steady"
+      @scroll.passive="onPageScroll"
+    >
+      <FundRankTab
+        :scrolled="scrolled"
+        @view-detail="openFundDetail"
+      />
+    </motion.section>
+
     <!-- ===== 我的页面（profile） ===== -->
     <motion.section
       v-if="activeTab === 'profile'"
@@ -951,6 +969,7 @@
       :show="showAddModal"
       :form="posForm"
       :categories="categoryNames"
+      :sub-categories="subCategories"
       @close="closeAddModal"
       @save="handlePosSave"
       @update:form="updatePosForm"
@@ -1001,6 +1020,13 @@
       @select="onDateSelect"
     />
 
+    <!-- 基金详情弹窗 -->
+    <FundDetailModal
+      :show="showFundDetail"
+      :fund-code="currentFundCode"
+      @close="showFundDetail = false"
+    />
+
     <!-- 提醒弹窗 -->
     <Teleport to="body">
       <Transition name="modal">
@@ -1042,6 +1068,8 @@ import DateCalendarPopover from './components/DateCalendarPopover.vue'
 import QuickLog from './components/QuickLog.vue'
 import AssetTab from './components/AssetTab.vue'
 import PosReceiptModal from './components/PosReceiptModal.vue'
+import FundRankTab from './components/FundRankTab.vue'
+import FundDetailModal from './components/FundDetailModal.vue'
 import { buildAssetFromTransaction } from './asset-utils'
 import type { Transaction, Category, SubCategories, Budget, RecurringItem, ReminderSettings, AppData, UISettings, Asset, AssetCardStyle } from './types'
 import { loadData, saveData, getStorage, todayStr, currentMonthKey, prevMonthKey, lastYearSameMonthKey, formatDisplayDate } from './storage'
@@ -1082,7 +1110,7 @@ const showAddModal = ref(false)
 const scrolled = ref(false)
 
 // ========== 各页面独立滚动位置 ==========
-const scrollPositions = reactive<Record<string, number>>({ home: 0, stats: 0, profile: 0 })
+const scrollPositions = reactive<Record<string, number>>({ home: 0, stats: 0, funds: 0, profile: 0 })
 
 const onPageScroll = (e: Event) => {
   const el = e.target as HTMLElement
@@ -1134,11 +1162,20 @@ const showRecurring = ref(false)
 const showReminder = ref(false)
 const showSearch = ref(false)
 const showReminderAlert = ref(false)
+const showFundDetail = ref(false)
+const currentFundCode = ref<string | null>(null)
+
+// 打开基金详情
+function openFundDetail(code: string) {
+  currentFundCode.value = code
+  showFundDetail.value = true
+}
 
 // ========== 安卓硬件返回键处理 ==========
 // 弹窗层级优先级（从最上层到最下层，排在前面的先关闭）
 const modalLayerPriority = [
   { key: 'showReminderAlert', ref: () => showReminderAlert.value, close: () => { showReminderAlert.value = false } },
+  { key: 'showFundDetail', ref: () => showFundDetail.value, close: () => { showFundDetail.value = false } },
   { key: 'showAddModal', ref: () => showAddModal.value, close: () => { showAddModal.value = false } },
   { key: 'showBudget', ref: () => showBudget.value, close: () => { showBudget.value = false } },
   { key: 'showCategory', ref: () => showCategory.value, close: () => { showCategory.value = false } },
@@ -1260,7 +1297,7 @@ const chartColors: string[] = [
 
 // 表单
 const form = reactive({
-  type: 'expense' as 'expense' | 'income',
+  type: 'expense' as 'expense' | 'income' | 'transfer',
   amount: '',
   category: '餐饮',
   subCategory: '早餐',
@@ -1318,7 +1355,8 @@ const posForm = computed(() => ({
   subCategory: form.subCategory,
   merchant: form.merchant,
   location: form.location,
-  note: form.note
+  note: form.note,
+  date: form.date || ''
 }))
 
 function updatePosForm(val: Partial<typeof posForm.value>) {
@@ -1335,23 +1373,30 @@ function updatePosForm(val: Partial<typeof posForm.value>) {
   if (val.merchant !== undefined) form.merchant = val.merchant
   if (val.location !== undefined) form.location = val.location
   if (val.note !== undefined) form.note = val.note
+  if (val.date !== undefined) form.date = val.date
 }
 
 function handlePosSave(tx: Partial<typeof posForm.value>) {
   const amount = calcAmount(String(tx.amount ?? ''))
   if (!amount) return
 
-  const icon = getCategoryIcon(form.category)
+  // transfer 类型不归入收支总额，给一个稳定的「转账」分类
+  const useCategory = form.type === 'transfer' ? '转账' : form.category
+  const icon = form.type === 'transfer'
+    ? 'ArrowLeftRight'
+    : getCategoryIcon(form.category)
   const newTx: Transaction = {
     id: appData.value.nextId++,
-    name: form.note || form.category,
-    category: form.category,
+    name: form.note || (form.type === 'transfer' ? '转账' : useCategory),
+    category: useCategory,
     subCategory: form.type === 'expense' ? form.subCategory : undefined,
     date: form.date || todayStr(),
     amount,
     type: form.type,
     icon,
-    tag: form.type === 'income' ? '收入' : form.subCategory,
+    tag: form.type === 'income' ? '收入'
+        : form.type === 'transfer' ? '转账'
+        : form.subCategory,
     merchant: form.merchant || undefined,
     location: form.location || undefined,
   }
@@ -1658,7 +1703,8 @@ const transactionGroups = computed<TxGroup[]>(() => {
     let expense = 0, income = 0
     for (const t of items) {
       if (t.type === 'expense') expense += t.amount
-      else income += t.amount
+      else if (t.type === 'income') income += t.amount
+      // transfer 跳过（不计入收支摘要）
     }
     const parts: string[] = []
     if (income > 0) parts.push('收 ¥' + income.toFixed(0))
@@ -2409,7 +2455,8 @@ const trendDailyMap = computed(() => {
     if (subFilter && tx.subCategory !== subFilter) continue
     const e = map.get(tx.date) || { income: 0, expense: 0 }
     if (tx.type === 'income') e.income += tx.amount
-    else e.expense += tx.amount
+    else if (tx.type === 'expense') e.expense += tx.amount
+    // transfer 跳过（不计入收支）
     map.set(tx.date, e)
   }
   return map
@@ -2714,7 +2761,8 @@ function buildDailyAmountMap(): Map<string, { income: number; expense: number }>
   for (const tx of transactions.value) {
     const entry = map.get(tx.date) || { income: 0, expense: 0 }
     if (tx.type === 'income') entry.income += tx.amount
-    else entry.expense += tx.amount
+    else if (tx.type === 'expense') entry.expense += tx.amount
+    // transfer 跳过（不计入收支）
     map.set(tx.date, entry)
   }
   return map
@@ -4055,6 +4103,7 @@ defineExpose({ deleteTransaction })
 }
 .tx-icon-box.income { background: var(--income-bg); }
 .tx-icon-box.expense { background: var(--expense-bg); }
+.tx-icon-box.transfer { background: rgba(106, 184, 227, 0.18); }
 
 .tx-info {
   display: flex;
@@ -4094,6 +4143,7 @@ defineExpose({ deleteTransaction })
 }
 .tx-amount.income { color: var(--income); }
 .tx-amount.expense { color: var(--expense); }
+.tx-amount.transfer { color: var(--lcd); }
 
 /* ============ 弹窗 (记账) ============ */
 .modal-overlay {

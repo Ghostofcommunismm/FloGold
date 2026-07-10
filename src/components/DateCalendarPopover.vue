@@ -1,7 +1,12 @@
 <template>
   <Teleport to="body">
     <Transition name="dcp">
-      <div v-if="show" class="dcp-overlay" @click.self="$emit('close')">
+      <div
+        v-if="show"
+        class="dcp-overlay"
+        :style="{ zIndex: String(zIndex) }"
+        @click.self="$emit('close')"
+      >
         <div class="dcp-card">
           <!-- 顶部 -->
           <div class="dcp-header">
@@ -74,8 +79,9 @@ const props = withDefaults(
     show: boolean
     modelValue?: string
     max?: string
+    zIndex?: number
   }>(),
-  { modelValue: '', max: '' },
+  { modelValue: '', max: '', zIndex: 300 },
 )
 
 const emit = defineEmits<{
